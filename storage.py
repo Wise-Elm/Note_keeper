@@ -9,10 +9,13 @@ from os.path import exists
 import yaml
 
 from core import _NoteTemplate
-from core import ID_NUMBER_LENGTH
+from core import ID_DIGIT_LENGTH
+from core import RUNTIME_ID
 
 
 DEFAULT_RECORDS_FILENAME = 'records.yaml'
+STORAGE_LOG_FILENAME = 'storage.log'  # Used when __name__ == '__main__'
+STORAGE_LOG_LEVEL = logging.DEBUG  # Used when __name__ == '__main__'
 
 
 # Configure logging.
@@ -20,17 +23,8 @@ log = logging.getLogger(__name__)
 log.addHandler(logging.NullHandler())
 
 
-# TODO (GS): Get custom exception working.
 class StorageError(RuntimeError):
     """Base class for exceptions arising from this module."""
-
-
-class LoadingError(StorageError):
-    """Exception class for loading errors."""
-
-
-class SavingError(StorageError):
-    """Exception class for saving errors."""
 
 
 class Repo:
@@ -50,7 +44,7 @@ class Repo:
         subclasses = dict(zip(class_names, subclass_obj))
         self.subclasses = subclasses  # Dictionary: keys=template class names, values=associated template class object.
 
-        self._id = []  # List of storing template id's for each note template.
+        self.id_ = []  # List storing template id's for each note template.
 
     def load(self, file_path=DEFAULT_RECORDS_FILENAME):
         """Load note templates from data file."""
@@ -127,13 +121,8 @@ class Repo:
 
         try:  # Add add object to self.note_templates.
             self.note_templates[template['_type']].append(note)
-        except ValueError(LoadingError) as e:
-            log.critical('{}: Unable to instantiate template object for {}'.format(e, template['id']))
-
-        # try:  # Add template id to self._id. Error is id is already in self._id.
-        #     self._add_id(template['id'])
-        # except LoadingError as e:
-        #     log.critical('{}: Unable to add new template id.{}'.format(e, template['id']))
+        except StorageError('Unable to instantiate template object for {}'.format(template['id'])) as e:
+            log.critical(f'{e}')
 
         self._add_id(template['id'])
 
@@ -151,11 +140,16 @@ class Repo:
             None
         """
 
-        if len(str(_id)) != ID_NUMBER_LENGTH or _id in self._id:
-            error = LoadingError('Template id could not be loaded into repo._id')
-            log.critical(f'{error}')
+        if len(str(_id)) != ID_DIGIT_LENGTH:
+            msg = f'Error for ID #: {_id}. Must be {ID_DIGIT_LENGTH}.'
+            log.critical(msg)
+            raise StorageError(msg)
+        elif _id in self.id_:
+            msg = f'Error for ID #: {_id}. ID already in use for another note template.'
+            log.critical(msg)
+            raise StorageError(msg)
         else:
-            self._id.append(_id)
+            self.id_.append(_id)
 
     def save(self, templates, file_path=DEFAULT_RECORDS_FILENAME):
         """Save data to source file.
@@ -172,14 +166,19 @@ class Repo:
 
         log.debug(f'Saving data to {file_path}...')
 
-        records = []
+        try:
 
-        for k, v in templates.items():
-            for note in v:
-                record = note.to_dict()
-                records.append(record)
+            records = []
 
-        self._save_to_yaml(records, file_path)
+            for k, v in templates.items():
+                for note in v:
+                    record = note.to_dict()
+                    records.append(record)
+
+            self._save_to_yaml(records, file_path)
+
+        except StorageError('Unable to save data to disc') as e:
+            log.critical(f'{e}')
 
         log.debug(f'Saving data to {file_path} complete.')
 
@@ -198,7 +197,7 @@ class Repo:
             yaml.dump(records, yaml_outfile)
 
 
-def self_test():
+def storage_self_test():
     """Run Unittests on module.
 
         Runs when storage.py is called directly. Creates a new yaml file with random records for testing. Conducts
@@ -216,22 +215,22 @@ def self_test():
 
     import test_storage
     from test_storage import create_random
-    from test_storage import TESTING_RECORDS_FILENAME
+    from test_storage import STORAGE_TESTING_RECORDS_FILENAME
 
     repo = Repo()
 
     # Create test file.
-    records = create_random(20)  # Generate random records.
-    test_file = open(TESTING_RECORDS_FILENAME, 'w')
-    repo._save_to_yaml(records, TESTING_RECORDS_FILENAME)  # Save random records to test yaml file.
+    records = create_random()  # Generate random records.
+    test_file = open(STORAGE_TESTING_RECORDS_FILENAME, 'w')
+    repo._save_to_yaml(records, STORAGE_TESTING_RECORDS_FILENAME)  # Save random records to test yaml file.
     test_file.close()
 
     # Conduct unittest.
     suite = unittest.TestLoader().loadTestsFromModule(test_storage)
     unittest.TextTestRunner(verbosity=2).run(suite)
 
-    # Delete test file.
-    os.remove(TESTING_RECORDS_FILENAME)
+    # Delete test file upon completion.
+    os.remove(STORAGE_TESTING_RECORDS_FILENAME)
 
 
 def test():
@@ -248,5 +247,14 @@ def test():
 
 
 if __name__ == '__main__':
-    self_test()
+
+    # Used during development. Log only stores data from latest run of if __name__ == '__main__'.
+    logging.basicConfig(
+        level=STORAGE_LOG_LEVEL,
+        format=f'[%(asctime)s] - {RUNTIME_ID} - %(levelname)s - [%(name)s:%(lineno)s] - %(message)s',
+        filename=STORAGE_LOG_FILENAME,
+        filemode='w'
+    )
+
+    storage_self_test()
     # test()
