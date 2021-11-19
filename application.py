@@ -3,6 +3,18 @@
 
 __version__ = '0.0.1'
 
+
+"""Note retrieval application.
+
+This application is designed to aid in writing patient notes for medical purposes. Note templates are intended to
+provide the basic structure of a patient note so that the practitioner can save time by filling in the details. This
+program provides the ability to create, display, edit, save, and delete note templates.
+
+Todo:
+    Configure a rotating log handler.
+"""
+
+
 import argparse
 import sys
 from datetime import date
@@ -10,10 +22,11 @@ import logging
 from random import randint
 
 from core import _NoteTemplate
-from core import RUNTIME_ID
 from core import ID_DIGIT_LENGTH
+from core import RUNTIME_ID
 
 from storage import Repo
+from storage import storage_self_test
 
 LOG_FILENAME = 'application.log'
 DEFAULT_LOG_LEVEL = logging.DEBUG
@@ -267,9 +280,21 @@ class Application:
 
         return today_date
 
-    # TODO (GS): Add a save() method.
-    def save(self):
-        self.repo.save(self.templates)
+    def save(self, templates):
+        """Save application data.
+
+        Args:
+            templates (dict{k=type, v=list[note templates]}): Keys=template type: Values=List[note templates].
+
+        Returns:
+            None
+        """
+
+        log.debug('Saving...')
+
+        self.repo.save(templates)
+
+        log.debug('Saved.')
 
 
 def parse_args(argv=sys.argv):
@@ -351,19 +376,76 @@ def parse_args(argv=sys.argv):
 
     return args
 
+
 def handle_args(args):
     """Handle args when parse_args() receives inputs.
-    
+
     Args:
         args (List [args]): List of arguments from argument parser.
-        
+
     Returns:
         None
     """
-    # TODO (GS): Fix returns.
-    
-    
-    
+
+    log.debug('Checking for arguments from terminal...')
+
+    # Check for arguments from arg_parse()
+    run_args = False
+    arguments = args.__dict__
+    for k, v in arguments.items():
+        if v is not False:
+            run_args = True
+            continue
+
+    if run_args is False:  # When no arguments from arg_parse() run self_test()
+        log.debug('No arguments from arg_parse. Running self_test()...')
+        self_test()
+        log.debug('self_test() complete.')
+
+    log.debug('arg_parse() arguments found.')
+
+    app = Application()
+    log.debug('Parsing arguments through application...')
+
+    if args.test:
+        self_test()  # Test application.py
+        storage_self_test()  # Test storage.py/
+
+    # Run Application.today_date().
+    if args.date:
+        print(app.today_date())
+
+    # Run Application.display_all_of_type().
+    if args.all:
+        print(app.display_all_of_type(args.all[0]))
+
+    # Run Application.display_template().
+    if args.display:
+        print(app.display_template(args.display[0], args.display[1]))
+
+    # Run Application.delete_template().
+    if args.delete:
+        result = app.delete_template(args.delete[0], args.delete[1])
+        if result is True:
+            print(f'Note template has been deleted. Type: {args.delete[0]}, ID: {args.delete[1]}.')
+        else:
+            print(f'Note template could not be deleted. Type: {args.delete[0]}, ID: {args.delete[1]}.')
+
+    # Run Application.edit_template().
+    if args.edit:
+        arg = {
+            'id': int(args.edit[0]),
+            '_type': args.edit[1],
+            'note': args.edit[2]
+        }
+
+        result = app.edit_template(arg)
+        if result is None:
+            print('Note template has NOT been modified!')
+        else:
+            print(f'{result} has been modified.')
+
+    return app
 
 
 def self_test():
@@ -403,20 +485,10 @@ def self_test():
 
 
 def test():
-    a = {
-        '_type': 'Periodic',
-        'note': 'This is a test/'
-    }
+    """For development level module testing."""
 
     app = Application()
-
-    x = {
-        '_type': 'Limited',
-        'id': 9709116544,
-        'note': 'This is a test.'
-    }
-
-    print(app.edit_template(x))
+    pass
 
 
 def main():
@@ -430,66 +502,11 @@ def main():
 
     log.debug('main...')
 
-    args = parse_args()
+    app = handle_args(parse_args())  # Returns instance of application.
 
-    # Check for arguments from arg_parse()
-    run_args = False
-    arguments = args.__dict__
-    for k, v in arguments.items():
-        if v is not False:
-            run_args = True
-            continue
+    app.save(app.templates)
 
-    if run_args is False:  # When no arguments from arg_parse() run self_test()
-        log.debug('No arguments from arg_parse. Running self_test()...')
-        self_test()
-        log.debug('self_test() complete.')
-
-    log.debug('arg_parse() arguments found.')
-
-    app = Application()
-    log.debug('Parsing arguments through application...')
-
-    # Run self_test().
-    if args.test:
-        self_test()
-
-    # Run Application.today_date().
-    if args.date:
-        print(app.today_date())
-
-    # Run Application.display_all_of_type().
-    if args.all:
-        print(app.display_all_of_type(args.all[0]))
-
-    # Run Application.display_template().
-    if args.display:
-        print(app.display_template(args.display[0], args.display[1]))
-
-    # Run Application.delete_template().
-    if args.delete:
-        result = app.delete_template(args.delete[0], args.delete[1])
-        if result is True:
-            print(f'Note template has been deleted. Type: {args.delete[0]}, ID: {args.delete[1]}.')
-        else:
-            print(f'Note template could not be deleted. Type: {args.delete[0]}, ID: {args.delete[1]}.')
-
-    # Run Application.edit_template().
-    if args.edit:
-        arg = {
-            'id': int(args.edit[0]),
-            '_type': args.edit[1],
-            'note': args.edit[2]
-        }
-
-        result = app.edit_template(arg)
-        if result is None:
-            print('Note template has NOT been modified!')
-        else:
-            print(f'{result} has been modified.')
-
-
-    # app.save()
+    log.debug('main.')
 
 
 if __name__ == '__main__':
