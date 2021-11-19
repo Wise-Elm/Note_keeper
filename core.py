@@ -3,15 +3,20 @@
 
 """This module provides object classes for application.py."""
 
-ID_NUMBER_LENGTH = 10
+import logging
+import unittest
+import uuid
+
+RUNTIME_ID = uuid.uuid4()  # Set unique id for each runtime.
+ID_DIGIT_LENGTH = 10
 
 
 class _NoteTemplate:
     """Objects of this type represent a periodontal appointment note template."""
 
     def __init__(self, template):
-        self.note = template['note']  # Content of note template.
-        self.id = template['id']  # Unique identification number for note template.
+        self.note = template['note']  # type(str). Content of note template.
+        self.id = template['id']  # type(int). Unique identification number for note template.
         """
         Args:
             template (dict): Note template.
@@ -29,11 +34,17 @@ class _NoteTemplate:
         Compares dictionary exam type and id with objects.
 
         Args:
-            other (dict): Dictionary representation of a note template.
+            other (dict OR Obj): Dictionary representation of a note template OR a _NoteTemplate obj.
 
         Returns:
             is_equivalent (bool): True if equal, False otherwise.
         """
+
+        if type(other) is self.__class__:
+            if self.__class__.__name__ == other.__class__.__name__ and self.id == other.id:
+                return True
+            else:
+                return False
 
         if self.__class__.__name__ == other['_type'] and self.id == other['id']:
             return True
@@ -54,6 +65,20 @@ class _NoteTemplate:
         note['_type'] = self.__class__.__name__
 
         return note
+
+    def text_display(self):
+        """Return a string formatted to display self. Return is an easy to read text representation.
+
+        Args:
+            None
+
+        Returns:
+            display_text (str): Attributes from self formatted into easy to read text.
+        """
+
+        template = self.to_dict()
+        display_text = 'Type: {}\nID: {}\n\n{}'.format(template['_type'], template['id'], template['note'])
+        return display_text
 
 
 class Limited(_NoteTemplate):
@@ -83,6 +108,7 @@ class Limited(_NoteTemplate):
         note = super().to_dict()
 
         return note
+
 
 class Surgery(_NoteTemplate):
     """Child class of _Note. Objects of this type represent a surgery note template."""
