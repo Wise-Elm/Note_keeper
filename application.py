@@ -145,7 +145,7 @@ class Application:
         if type(_id) is str:
             _id = int(_id)
 
-        for template in self.templates[_type]:
+        for template in self.templates[_type.title()]:
             if template.id == _id:
                 log.debug('Template found.')
                 return template.text_display()
@@ -173,7 +173,7 @@ class Application:
         try:
             long_text = ''
             num = 1
-            for template in self.templates[_type]:
+            for template in self.templates[_type.title()]:
                 out_str = f'\n\nNumber: {num}\n' + template.text_display() + '\n'
                 long_text += out_str
                 num += 1
@@ -297,6 +297,93 @@ class Application:
         log.debug('Saved.')
 
 
+def persistent():
+    """Run application in persistent mode.
+
+    Args:
+        None
+
+    Returns:
+        None
+    """
+
+    space_len = 12
+    indent_len = 4
+
+    app = Application()
+
+    menu = f"Optional inputs:\n" \
+           f"{' ' * indent_len}add {' ' * (space_len - len('add'))} Add a new note template.\n" \
+           f"{' ' * indent_len}delete {' ' * (space_len - len('delete'))} Delete a note template.\n" \
+           f"{' ' * indent_len}edit {' ' * (space_len - len('edit'))} Edit a note template.\n" \
+           f"{' ' * indent_len}save {' ' * (space_len - len('save'))} Option to save changes.\n" \
+           f"{' ' * indent_len}date {' ' * (space_len - len('date'))} Display today's date\n" \
+           f"{' ' * indent_len}display {' ' * (space_len - len('display'))} Display note template.\n" \
+           f"{' ' * indent_len}display type {' ' * (space_len - len('display type'))} Display all note templates of " \
+           f"a type.\n" \
+           f"{' ' * indent_len}quit {' ' * (space_len - len('quit'))} Quit Program."
+
+    print("Application is being run in persistent mode. Enter 'menu' for a list of options, or 'exit' to quit.")
+
+    run = True
+    while run is True:
+
+        arg = input('\nEnter your selection: ')
+
+        if arg.lower() == 'menu' or arg.lower() == 'help':
+            print(menu)
+
+        elif arg.lower() == 'add':
+            type_ = input('Enter note type: ')
+            note = input('Enter note: ')
+            result = app.add_template({'_type': type_.title(), 'note': note})
+            print('Note template has been added.')
+
+        elif arg.lower() == 'display':
+            type_ = input('Enter template type: ')
+            id_ = input('Enter template id: ')
+            try:
+                result = app.display_template(type_, id_)
+                if result is None:
+                    print('Note template not found.')
+                else:
+                    print(result)
+            except:
+                print('Invalid input.')
+
+        elif arg.lower() == 'display type':
+            type_ = input('Enter template type: ')
+            try:
+                print(app.display_all_of_type(type_))
+            except ApplicationError:
+                print('Invalid input.')
+
+        elif arg.lower() == 'quit':
+            option = input('Would you like to save y/n?: ')
+            if option.lower() == 'y':
+                app.save(app.templates)
+                print('Program Saved.')
+            elif option.lower() != 'n':
+                print('Invalid selection.')
+            else:
+                print('Program not saved.')
+
+            run = False
+
+        elif arg.lower() == 'date':
+            print(f"Today's date: {app.today_date()} (yyyy-mm-dd).")
+
+        elif arg.lower() == 'save':
+            app.save(app.templates)
+            print('Program Saved.')
+
+        else:
+            print('Invalid selection.')
+
+    print('Good bye!')
+    return
+
+
 def parse_args(argv=sys.argv):
     """Run program from terminal."""
 
@@ -367,6 +454,16 @@ def parse_args(argv=sys.argv):
         nargs=3,
         default=False,
         metavar=('ID', 'Type', 'Note')
+    )
+
+    # TODO (GS): develop this argument.
+    # Run Application in persistent mode through terminal.
+    parser.add_argument(
+        '-p',
+        '--persistent',
+        help='Run application in persistent mode through the terminal.',
+        default=False,
+        action='store_true'
     )
 
     args = parser.parse_args()  # Collect arguments.
@@ -444,6 +541,9 @@ def handle_args(args):
             print('Note template has NOT been modified!')
         else:
             print(f'{result} has been modified.')
+
+    if args.persistent:
+        persistent()
 
     return app
 
