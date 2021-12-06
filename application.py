@@ -36,6 +36,7 @@ log = logging.getLogger(__name__)
 log.setLevel(DEFAULT_LOG_LEVEL)
 
 
+# TODO (GS): ApplicationError
 class ApplicationError(RuntimeError):
     """Base class for exceptions arising from this module."""
 
@@ -203,6 +204,8 @@ class Application:
         if type(_id) is str:
             _id = int(_id)
 
+        _type = _type.title()
+
         for template in self.templates[_type]:
             if template.id == _id:
                 _index = self.templates[_type].index(template)
@@ -323,6 +326,11 @@ def persistent():
            f"a type.\n" \
            f"{' ' * indent_len}quit {' ' * (space_len - len('quit'))} Quit Program."
 
+    print('Welcome to')
+    print('                 __  _____  __              __   __   __   __   __  ')
+    print('         /\  /  /  \   |   |__        |_/  |__  |__  |_/  |__  |__| ')
+    print('        /  \/   \__/   |   |__        | \  |__  |__  |    |__  |  \ ')
+    print('\n')
     print("Application is being run in persistent mode. Enter 'menu' for a list of options, or 'exit' to quit.")
 
     run = True
@@ -334,12 +342,15 @@ def persistent():
             print(menu)
 
         elif arg.lower() == 'add':
+            print(f'Available types: {app.subclass_names}.')
             type_ = input('Enter note type: ')
             note = input('Enter note: ')
             result = app.add_template({'_type': type_.title(), 'note': note})
+            print(f'New note template:\n\n{result}\n')
             print('Note template has been added.')
 
         elif arg.lower() == 'display':
+            print(f'Available types: {app.subclass_names}.')
             type_ = input('Enter template type: ')
             id_ = input('Enter template id: ')
             try:
@@ -352,6 +363,7 @@ def persistent():
                 print('Invalid input.')
 
         elif arg.lower() == 'display type':
+            print(f'Available types: {app.subclass_names}.')
             type_ = input('Enter template type: ')
             try:
                 print(app.display_all_of_type(type_))
@@ -363,12 +375,36 @@ def persistent():
             if option.lower() == 'y':
                 app.save(app.templates)
                 print('Program Saved.')
+                run = False  # Quit while loop and end program.
             elif option.lower() != 'n':
                 print('Invalid selection.')
             else:
                 print('Program not saved.')
+                run = False  # Quit while loop and end program.
 
-            run = False
+        elif arg.lower() == 'delete':
+            print(f'Available types: {app.subclass_names}.')
+            type_ = input('Type to delete: ')
+            id_ = input('Id to delete: ')
+            result = app.delete_template(type_, id_)
+            if result is True:
+                print(f'Template type: {type_}, id: {id_} has been deleted.')
+            else:
+                print(f'Template (type: {type_}, id: {id_}) has NOT been deleted because it could not be found.')
+
+        elif arg.lower() == 'edit':
+            print(f'Available types: {app.subclass_names}.')
+            type_ = input('Type to edit: ').title()
+            id_ = int(input('Id to edit: '))
+            print('Enter key will input the note. To move to a new line rather than hitting enter type "\ n", without'
+                  ' the space.')
+            note = input('Enter new note: \n')
+            argument = {'_type': type_, 'id': id_, 'note': note}
+            result = app.edit_template(argument)
+            if result is None:
+                print(f'Template (type: {type_}, id: {id_}) was NOT edited. Could not be found.')
+            else:
+                print(f'{result} has been edited.')
 
         elif arg.lower() == 'date':
             print(f"Today's date: {app.today_date()} (yyyy-mm-dd).")
@@ -586,8 +622,6 @@ def self_test():
 
 def test():
     """For development level module testing."""
-
-    app = Application()
     pass
 
 
