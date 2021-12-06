@@ -309,6 +309,8 @@ def persistent():
     Returns:
         None
     """
+    
+    # TODO (GS): add logging.
 
     space_len = 12
     indent_len = 4
@@ -627,6 +629,7 @@ def test():
 
 def main():
 
+    # TODO (GS): Add rotating logging.
     # Configure logging.
     logging.basicConfig(
         level=DEFAULT_LOG_LEVEL,
