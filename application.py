@@ -73,7 +73,7 @@ class Application:
 
         # Check if new_template can be associated with a valid class.
         if new_template['_type'] not in self.subclass_names:
-            msg = 'Note Template type not allowed. Input type: {}'.format(new_template['type'])
+            msg = 'Note Template type not allowed.'
             log.critical(msg)
             raise ApplicationError(msg)
 
@@ -139,23 +139,37 @@ class Application:
         Returns:
             template (str) OR (None): Note template matching the id number and _type from arguments, or None when no
                 stored template has a matching id number.
+            msg (str): Message indicating the success or failure of the function.
         """
 
         log.debug('Finding template to display...')
 
-        if type(_id) is str:
-            _id = int(_id)
+        if type(_id) is str:  # Check legality of _id.
+            if not _id.isnumeric():
+                msg = 'Entered id is not valid. Must be all numbers.'
+                log.debug(msg)
+                raise ApplicationError(msg)
+            else:
+                _id = int(_id)
+
+        _type = _type.title()
+
+        if _type not in self.templates:  # Check legality of _type.
+            msg = 'Entered type is not valid.'
+            log.debug(msg)
+            raise ApplicationError(msg)
 
         for template in self.templates[_type.title()]:
             if template.id == _id:
-                log.debug('Template found.')
-                return template.text_display()
+                msg = 'Template found.'
+                log.debug(msg)
+                return template.text_display(), msg
 
         # When template not found.
         msg = f'Template with type: {_type}, id: {_type} NOT found.'
         log.debug(msg)
 
-        return None
+        return None, msg
 
     def display_all_of_type(self, _type):
         """Displays all note templates from specified type.
@@ -171,22 +185,23 @@ class Application:
 
         log.debug('Compiling display data...')
 
-        try:
-            long_text = ''
-            num = 1
-            for template in self.templates[_type.title()]:
-                out_str = f'\n\nNumber: {num}\n' + template.text_display() + '\n'
-                long_text += out_str
-                num += 1
+        _type = _type.title()
 
-            log.debug('Display data compiled.')
-
-            return long_text
-
-        except:
-            msg = 'Applicaiton.display_all_of_type() failed.'
-            log.critical(msg)
+        if _type not in self.templates:  # Check legality of _type.
+            msg = 'Entered type is not valid.'
+            log.debug(msg)
             raise ApplicationError(msg)
+
+        long_text = ''
+        num = 1
+        for template in self.templates[_type.title()]:
+            out_str = f'\n\nNumber: {num}\n' + template.text_display() + '\n'
+            long_text += out_str
+            num += 1
+
+        log.debug('Display data compiled.')
+
+        return long_text
 
     def delete_template(self, _type, _id):
         """Delete note template.
@@ -197,24 +212,37 @@ class Application:
 
         Returns:
             result (Bool): True if successful, False otherwise.
+            msg (str): Message indicating the success or failure of function.
         """
 
         log.debug(f'Deleting template. Type: {_type}, id: {_id}...')
 
-        if type(_id) is str:
-            _id = int(_id)
+        if type(_id) is str:  # Check legality of _id.
+            if not _id.isnumeric():
+                msg = 'Entered id is not valid. Must be all numbers.'
+                log.debug(msg)
+                raise ApplicationError(msg)
+            else:
+                _id = int(_id)
 
         _type = _type.title()
+
+        if _type not in self.templates:  # Check legality of _type.
+            msg = 'Entered type is not valid.'
+            log.debug(msg)
+            raise ApplicationError(msg)
 
         for template in self.templates[_type]:
             if template.id == _id:
                 _index = self.templates[_type].index(template)
                 self.templates[_type].pop(_index)
-                log.debug(f'Template Type: {_type}, id: {_id}, has been deleted.')
-                return True
+                msg = f'Template Type: {_type}, id: {_id}, has been deleted.'
+                log.debug(msg)
+                return True, msg
 
-        log.debug(f'Template Type: {_type}, id: {_id}, cannot be found and has NOT been deleted.')
-        return False
+        msg = f'Template Type: {_type}, id: {_id}, cannot be found and has NOT been deleted.'
+        log.debug(msg)
+        return False, msg
 
     def edit_template(self, edited_template):
         """Edit note template attributes.
@@ -230,7 +258,20 @@ class Application:
 
         log.debug('Editing note template...')
 
-        result = None
+        if type(edited_template['id']) is str:  # Check legality of id key.
+            if not edited_template['id'].isnumeric():
+                msg = 'Entered id is not valid. Must be all numbers.'
+                log.debug(msg)
+                raise ApplicationError(msg)
+            else:
+                edited_template['id'] = int(edited_template['id'])
+
+        edited_template['_type'] = edited_template['_type'].title()
+
+        if edited_template['_type'] not in self.templates:  # Check legality of _type.
+            msg = 'Entered type is not valid.'
+            log.debug(msg)
+            raise ApplicationError(msg)
 
         # Search same template type for matching ID. (Attempt a O(log(n)) search.)
         original_template = None  # Filled with original template if found within same note template type.
@@ -251,17 +292,17 @@ class Application:
                             break
 
         if original_template is None:  # When template is not found.
-            message = 'Template not found for ID: {}.'.format(edited_template['id'])
-            log.debug(message)
-            return result
+            msg = 'Edit failed! Template not found for ID: {}.'.format(edited_template['id'])
+            log.debug(msg)
+            raise ApplicationError(msg)
 
         # Delete original template.
         self.delete_template(original_template.to_dict()['_type'], original_template.to_dict()['id'])
 
         # Add new template.
         result = self.add_template(new_template=edited_template, _id=edited_template['id'])
-
-        log.debug('Note template has been edited.')
+        msg = 'Note template has been edited.'
+        log.debug(msg)
 
         return result
 
@@ -309,70 +350,110 @@ def persistent():
     Returns:
         None
     """
-    
-    # TODO (GS): add logging.
 
-    space_len = 12
-    indent_len = 4
+    # TODO (GS): add logging.
 
     app = Application()
 
-    menu = f"Optional inputs:\n" \
-           f"{' ' * indent_len}add {' ' * (space_len - len('add'))} Add a new note template.\n" \
-           f"{' ' * indent_len}delete {' ' * (space_len - len('delete'))} Delete a note template.\n" \
-           f"{' ' * indent_len}edit {' ' * (space_len - len('edit'))} Edit a note template.\n" \
-           f"{' ' * indent_len}save {' ' * (space_len - len('save'))} Option to save changes.\n" \
-           f"{' ' * indent_len}date {' ' * (space_len - len('date'))} Display today's date\n" \
-           f"{' ' * indent_len}display {' ' * (space_len - len('display'))} Display note template.\n" \
-           f"{' ' * indent_len}display type {' ' * (space_len - len('display type'))} Display all note templates of " \
-           f"a type.\n" \
-           f"{' ' * indent_len}quit {' ' * (space_len - len('quit'))} Quit Program."
+    graphic_space = 9
+    graphic_indent = 8
 
-    print('Welcome to')
-    print('                 __  _____  __              __   __   __   __   __  ')
-    print('         /\  /  /  \   |   |__        |_/  |__  |__  |_/  |__  |__| ')
-    print('        /  \/   \__/   |   |__        | \  |__  |__  |    |__  |  \ ')
+    print('Welcome to:')
+    print(f"{' ' * graphic_indent}         __  _____  __{' ' * graphic_space}      __   __   __   __   __   ")
+    print(f"{' ' * graphic_indent} /\  /  /  \   |   |__{' ' * graphic_space}|_/  |__  |__  |_/  |__  |__|  ")
+    print(f"{' ' * graphic_indent}/  \/   \__/   |   |__{' ' * graphic_space}| \  |__  |__  |    |__  |  \  ")
     print('\n')
-    print("Application is being run in persistent mode. Enter 'menu' for a list of options, or 'exit' to quit.")
+    print("Application is being run in persistent mode. Enter 'menu' for a list of options, or 'quit' to exit.")
+
+    menu_space = 20
+    menu_indent = 4
+
+    menu = f"Optional inputs:\n" \
+           f"{' ' * menu_indent}add OR a{' ' * (menu_space - len('add OR a'))} Add a new note template.\n" \
+           f"{' ' * menu_indent}date OR da{' ' * (menu_space - len('date OR da'))} Display today's date\n" \
+           f"{' ' * menu_indent}delete OR de{' ' * (menu_space - len('delete OR de'))} Delete a note template.\n" \
+           f"{' ' * menu_indent}display OR d{' ' * (menu_space - len('display OR d'))} Display note template.\n" \
+           f"{' ' * menu_indent}display type OR dt{' ' * (menu_space - len('display type OR dt'))} Display all note " \
+           f"templates of a type.\n" \
+           f"{' ' * menu_indent}edit OR e{' ' * (menu_space - len('edit OR e'))} Edit a note template.\n" \
+           f"{' ' * menu_indent}save OR s{' ' * (menu_space - len('save OR s'))} Option to save changes.\n" \
+           f"{' ' * menu_indent}quit OR q{' ' * (menu_space - len('quit OR q'))} Quit Program."
 
     run = True
     while run is True:
 
         arg = input('\nEnter your selection: ')
 
-        if arg.lower() == 'menu' or arg.lower() == 'help':
+        if arg.lower() == 'menu' or arg.lower() == 'help' or arg.lower() == 'h':
             print(menu)
 
-        elif arg.lower() == 'add':
+        elif arg.lower() == 'add' or arg.lower() == 'a':
             print(f'Available types: {app.subclass_names}.')
             type_ = input('Enter note type: ')
             note = input('Enter note: ')
-            result = app.add_template({'_type': type_.title(), 'note': note})
-            print(f'New note template:\n\n{result}\n')
-            print('Note template has been added.')
+            try:
+                result = app.add_template({'_type': type_.title(), 'note': note})
+                print(f'New note template:\n\n{result}\n')
+                print('Note template has been added.')
+            except ApplicationError as AE:
+                print(AE)
 
-        elif arg.lower() == 'display':
+        elif arg.lower() == 'date' or arg.lower() == 'da':
+            print(f"Today's date: {app.today_date()} (yyyy-mm-dd).")
+
+        elif arg.lower() == 'delete' or arg.lower() == 'de':
+            print(f'Available types: {app.subclass_names}.')
+            type_ = input('Type to delete: ')
+            id_ = input('Id to delete: ')
+            try:
+                result = app.delete_template(type_, id_)
+                if result[0] is True:
+                    print(result[1])
+                else:
+                    print(result[1])
+            except ApplicationError as AE:
+                print(AE)
+
+        elif arg.lower() == 'display' or arg.lower() == 'd':
             print(f'Available types: {app.subclass_names}.')
             type_ = input('Enter template type: ')
             id_ = input('Enter template id: ')
             try:
                 result = app.display_template(type_, id_)
-                if result is None:
-                    print('Note template not found.')
+                if result[0] is None:
+                    print(result[1])
                 else:
-                    print(result)
-            except:
-                print('Invalid input.')
+                    print(f'{result[1]}\n\n{result[0]}')
+            except ApplicationError as AE:
+                print(AE)
 
-        elif arg.lower() == 'display type':
+        elif arg.lower() == 'display type' or arg.lower() == 'dt':
             print(f'Available types: {app.subclass_names}.')
             type_ = input('Enter template type: ')
             try:
                 print(app.display_all_of_type(type_))
-            except ApplicationError:
-                print('Invalid input.')
+            except ApplicationError as AE:
+                print(AE)
 
-        elif arg.lower() == 'quit':
+        elif arg.lower() == 'edit' or arg.lower() == 'e':
+            print(f'Available types: {app.subclass_names}.')
+            type_ = input('Type to edit: ').title()
+            id_ = int(input('Id to edit: '))
+            print('Enter key will input the note. To move to a new line rather than hitting enter type "\ n", without'
+                  ' the space.')
+            note = input('Enter new note: \n')
+            argument = {'_type': type_, 'id': id_, 'note': note}
+            try:
+                result = app.edit_template(argument)
+                print(f'{result} has been edited.')
+            except ApplicationError as AE:
+                print(AE)
+
+        elif arg.lower() == 'save' or arg.lower() == 's':
+            app.save(app.templates)
+            print('Program Saved.')
+
+        elif arg.lower() == 'quit' or arg.lower() == 'q':
             option = input('Would you like to save y/n?: ')
             if option.lower() == 'y':
                 app.save(app.templates)
@@ -383,37 +464,6 @@ def persistent():
             else:
                 print('Program not saved.')
                 run = False  # Quit while loop and end program.
-
-        elif arg.lower() == 'delete':
-            print(f'Available types: {app.subclass_names}.')
-            type_ = input('Type to delete: ')
-            id_ = input('Id to delete: ')
-            result = app.delete_template(type_, id_)
-            if result is True:
-                print(f'Template type: {type_}, id: {id_} has been deleted.')
-            else:
-                print(f'Template (type: {type_}, id: {id_}) has NOT been deleted because it could not be found.')
-
-        elif arg.lower() == 'edit':
-            print(f'Available types: {app.subclass_names}.')
-            type_ = input('Type to edit: ').title()
-            id_ = int(input('Id to edit: '))
-            print('Enter key will input the note. To move to a new line rather than hitting enter type "\ n", without'
-                  ' the space.')
-            note = input('Enter new note: \n')
-            argument = {'_type': type_, 'id': id_, 'note': note}
-            result = app.edit_template(argument)
-            if result is None:
-                print(f'Template (type: {type_}, id: {id_}) was NOT edited. Could not be found.')
-            else:
-                print(f'{result} has been edited.')
-
-        elif arg.lower() == 'date':
-            print(f"Today's date: {app.today_date()} (yyyy-mm-dd).")
-
-        elif arg.lower() == 'save':
-            app.save(app.templates)
-            print('Program Saved.')
 
         else:
             print('Invalid selection.')
@@ -624,7 +674,10 @@ def self_test():
 
 def test():
     """For development level module testing."""
-    pass
+    app = Application()
+    a = app.display_template('Limited', 1549196665)
+    print(a[0])
+    app.save(app.templates)
 
 
 def main():
@@ -639,9 +692,7 @@ def main():
 
     log.debug('main...')
 
-    app = handle_args(parse_args())  # Returns instance of application.
-
-    app.save(app.templates)
+    handle_args(parse_args())  # Returns instance of application.
 
     log.debug('main.')
 
