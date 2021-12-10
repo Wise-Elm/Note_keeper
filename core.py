@@ -3,16 +3,28 @@
 
 """This module provides object classes for application.py."""
 
+# TODO (GS): eliminate unused imports.
+import copy
 import logging
 import unittest
 import uuid
 
 RUNTIME_ID = uuid.uuid4()  # Set unique id for each runtime.
 ID_DIGIT_LENGTH = 10
+CORE_LOG_FILENAME = 'core.log'  # Used when __name__ == '__main__'
+CORE_LOG_LEVEL = logging.DEBUG  # Used when __name__ == '__main__'
+
+# Configure logging.
+log = logging.getLogger(__name__)
+log.addHandler(logging.NullHandler())
 
 
-class _NoteTemplate:
-    """Objects of this type represent a periodontal appointment note template."""
+class CoreError(RuntimeError):
+    """Base class for exceptions arising from this module."""
+
+
+class _Template:
+    """ABC. Objects of this type represent a periodontal appointment note template."""
 
     def __init__(self, template):
         self.note = template['note']  # type(str). Content of note template.
@@ -25,7 +37,7 @@ class _NoteTemplate:
             None
         """
 
-    def __str__(self):
+    def __repr__(self):
         return f'{self.__class__.__name__}, id: {self.id}'
 
     def __eq__(self, other):
@@ -40,16 +52,50 @@ class _NoteTemplate:
             is_equivalent (bool): True if equal, False otherwise.
         """
 
-        if type(other) is self.__class__:
-            if self.__class__.__name__ == other.__class__.__name__ and self.id == other.id:
+        log.debug('__eq__...')
+
+        # Handle dictionary as argument.
+        if type(other) is dict:
+            if other['id']:
+                if self.id == other['id']:
+                    log.debug('__eq__ = True.')
+                    return True
+                else:
+                    log.debug('__eq__ = False.')
+                    return False
+            else:
+                msg = 'Invalid id.'
+                log.debug('__eq__ ' + msg)
+                raise CoreError(msg)
+
+        # Handle _NoteTemplate as argument.
+        if isinstance(other, _Template):
+            if self.id == other.id:
+                log.debug('__eq__ = True.')
                 return True
             else:
+                log.debug('__eq__ = False.')
                 return False
 
-        if self.__class__.__name__ == other['_type'] and self.id == other['id']:
-            return True
+        # Handle illegal argument.
         else:
-            return False
+            msg = 'Invalid Type.'
+            log.debug('__eq__ ' + msg)
+            raise CoreError(msg)
+
+    def __str__(self):
+        """Return a string formatted to display self.
+
+        Args:
+            None
+
+        Returns:
+            display_text (str): String representation of self.
+        """
+
+        _type = self.__class__.__name__  # Child class name as string.
+        display_text = 'Type: {}\nID: {}\n\n{}'.format(_type, self.id, self.note)
+        return display_text
 
     def to_dict(self):
         """Return a dictionary representation of _Note.
@@ -61,166 +107,59 @@ class _NoteTemplate:
             note (dict): A dictionary of this object's attrs as keys, and their values.
         """
 
+        log.debug(f'{self.__repr__()} to_dict...')
+
         note = self.__dict__
+        note = copy.deepcopy(note)  # Keep integrity of __dict__.
         note['_type'] = self.__class__.__name__
 
+        log.debug(f'{self.__repr__()} to_dict.')
         return note
 
-    def text_display(self):
-        """Return a string formatted to display self. Return is an easy to read text representation.
 
-        Args:
-            None
-
-        Returns:
-            display_text (str): Attributes from self formatted into easy to read text.
-        """
-
-        template = self.to_dict()
-        display_text = 'Type: {}\nID: {}\n\n{}'.format(template['_type'], template['id'], template['note'])
-        return display_text
-
-
-class Limited(_NoteTemplate):
+# TODO (GS): Change name of class. class name should be noun. function name should be verbs.
+class LimitedExam(_Template):
     """Child class of _Note. Objects of this type represent a limited note template."""
 
-    def __init__(self, template):
-        """
-        Args:
-            template (dict): Note template.
 
-        Returns:
-            None
-        """
-
-        super().__init__(template)
-
-    def to_dict(self):
-        """Return a dictionary representation of Limited.
-
-        Args:
-            None
-
-        Returns:
-            note (dict): A dictionary of this object's attrs as keys, and their values.
-        """
-
-        note = super().to_dict()
-
-        return note
-
-
-class Surgery(_NoteTemplate):
+class Surgery(_Template):
     """Child class of _Note. Objects of this type represent a surgery note template."""
 
-    def __init__(self, template):
-        """
-        Args:
-            template (dict): Note template.
 
-        Returns:
-            None
-        """
-
-        super().__init__(template)
-
-    def to_dict(self):
-        """Return a dictionary representation of Surgery.
-
-        Args:
-            None
-
-        Returns:
-            note (dict): A dictionary of this object's attrs as keys, and their values.
-        """
-
-        note = super().to_dict()
-
-        return note
-
-
-class Hygiene(_NoteTemplate):
+class HygieneExam(_Template):
     """Child class of _Note. Objects of this type represent a hygiene note template."""
 
-    def __init__(self, template):
-        """
-        Args:
-            template (dict): Note template.
 
-        Returns:
-            None
-        """
-
-        super().__init__(template)
-
-    def to_dict(self):
-        """Return a dictionary representation of Hygiene.
-
-        Args:
-            None
-
-        Returns:
-            note (dict): A dictionary of this object's attrs as keys, and their values.
-        """
-
-        note = super().to_dict()
-
-        return note
-
-
-class Periodic(_NoteTemplate):
+class PeriodicExam(_Template):
     """Child class of _Note. Objects of this type represent a periodic note template."""
 
-    def __init__(self, template):
-        """
-        Args:
-            template (dict): Note template.
 
-        Returns:
-            None
-        """
-
-        super().__init__(template)
-
-    def to_dict(self):
-        """Return a dictionary representation of Periodic.
-
-        Args:
-            None
-
-        Returns:
-            note (dict): A dictionary of this object's attrs as keys, and their values.
-        """
-
-        note = super().to_dict()
-
-        return note
-
-
-class Comprehensive(_NoteTemplate):
+class ComprehensiveExam(_Template):
     """Child class of _Note. Objects of this type represent a comprehensive note template."""
 
-    def __init__(self, template):
-        """
-        Args:
-            template (dict): Note template.
 
-        Returns:
-            None
-        """
+def test():
+    """Used to perform detailed module testing during development. Not for production use.
 
-        super().__init__(template)
+    Args:
+        None
 
-    def to_dict(self):
-        """Return a dictionary representation of Comprehensive.
+    Returns:
+        None
+    """
 
-        Args:
-            None
+    pass
 
-        Returns:
-            note (dict): A dictionary of this object's attrs as keys, and their values.
-        """
 
-        note = super().to_dict()
+if __name__ == '__main__':
 
-        return note
+    # Used during development. Log only stores data from latest run of if __name__ == '__main__'.
+    logging.basicConfig(
+        level=CORE_LOG_LEVEL,
+        format=f'[%(asctime)s] - {RUNTIME_ID} - %(levelname)s - [%(name)s:%(lineno)s] - %(message)s',
+        filename=CORE_LOG_FILENAME,
+        filemode='w'
+    )
+
+    test()
+
