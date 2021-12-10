@@ -1,6 +1,3 @@
-#!/usr/bin/python3
-# -*- coding: utf-8 -*-
-
 """This module performs a unittest on storage.py"""
 
 import random
@@ -9,7 +6,7 @@ import unittest
 
 import yaml
 
-from core import _NoteTemplate
+from core import _Template
 from core import ID_DIGIT_LENGTH
 
 from storage import Repo
@@ -31,7 +28,7 @@ def create_random(num=20):
         notes (list [dict]): List of dictionaries representing note templates. keys='_type', 'id', 'note'.
     """
 
-    subclasses = [cls.__name__ for cls in _NoteTemplate.__subclasses__()]  # List of note template classes.
+    subclasses = [cls.__name__ for cls in _Template.__subclasses__()]  # List of note template classes.
     notes = []
 
     for n in range(num):
@@ -117,13 +114,17 @@ class TestStorage(unittest.TestCase):
 
         with open(DEFAULT_RECORDS_FILENAME, 'r') as infile:
             records = yaml.full_load(infile)
-            for record in records:
-                test_records.append(record)
+            # Check if storage file contains data.
+            if records is not None:
+                for record in records:
+                    test_records.append(record)
 
-        for record in test_records:
-            self.assertIn('_type', record)
-            self.assertIn('id', record)
-            self.assertIn('note', record)
+                for record in test_records:
+                    self.assertIn('_type', record)
+                    self.assertIn('id', record)
+                    self.assertIn('note', record)
+            else:  # Execute when storage file contains no data.
+                self.assertEqual(records, None)
 
     def test_id_duplicates(self):
         """Test Repo._id to make sure it is not storing duplicate values."""
