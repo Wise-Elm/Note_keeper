@@ -8,7 +8,7 @@ from os.path import exists
 
 import yaml
 
-from core import _NoteTemplate
+from core import _Template
 from core import ID_DIGIT_LENGTH
 from core import RUNTIME_ID
 
@@ -35,11 +35,11 @@ class Repo:
         log.debug('Initializing...')
 
         # Prepare self.notes with keys and empty lists corresponding to template classes.
-        class_names = [cls.__name__ for cls in _NoteTemplate.__subclasses__()]  # Generate list of template class names.
+        class_names = [cls.__name__ for cls in _Template.__subclasses__()]  # Generate list of template class names.
         classes = {_class: [] for _class in class_names}  # Keys = Template class, values = [].
         self.note_templates = classes  # Dictionary: keys=template class names, values=[note templates].
 
-        subclass_obj = _NoteTemplate.__subclasses__()  # Generate list of template class objects.
+        subclass_obj = _Template.__subclasses__()  # Generate list of template class objects.
         # Generate dictionary of template class names as keys and objects as values.
         subclasses = dict(zip(class_names, subclass_obj))
         self.subclasses = subclasses  # Dictionary: keys=template class names, values=associated template class object.
@@ -243,6 +243,9 @@ def test():
         None
     """
 
+    r = Repo()
+    r.load()
+
     pass
 
 
@@ -256,5 +259,5 @@ if __name__ == '__main__':
         filemode='w'
     )
 
-    storage_self_test()
-    # test()
+    # storage_self_test()
+    test()
