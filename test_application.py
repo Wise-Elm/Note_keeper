@@ -12,14 +12,20 @@ import yaml
 from application import Application
 
 from core import ID_DIGIT_LENGTH
-from core import _NoteTemplate
+from core import _Template
 
-app = Application()
+from storage import Repo
 
 APPLICATION_TESTING_RECORDS_FILENAME = 'application_test.yaml'
 
+app = Application()
+repo = Repo()
+repo.load(APPLICATION_TESTING_RECORDS_FILENAME)
+app.templates = repo.note_templates
 
-def create_random(num=20):
+
+
+def create_random(num=50):
     """Generate random note_templates for unittest.
 
     Args:
@@ -29,7 +35,7 @@ def create_random(num=20):
         notes (list [dict]): List of dictionaries representing note templates. keys='_type', 'id', 'note'.
     """
 
-    subclasses = [cls.__name__ for cls in _NoteTemplate.__subclasses__()]  # List of note template classes.
+    subclasses = [cls.__name__ for cls in _Template.__subclasses__()]  # List of note template classes.
     notes = []
 
     for n in range(num):
@@ -123,15 +129,17 @@ class TestApplication(unittest.TestCase):
 
         random_name = random.choice(app.subclass_names)
         random_obj = random.choice(app.templates[random_name])
-        first_template = random_obj.text_display()
-        second_template = app.display_template(random_obj.to_dict()['_type'], random_obj.to_dict()['id'])
+        first_template = random_obj.__str__()
+        second_template = app.display_template(random_obj.to_dict()['_type'], random_obj.id)
 
-        self.assertEqual(first_template, second_template)
+        # index 0 on second template since display_template() has multiple returns.
+        self.assertEqual(first_template, second_template[0])
 
     def test_delete_template(self):
         """Test Application.delete_template()."""
 
         test_template = random.choice(app.subclass_names)
+        x = app.templates  # TODO(GS): Why is app.templates keys often empty?
         test_template = random.choice(app.templates[test_template])
 
         # Confirm length of list before object is removed.
@@ -169,6 +177,7 @@ class TestApplication(unittest.TestCase):
 
         # Confirm edited note template was added to Application.template correctly.
         self.assertDictEqual(modified_template, new_template.to_dict())
+
 
 
 if __name__ == '__main__':
