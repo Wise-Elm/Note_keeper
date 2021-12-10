@@ -21,12 +21,14 @@ from datetime import date
 import logging
 from random import randint
 
-from core import _NoteTemplate
+from core import _Template
 from core import ID_DIGIT_LENGTH
 from core import RUNTIME_ID
 
+
 from storage import Repo
 from storage import storage_self_test
+
 
 LOG_FILENAME = 'application.log'
 DEFAULT_LOG_LEVEL = logging.DEBUG
@@ -52,7 +54,7 @@ class Application:
         self.templates = self.repo.note_templates  # Dictionary: keys=template class names, values=[note templates].
         self._id = self.repo.id_  # List storing template id's for each note template.
         # List of valid template classes.
-        self.subclass_names = [cls.__name__ for cls in _NoteTemplate.__subclasses__()]
+        self.subclass_names = [cls.__name__ for cls in _Template.__subclasses__()]
         # Dictionary: keys=template class names, values=associated template class object.
         self.subclasses = self.repo.subclasses
 
@@ -86,7 +88,7 @@ class Application:
             'note': new_template['note']
         }
 
-        subclass_obj = _NoteTemplate.__subclasses__()  # Generate list of template class objects.
+        subclass_obj = _Template.__subclasses__()  # Generate list of template class objects.
         # Generate dictionary of template class names as keys and objects as values.
         subclasses_w_obj = dict(zip(self.subclass_names, subclass_obj))
 
@@ -152,18 +154,16 @@ class Application:
             else:
                 _id = int(_id)
 
-        _type = _type.title()
-
         if _type not in self.templates:  # Check legality of _type.
             msg = 'Entered type is not valid.'
             log.debug(msg)
             raise ApplicationError(msg)
 
-        for template in self.templates[_type.title()]:
+        for template in self.templates[_type]:
             if template.id == _id:
                 msg = 'Template found.'
                 log.debug(msg)
-                return template.text_display(), msg
+                return template.__str__(), msg
 
         # When template not found.
         msg = f'Template with type: {_type}, id: {_type} NOT found.'
@@ -185,8 +185,6 @@ class Application:
 
         log.debug('Compiling display data...')
 
-        _type = _type.title()
-
         if _type not in self.templates:  # Check legality of _type.
             msg = 'Entered type is not valid.'
             log.debug(msg)
@@ -194,8 +192,8 @@ class Application:
 
         long_text = ''
         num = 1
-        for template in self.templates[_type.title()]:
-            out_str = f'\n\nNumber: {num}\n' + template.text_display() + '\n'
+        for template in self.templates[_type]:
+            out_str = f'\n\nNumber: {num}\n' + template.__str__() + '\n'
             long_text += out_str
             num += 1
 
@@ -224,8 +222,6 @@ class Application:
                 raise ApplicationError(msg)
             else:
                 _id = int(_id)
-
-        _type = _type.title()
 
         if _type not in self.templates:  # Check legality of _type.
             msg = 'Entered type is not valid.'
@@ -266,8 +262,6 @@ class Application:
             else:
                 edited_template['id'] = int(edited_template['id'])
 
-        edited_template['_type'] = edited_template['_type'].title()
-
         if edited_template['_type'] not in self.templates:  # Check legality of _type.
             msg = 'Entered type is not valid.'
             log.debug(msg)
@@ -297,7 +291,7 @@ class Application:
             raise ApplicationError(msg)
 
         # Delete original template.
-        self.delete_template(original_template.to_dict()['_type'], original_template.to_dict()['id'])
+        self.delete_template(original_template.to_dict()['_type'], original_template.id)
 
         # Add new template.
         result = self.add_template(new_template=edited_template, _id=edited_template['id'])
@@ -392,7 +386,7 @@ def persistent():
             type_ = input('Enter note type: ')
             note = input('Enter note: ')
             try:
-                result = app.add_template({'_type': type_.title(), 'note': note})
+                result = app.add_template({'_type': type_, 'note': note})
                 print(f'New note template:\n\n{result}\n')
                 print('Note template has been added.')
             except ApplicationError as AE:
@@ -437,7 +431,7 @@ def persistent():
 
         elif arg.lower() == 'edit' or arg.lower() == 'e':
             print(f'Available types: {app.subclass_names}.')
-            type_ = input('Type to edit: ').title()
+            type_ = input('Type to edit: ')
             id_ = int(input('Id to edit: '))
             print('Enter key will input the note. To move to a new line rather than hitting enter type "\ n", without'
                   ' the space.')
@@ -505,8 +499,8 @@ def parse_args(argv=sys.argv):
     parser.add_argument(
         '-a',
         '--all',
-        help='Display all note templates for argument type. Avaliable note types: Periodic, Hygiene, Surgery, '
-             'Comprehensive, Limited.',
+        help='Display all note templates for argument type. Available note types: PeriodicExam, HygieneExam, Surgery, '
+             'ComprehensiveExam, LimitedExam.',
         nargs=1,
         default=False,
         metavar='Type.',
@@ -602,7 +596,11 @@ def handle_args(args):
 
     # Run Application.display_all_of_type().
     if args.all:
-        print(app.display_all_of_type(args.all[0]))
+        result = app.display_all_of_type(args.all[0])
+        if len(result) == 0:
+            print('No templates of that type found.')
+        else:
+            print(result)
 
     # Run Application.display_template().
     if args.display:
@@ -658,26 +656,26 @@ def self_test():
 
     repo = Repo()
 
+    # TODO (GS): make test file not need to write and read from disc.
     # Create test file.
-    records = create_random()
-    test_file = open(APPLICATION_TESTING_RECORDS_FILENAME, 'w')
-    repo._save_to_yaml(records, APPLICATION_TESTING_RECORDS_FILENAME)
-    test_file.close()
+    # records = create_random()
+    # test_file = open(APPLICATION_TESTING_RECORDS_FILENAME, 'w')
+    # repo._save_to_yaml(records, APPLICATION_TESTING_RECORDS_FILENAME)
+    # test_file.close()
 
     # Conduct unittest.
     suite = unittest.TestLoader().loadTestsFromModule(test_application)
     unittest.TextTestRunner(verbosity=2).run(suite)
 
+    # TODO (GS): make test file not need to write and read from disc.
     # Delete test file upon completion.
-    os.remove(APPLICATION_TESTING_RECORDS_FILENAME)
+    # os.remove(APPLICATION_TESTING_RECORDS_FILENAME)
 
 
 def test():
     """For development level module testing."""
-    app = Application()
-    a = app.display_template('Limited', 1549196665)
-    print(a[0])
-    app.save(app.templates)
+
+    pass
 
 
 def main():
