@@ -36,8 +36,9 @@ class Repo:
 
         # Prepare self.notes with keys and empty lists corresponding to template classes.
         class_names = [cls.__name__ for cls in _Template.__subclasses__()]  # Generate list of template class names.
-        classes = {_class: [] for _class in class_names}  # Keys = Template class, values = [].
-        self.note_templates = classes  # Dictionary: keys=template class names, values=[note templates].
+        self.subclass_names = class_names
+        self.classes = {_class: [] for _class in class_names}  # Keys = Template class, values = [].
+        self.note_templates = self.classes  # Dictionary: keys=template class names, values=[note templates].
 
         subclass_obj = _Template.__subclasses__()  # Generate list of template class objects.
         # Generate dictionary of template class names as keys and objects as values.
@@ -46,13 +47,16 @@ class Repo:
 
         self.id_ = []  # List storing template id's for each note template.
 
-    def load(self, file_path=DEFAULT_RECORDS_FILENAME):
+    def load(self, file_path=DEFAULT_RECORDS_FILENAME, _test=False):
         """Load note templates from data file."""
-
+        # TODO (GS): fix docstring.
         log.debug('Loading...')
 
-        templates = self._get_from_yaml(file_path)  # List of dictionaries of each templates.
-        self._load_obj(templates)
+        if _test is True:
+            self.note_templates = self.classes  # Reset self.note_templates by clearing template data.
+        else:
+            templates = self._get_from_yaml(file_path)  # List of dictionaries of each templates.
+            self._load_obj(templates)
 
         log.debug('Loading complete.')
 
@@ -259,5 +263,5 @@ if __name__ == '__main__':
         filemode='w'
     )
 
-    # storage_self_test()
-    test()
+    storage_self_test()
+    # test()
