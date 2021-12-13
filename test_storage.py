@@ -1,3 +1,6 @@
+#!/usr/bin/python3
+# -*- coding: utf-8 -*-
+
 """This module performs a unittest on storage.py"""
 
 import random
@@ -17,7 +20,7 @@ repo = Repo()
 
 STORAGE_TESTING_RECORDS_FILENAME = 'storage_test.yaml'
 
-
+# TODO (GS): Use testing assets from test_assets.py rather than functions from this module to create templates.
 def create_random(num=20):
     """Generate random note_templates for unittest.
 
