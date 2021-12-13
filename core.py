@@ -3,10 +3,9 @@
 
 """This module provides object classes for application.py."""
 
-# TODO (GS): eliminate unused imports.
 import copy
 import logging
-import unittest
+import unittest  # TODO (GS): Design unittest for this module.
 import uuid
 
 RUNTIME_ID = uuid.uuid4()  # Set unique id for each runtime.
@@ -117,7 +116,6 @@ class _Template:
         return note
 
 
-# TODO (GS): Change name of class. class name should be noun. function name should be verbs.
 class LimitedExam(_Template):
     """Child class of _Note. Objects of this type represent a limited note template."""
 
@@ -162,4 +160,3 @@ if __name__ == '__main__':
     )
 
     test()
-
