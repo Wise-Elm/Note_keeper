@@ -54,7 +54,7 @@ class Application:
         self.templates = self.repo.note_templates  # Dictionary: keys=template class names, values=[note templates].
         self._id = self.repo.id_  # List storing template id's for each note template.
         # List of valid template classes.
-        self.subclass_names = [cls.__name__ for cls in _Template.__subclasses__()]
+        self.subclass_names = self.repo.subclass_names
         # Dictionary: keys=template class names, values=associated template class object.
         self.subclasses = self.repo.subclasses
 
@@ -583,12 +583,12 @@ def handle_args(args):
 
     log.debug('arg_parse() arguments found.')
 
-    app = Application()
-    log.debug('Parsing arguments through application...')
-
-    if args.test:
+    if args.test:  # TODO (GS): Problem with this.
         self_test()  # Test application.py
         storage_self_test()  # Test storage.py/
+
+    app = Application()
+    log.debug('Parsing arguments through application...')
 
     # Run Application.today_date().
     if args.date:
@@ -647,29 +647,13 @@ def self_test():
         None
     """
 
-    import os
     import unittest
 
     import test_application
-    from test_application import create_random
-    from test_application import APPLICATION_TESTING_RECORDS_FILENAME
-
-    repo = Repo()
-
-    # TODO (GS): make test file not need to write and read from disc.
-    # Create test file.
-    # records = create_random()
-    # test_file = open(APPLICATION_TESTING_RECORDS_FILENAME, 'w')
-    # repo._save_to_yaml(records, APPLICATION_TESTING_RECORDS_FILENAME)
-    # test_file.close()
 
     # Conduct unittest.
     suite = unittest.TestLoader().loadTestsFromModule(test_application)
     unittest.TextTestRunner(verbosity=2).run(suite)
-
-    # TODO (GS): make test file not need to write and read from disc.
-    # Delete test file upon completion.
-    # os.remove(APPLICATION_TESTING_RECORDS_FILENAME)
 
 
 def test():
