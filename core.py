@@ -1,11 +1,10 @@
-#!/usr/bin/python3
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
 """This module provides object classes for application.py."""
 
 import copy
 import logging
-import unittest  # TODO (GS): Design unittest for this module.
 import uuid
 
 RUNTIME_ID = uuid.uuid4()  # Set unique id for each runtime.
@@ -117,27 +116,45 @@ class _Template:
 
 
 class LimitedExam(_Template):
-    """Child class of _Note. Objects of this type represent a limited note template."""
+    """Child class of _Template. Objects of this type represent a limited note template."""
 
 
 class Surgery(_Template):
-    """Child class of _Note. Objects of this type represent a surgery note template."""
+    """Child class of _Template. Objects of this type represent a surgery note template."""
 
 
 class HygieneExam(_Template):
-    """Child class of _Note. Objects of this type represent a hygiene note template."""
+    """Child class of _Template. Objects of this type represent a hygiene note template."""
 
 
 class PeriodicExam(_Template):
-    """Child class of _Note. Objects of this type represent a periodic note template."""
+    """Child class of _Template. Objects of this type represent a periodic note template."""
 
 
 class ComprehensiveExam(_Template):
-    """Child class of _Note. Objects of this type represent a comprehensive note template."""
+    """Child class of _Template. Objects of this type represent a comprehensive note template."""
+
+
+def core_self_test():
+    """Run Unittests on module.
+
+    Args:
+        None
+
+    Returns:
+        None
+    """
+
+    import unittest
+    import test_core
+
+    # Conduct unittest.
+    suite = unittest.TestLoader().loadTestsFromModule(test_core)
+    unittest.TextTestRunner(verbosity=2).run(suite)
 
 
 def test():
-    """Used to perform detailed module testing during development. Not for production use.
+    """Used to perform detailed module testing during development.
 
     Args:
         None
@@ -159,4 +176,5 @@ if __name__ == '__main__':
         filemode='w'
     )
 
-    test()
+    core_self_test()
+    # test()
