@@ -1,14 +1,17 @@
-#!/usr/bin/python3
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
 __version__ = '0.0.1'
 
 
-"""Note retrieval application.
+"""Note organization application.
+
+-This program is currently in production, and is primarily derived for the purpose of learning Python.-
 
 This application is designed to aid in writing patient notes for medical purposes. Note templates are intended to
-provide the basic structure of a patient note so that the practitioner can save time by filling in the details. This
-program provides the ability to create, display, edit, save, and delete note templates.
+provide the basic structure of a patient note so that the practitioner can save time by filling in the details rather
+than constructing a completely new note. This program provides the ability to create, display, edit, save, and delete 
+note templates.
 
 Todo:
     Configure a rotating log handler.
@@ -24,6 +27,7 @@ from random import randint
 from core import _Template
 from core import ID_DIGIT_LENGTH
 from core import RUNTIME_ID
+from core import core_self_test
 
 
 from storage import Repo
@@ -38,7 +42,6 @@ log = logging.getLogger(__name__)
 log.setLevel(DEFAULT_LOG_LEVEL)
 
 
-# TODO (GS): ApplicationError
 class ApplicationError(RuntimeError):
     """Base class for exceptions arising from this module."""
 
@@ -52,7 +55,7 @@ class Application:
         self.repo.load()
 
         self.templates = self.repo.note_templates  # Dictionary: keys=template class names, values=[note templates].
-        self._id = self.repo.id_  # List storing template id's for each note template.
+        self.id_ = self.repo.id_  # List storing template id's for each note template.
         # List of valid template classes.
         self.subclass_names = self.repo.subclass_names
         # Dictionary: keys=template class names, values=associated template class object.
@@ -109,27 +112,27 @@ class Application:
             None
 
         Returns:
-            _id (int): A unique id number that has not been used and is of the specified length.
+            id_ (int): A unique id number that has not been used and is of the specified length.
         """
 
         log.debug('Generate new id number...')
 
         unique = False
-        _len = False
-        while not unique or not _len:
-            _id = randint(int('1' + ('0' * (ID_DIGIT_LENGTH - 1))), int('9' * ID_DIGIT_LENGTH))
+        len_ = False
+        while not unique or not len_:
+            id_ = randint(int('1' + ('0' * (ID_DIGIT_LENGTH - 1))), int('9' * ID_DIGIT_LENGTH))
 
-            if len(str(_id)) == ID_DIGIT_LENGTH:
-                _len = True
-            if _id not in self._id:
+            if len(str(id_)) == ID_DIGIT_LENGTH:
+                len_ = True
+            if id_ not in self.id_:
                 unique = True
 
-            if _id is False or unique is False:
-                _id, unique = False, False
+            if id_ is False or unique is False:
+                id_, unique = False, False
 
         log.debug('New id number generated.')
 
-        return _id
+        return id_
 
     def display_template(self, _type, _id):
         """Display desired note template.
@@ -300,7 +303,7 @@ class Application:
 
         return result
 
-    def today_date(self):
+    def return_date(self):
         """Return datetime object representing today's date.
 
         Args:
@@ -389,11 +392,11 @@ def persistent():
                 result = app.add_template({'_type': type_, 'note': note})
                 print(f'New note template:\n\n{result}\n')
                 print('Note template has been added.')
-            except ApplicationError as AE:
-                print(AE)
+            except ApplicationError as ae:
+                print(ae)
 
         elif arg.lower() == 'date' or arg.lower() == 'da':
-            print(f"Today's date: {app.today_date()} (yyyy-mm-dd).")
+            print(f"Today's date: {app.return_date()} (yyyy-mm-dd).")
 
         elif arg.lower() == 'delete' or arg.lower() == 'de':
             print(f'Available types: {app.subclass_names}.')
@@ -405,8 +408,8 @@ def persistent():
                     print(result[1])
                 else:
                     print(result[1])
-            except ApplicationError as AE:
-                print(AE)
+            except ApplicationError as ae:
+                print(ae)
 
         elif arg.lower() == 'display' or arg.lower() == 'd':
             print(f'Available types: {app.subclass_names}.')
@@ -418,16 +421,16 @@ def persistent():
                     print(result[1])
                 else:
                     print(f'{result[1]}\n\n{result[0]}')
-            except ApplicationError as AE:
-                print(AE)
+            except ApplicationError as ae:
+                print(ae)
 
         elif arg.lower() == 'display type' or arg.lower() == 'dt':
             print(f'Available types: {app.subclass_names}.')
             type_ = input('Enter template type: ')
             try:
                 print(app.display_all_of_type(type_))
-            except ApplicationError as AE:
-                print(AE)
+            except ApplicationError as ae:
+                print(ae)
 
         elif arg.lower() == 'edit' or arg.lower() == 'e':
             print(f'Available types: {app.subclass_names}.')
@@ -440,8 +443,8 @@ def persistent():
             try:
                 result = app.edit_template(argument)
                 print(f'{result} has been edited.')
-            except ApplicationError as AE:
-                print(AE)
+            except ApplicationError as ae:
+                print(ae)
 
         elif arg.lower() == 'save' or arg.lower() == 's':
             app.save(app.templates)
@@ -538,7 +541,6 @@ def parse_args(argv=sys.argv):
         metavar=('ID', 'Type', 'Note')
     )
 
-    # TODO (GS): develop this argument.
     # Run Application in persistent mode through terminal.
     parser.add_argument(
         '-p',
@@ -566,7 +568,7 @@ def handle_args(args):
         None
     """
 
-    log.debug('Checking for arguments from terminal...')
+    log.debug('Checking for arguments from shell...')
 
     # Check for arguments from arg_parse()
     run_args = False
@@ -583,16 +585,21 @@ def handle_args(args):
 
     log.debug('arg_parse() arguments found.')
 
-    if args.test:  # TODO (GS): Problem with this.
+    if args.test:
+        log.debug('Begin unittest...')
+
         self_test()  # Test application.py
-        storage_self_test()  # Test storage.py/
+        storage_self_test()  # Test storage.py
+        core_self_test()  # Test core.py
+
+        log.debug('Unittest complete.')
 
     app = Application()
     log.debug('Parsing arguments through application...')
 
     # Run Application.today_date().
     if args.date:
-        print(app.today_date())
+        print(app.return_date())
 
     # Run Application.display_all_of_type().
     if args.all:
@@ -683,3 +690,4 @@ if __name__ == '__main__':
     # self_test()
     # test()
     main()
+t
