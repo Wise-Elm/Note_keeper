@@ -1,4 +1,4 @@
-#!/usr/bin/python3
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
 """This module is used to test application.py"""
@@ -12,14 +12,14 @@ from core import _Template
 
 from test_assets import create_random_id
 from test_assets import create_random_note
-from test_assets import create_random_template
+from test_assets import create_random_templates
 from test_assets import create_random_type
 
 
 # Setup instance for testing.
 app = Application()
 app.templates = {cls.__name__: [] for cls in _Template.__subclasses__()}  # Reset app.templates to unloaded format.
-app = create_random_template(app)  # Create random test data and add to instance.
+app = create_random_templates(app=app)  # Create random test data and add to instance.
 
 
 class TestApplication(unittest.TestCase):
