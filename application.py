@@ -32,7 +32,6 @@ from core import core_self_test
 
 from storage import Repo
 from storage import storage_self_test
-from storage import StorageError
 
 
 LOG_FILENAME = 'application.log'
