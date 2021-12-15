@@ -32,6 +32,7 @@ from core import core_self_test
 
 from storage import Repo
 from storage import storage_self_test
+from storage import StorageError
 
 
 LOG_FILENAME = 'application.log'
@@ -61,14 +62,21 @@ class Application:
         # Dictionary: keys=template class names, values=associated template class object.
         self.subclasses = self.repo.subclasses
 
-    def add_template(self, new_template, _id=None):
+    def add_template(self, new_template, id_=None):
         """Add new note template.
 
         Adds key('id'): value(unique 10 digit number for identification).
 
         Args:
-            new_template (dict): keys = '_type' & 'note".
-            _id (int, OPTIONAL): Used to assign specific id number to new note template.
+            new_template (dict): Dictionary representation of a note template. The id key/value is optional.
+                example:
+                    new_template = {
+                        '_type': 'Surgery,
+                        'id': 0123456789, (OPTIONAL Key/Value)
+                        'note': 'This is an example'
+                    }
+
+            id_ (int, OPTIONAL): Used to assign specific id number to new note template if desired.
 
         Returns:
             template (obj): Note template object.
@@ -83,11 +91,11 @@ class Application:
             raise ApplicationError(msg)
 
         # Format new_template Keys and values for inclusion into self.templates.
-        if _id is None:
-            _id = self._generate_random_id()
+        if id_ is None:
+            id_ = self._generate_random_id()
 
         output_template = {
-            'id': _id,
+            'id': id_,
             'note': new_template['note']
         }
 
@@ -106,13 +114,13 @@ class Application:
         return template  # type object.
 
     def _generate_random_id(self):
-        """Generate a random id number that has not been used.
+        """Generate a random id number that is unique.
 
         Args:
             None
 
         Returns:
-            id_ (int): A unique id number that has not been used and is of the specified length.
+            id_ (int): A unique id number of the proper length (ID_DIGIT_LENGTH).
         """
 
         log.debug('Generate new id number...')
@@ -134,114 +142,113 @@ class Application:
 
         return id_
 
-    def display_template(self, _type, _id):
+    def display_template(self, type_, id_):
         """Display desired note template.
 
         Args:
-            _type (str): Template class type.
-            _id (str OR int): id number for template.
+            type_ (str): Template class type. ex: 'Surgery'.
+            id_ (str OR int): id number for desired template.
 
         Returns:
-            template (str) OR (None): Note template matching the id number and _type from arguments, or None when no
-                stored template has a matching id number.
-            msg (str): Message indicating the success or failure of the function.
+            template (str): Note template matching the id number and type_ from arguments.
         """
 
         log.debug('Finding template to display...')
 
-        if type(_id) is str:  # Check legality of _id.
-            if not _id.isnumeric():
+        if type(id_) is str:  # Check legality of _id.
+            if not id_.isnumeric():
                 msg = 'Entered id is not valid. Must be all numbers.'
                 log.debug(msg)
                 raise ApplicationError(msg)
             else:
-                _id = int(_id)
+                id_ = int(id_)
 
-        if _type not in self.templates:  # Check legality of _type.
+        if type_ not in self.templates:  # Check legality of _type.
             msg = 'Entered type is not valid.'
             log.debug(msg)
             raise ApplicationError(msg)
 
-        for template in self.templates[_type]:
-            if template.id == _id:
+        for template in self.templates[type_]:
+            if template.id == id_:
                 msg = 'Template found.'
                 log.debug(msg)
-                return template.__str__(), msg
+                return template.__str__()
 
         # When template not found.
-        msg = f'Template with type: {_type}, id: {_type} NOT found.'
+        msg = f'Template with type: {type_}, id: {type_} NOT found.'
         log.debug(msg)
+        raise ApplicationError(msg)
 
-        return None, msg
-
-    def display_all_of_type(self, _type):
+    def display_all_of_type(self, type_):
         """Displays all note templates from specified type.
 
         Concatenates all from type together as one long string in the form of a text document.
 
         Args:
-            _type (str): Type of note template.
+            type_ (str): Type of note template. ex: 'Surgery'.
 
         Returns:
-            long_text (str): Formatted string containing all note templates from argument type.
+            text (str): Formatted string containing all note templates from argument type.
         """
 
         log.debug('Compiling display data...')
 
-        if _type not in self.templates:  # Check legality of _type.
-            msg = 'Entered type is not valid.'
+        if type_ not in self.templates:  # Check legality of _type.
+            msg = f'Entered type: ({type_}), is not valid.'
             log.debug(msg)
             raise ApplicationError(msg)
 
-        long_text = ''
+        text = ''
         num = 1
-        for template in self.templates[_type]:
+        for template in self.templates[type_]:
             out_str = f'\n\nNumber: {num}\n' + template.__str__() + '\n'
-            long_text += out_str
+            text += out_str
             num += 1
 
         log.debug('Display data compiled.')
 
-        return long_text
+        if len(text) == 0:
+            text = f'No templates of type: {type_} found.'
 
-    def delete_template(self, _type, _id):
+        return text
+
+    def delete_template(self, type_, id_):
         """Delete note template.
 
         Args:
-            _type (str): Template type.
-            _id (int OR str): id number for note template to delete.
+            type_ (str): Template type. ex: 'Surgery'.
+            id_ (int OR str): id number for note template to delete.
 
         Returns:
             result (Bool): True if successful, False otherwise.
-            msg (str): Message indicating the success or failure of function.
         """
 
-        log.debug(f'Deleting template. Type: {_type}, id: {_id}...')
+        log.debug(f'Deleting template. Type: {type_}, id: {id_}...')
 
-        if type(_id) is str:  # Check legality of _id.
-            if not _id.isnumeric():
-                msg = 'Entered id is not valid. Must be all numbers.'
+        if type(id_) is str:  # Check legality of _id.
+            if not id_.isnumeric():
+                msg = f'Entered id: ({id_}), is not valid. Must only contain numbers.'
                 log.debug(msg)
                 raise ApplicationError(msg)
             else:
-                _id = int(_id)
+                id_ = int(id_)
 
-        if _type not in self.templates:  # Check legality of _type.
+        if type_ not in self.templates:  # Check legality of _type.
             msg = 'Entered type is not valid.'
             log.debug(msg)
             raise ApplicationError(msg)
 
-        for template in self.templates[_type]:
-            if template.id == _id:
-                _index = self.templates[_type].index(template)
-                self.templates[_type].pop(_index)
-                msg = f'Template Type: {_type}, id: {_id}, has been deleted.'
+        for template in self.templates[type_]:
+            if template.id == id_:
+                index = self.templates[type_].index(template)
+                self.templates[type_].pop(index)
+                msg = f'Template Type: {type_}, id: {id_}, has been deleted.'
                 log.debug(msg)
-                return True, msg
+                return True
 
-        msg = f'Template Type: {_type}, id: {_id}, cannot be found and has NOT been deleted.'
+        msg = f'Template Type: {type_}, id: {id_}, cannot be found and has NOT been deleted.'
         log.debug(msg)
-        return False, msg
+        raise ApplicationError(msg)
 
     def edit_template(self, edited_template):
         """Edit note template attributes.
@@ -252,21 +259,21 @@ class Application:
             edited_template (dict): Dictionary of note template attributes.
 
         Returns:
-            result (_NoteTemplate[obj] OR None): Object if successful, None otherwise.
+            result (_NoteTemplate[obj]): Template object.
         """
 
         log.debug('Editing note template...')
 
         if type(edited_template['id']) is str:  # Check legality of id key.
             if not edited_template['id'].isnumeric():
-                msg = 'Entered id is not valid. Must be all numbers.'
+                msg = f"Entered id: {edited_template['id']}, is not valid. Must be all numbers."
                 log.debug(msg)
                 raise ApplicationError(msg)
             else:
                 edited_template['id'] = int(edited_template['id'])
 
         if edited_template['_type'] not in self.templates:  # Check legality of _type.
-            msg = 'Entered type is not valid.'
+            msg = f"Entered type: {edited_template['_type']}, is not valid."
             log.debug(msg)
             raise ApplicationError(msg)
 
@@ -297,7 +304,7 @@ class Application:
         self.delete_template(original_template.to_dict()['_type'], original_template.id)
 
         # Add new template.
-        result = self.add_template(new_template=edited_template, _id=edited_template['id'])
+        result = self.add_template(new_template=edited_template, id_=edited_template['id'])
         msg = 'Note template has been edited.'
         log.debug(msg)
 
@@ -333,9 +340,11 @@ class Application:
 
         log.debug('Saving...')
 
-        self.repo.save(templates)
-
-        log.debug('Saved.')
+        if self.repo.save(templates):
+            log.debug('Saved.')
+        else:
+            log.critical('Data could NOT be saved.')
+            raise ApplicationError('Error while attempting to save. Data not saved.')
 
 
 def persistent():
@@ -403,11 +412,7 @@ def persistent():
             type_ = input('Type to delete: ')
             id_ = input('Id to delete: ')
             try:
-                result = app.delete_template(type_, id_)
-                if result[0] is True:
-                    print(result[1])
-                else:
-                    print(result[1])
+                print(app.delete_template(type_, id_))
             except ApplicationError as ae:
                 print(ae)
 
@@ -416,11 +421,7 @@ def persistent():
             type_ = input('Enter template type: ')
             id_ = input('Enter template id: ')
             try:
-                result = app.display_template(type_, id_)
-                if result[0] is None:
-                    print(result[1])
-                else:
-                    print(f'{result[1]}\n\n{result[0]}')
+                print(app.display_template(type_, id_))
             except ApplicationError as ae:
                 print(ae)
 
@@ -436,19 +437,21 @@ def persistent():
             print(f'Available types: {app.subclass_names}.')
             type_ = input('Type to edit: ')
             id_ = int(input('Id to edit: '))
-            print('Enter key will input the note. To move to a new line rather than hitting enter type "\ n", without'
-                  ' the space.')
+            print('Enter key will input the note.')
             note = input('Enter new note: \n')
             argument = {'_type': type_, 'id': id_, 'note': note}
             try:
-                result = app.edit_template(argument)
-                print(f'{result} has been edited.')
+                app.edit_template(argument)
+                print(f'Note template has been edited.')
             except ApplicationError as ae:
                 print(ae)
 
         elif arg.lower() == 'save' or arg.lower() == 's':
-            app.save(app.templates)
-            print('Program Saved.')
+            try:
+                app.save(app.templates)
+                print('Program Saved.')
+            except ApplicationError as ae:
+                print(ae)
 
         elif arg.lower() == 'quit' or arg.lower() == 'q':
             option = input('Would you like to save y/n?: ')
@@ -603,23 +606,24 @@ def handle_args(args):
 
     # Run Application.display_all_of_type().
     if args.all:
-        result = app.display_all_of_type(args.all[0])
-        if len(result) == 0:
-            print('No templates of that type found.')
-        else:
-            print(result)
+        try:
+            print(app.display_all_of_type(args.all[0]))
+        except ApplicationError as ae:
+            print(ae)
 
     # Run Application.display_template().
     if args.display:
-        print(app.display_template(args.display[0], args.display[1]))
+        try:
+            print(app.display_template(args.display[0], args.display[1]))
+        except ApplicationError as ae:
+            print(ae)
 
     # Run Application.delete_template().
     if args.delete:
-        result = app.delete_template(args.delete[0], args.delete[1])
-        if result is True:
-            print(f'Note template has been deleted. Type: {args.delete[0]}, ID: {args.delete[1]}.')
-        else:
-            print(f'Note template could not be deleted. Type: {args.delete[0]}, ID: {args.delete[1]}.')
+        try:
+            print(app.delete_template(args.delete[0], args.delete[1]))
+        except ApplicationError as ae:
+            print(ae)
 
     # Run Application.edit_template().
     if args.edit:
@@ -628,12 +632,11 @@ def handle_args(args):
             '_type': args.edit[1],
             'note': args.edit[2]
         }
-
-        result = app.edit_template(arg)
-        if result is None:
-            print('Note template has NOT been modified!')
-        else:
-            print(f'{result} has been modified.')
+        try:
+            result = app.edit_template(arg)
+            print(result.to_dict()['_type'] + ', id: ' + str(result.to_dict()['id']) + ', has been edited.')
+        except ApplicationError as ae:
+            print(ae)
 
     if args.persistent:
         persistent()
@@ -690,4 +693,3 @@ if __name__ == '__main__':
     # self_test()
     # test()
     main()
-t
