@@ -58,7 +58,7 @@ class TestApplication(unittest.TestCase):
         second_template = app.display_template(random_obj.to_dict()['_type'], random_obj.id)
 
         # index 0 on second template since display_template() has multiple returns.
-        self.assertEqual(first_template, second_template[0])
+        self.assertEqual(first_template, second_template)
 
     def test_delete_template(self):  # TODO (GS): Fix docstring.
         """Test Application.delete_template()."""
@@ -80,7 +80,6 @@ class TestApplication(unittest.TestCase):
         # Add template back to prevent testing problems that arise from other unitests checking for the original testing
         # data.
         app.add_template(test_template.to_dict())
-
 
     def test_edit_template(self):  # TODO (GS): Fix docstring.
         """Test Application.edit_template()."""
