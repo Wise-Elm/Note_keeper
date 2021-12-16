@@ -97,9 +97,9 @@ def create_random_templates(app=None, repo=None, num=10):
 
         # Check to see if there are any missing note template types and fill them, only if the num argument is >= the
         # number of possible note template types.
-        if num >= len(repo.note_templates):
-            for _type in repo.note_templates:
-                if len(repo.note_templates[_type]) == 0:
+        if num >= len(repo.templates):
+            for _type in repo.templates:
+                if len(repo.templates[_type]) == 0:
                     random_note = {
                         '_type': _type,
                         'id': create_random_id(repo=repo),
