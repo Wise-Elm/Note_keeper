@@ -8,10 +8,9 @@ __version__ = '0.0.1'
 
 -This program is currently in production, and is primarily derived for the purpose of learning Python.-
 
-This application is designed to aid in writing patient notes for medical purposes. Note templates are intended to
-provide the basic structure of a patient note so that the practitioner can save time by filling in the details rather
-than constructing a completely new note. This program provides the ability to create, display, edit, save, and delete 
-note templates.
+This application is designed to aid in writing medical notes by allowing the user to construct, save, display, delete, 
+and edit note templates. Note templates are intended to provide the basic structure of a patient note so that the 
+practitioner can save time by filling the details rather than constructing a completely new note.
 
 Todo:
     Configure a rotating log handler.
@@ -47,28 +46,49 @@ class ApplicationError(RuntimeError):
 
 
 class Application:
-    """Handle interaction between program layers."""
+    """Handle interaction between program modules."""
 
     def __init__(self):
 
-        self.repo = Repo()
-        self.repo.load()
+        log.debug('Initializing...')
 
-        self.templates = self.repo.note_templates  # Dictionary: keys=template class names, values=[note templates].
+        self.repo = Repo()
+        self.repo.load()  # Automatically load data.
+
+        self.templates = self.repo.templates  # Dictionary: Keys=template class names, Values=[note templates].
+        #   Example:
+        #       self.templates = {
+        #           'LimitedExam': [LimitedExam objects],
+        #           'Surgery': [Surgery objects],
+        #           'HygieneExam': [HygieneExam objects],
+        #           'PeriodicExam': [PeriodicExam objects],
+        #           'ComprehensiveExam': [ComprehensiveExam objects]
+        #       }
+
         self.id_ = self.repo.id_  # List storing template id's for each note template.
-        # List of valid template classes.
-        self.subclass_names = self.repo.subclass_names
-        # Dictionary: keys=template class names, values=associated template class object.
-        self.subclasses = self.repo.subclasses
+
+        self.subclass_names = self.repo.subclass_names  # List of valid template classes.
+        #   Example:
+        #       self.subclass_names = ['Surgery', 'ComprehensiveExam', 'etc']
+
+        self.subclasses = self.repo.subclasses  # Dict: keys = class names, values = class objects.
+        #   Example:
+        #       self.subclasses = {
+        #           'LimitedExam': <class 'core.LimitedExam'>,
+        #           'Surgery': <class 'core.Surgery'>,
+        #           'HygieneExam': <class 'core.HygieneExam'>,
+        #           'PeriodicExam': <class 'core.PeriodicExam'>,
+        #           'ComprehensiveExam': <class 'core.ComprehensiveExam'>
+        #       }
+
+        log.debug('Initializing complete.')
 
     def add_template(self, new_template, id_=None):
         """Add new note template.
 
-        Adds key('id'): value(unique 10 digit number for identification).
-
         Args:
             new_template (dict): Dictionary representation of a note template. The id key/value is optional.
-                example:
+                Example:
                     new_template = {
                         '_type': 'Surgery,
                         'id': 0123456789, (OPTIONAL Key/Value)
@@ -89,7 +109,7 @@ class Application:
             log.critical(msg)
             raise ApplicationError(msg)
 
-        # Format new_template Keys and values for inclusion into self.templates.
+        # If id_ is None generate a new unique id.
         if id_ is None:
             id_ = self._generate_random_id()
 
@@ -98,11 +118,7 @@ class Application:
             'note': new_template['note']
         }
 
-        subclass_obj = _Template.__subclasses__()  # Generate list of template class objects.
-        # Generate dictionary of template class names as keys and objects as values.
-        subclasses_w_obj = dict(zip(self.subclass_names, subclass_obj))
-
-        _class = subclasses_w_obj[new_template['_type']]  # Select appropriate type for new_template.
+        _class = self.subclasses[new_template['_type']]  # Select appropriate object class for new template.
         template = _class(output_template)  # Instantiate template object.
 
         # Add new object to appropriate dictionary value in self.templates.
@@ -110,10 +126,10 @@ class Application:
 
         log.debug('New template added.')
 
-        return template  # type object.
+        return template  # Object.
 
     def _generate_random_id(self):
-        """Generate a random id number that is unique.
+        """Generate a unique id.
 
         Args:
             None
@@ -128,6 +144,8 @@ class Application:
         len_ = False
         while not unique or not len_:
             id_ = randint(int('1' + ('0' * (ID_DIGIT_LENGTH - 1))), int('9' * ID_DIGIT_LENGTH))
+            #   Example if ID_DIGIT_LEN == 3:
+            #       id_ = int between 100 & 999.
 
             if len(str(id_)) == ID_DIGIT_LENGTH:
                 len_ = True
@@ -142,7 +160,7 @@ class Application:
         return id_
 
     def display_template(self, type_, id_):
-        """Display desired note template.
+        """Display a note template.
 
         Args:
             type_ (str): Template class type. ex: 'Surgery'.
@@ -154,7 +172,7 @@ class Application:
 
         log.debug('Finding template to display...')
 
-        if type(id_) is str:  # Check legality of _id.
+        if type(id_) is str:  # Check legality of id_ argument.
             if not id_.isnumeric():
                 msg = 'Entered id is not valid. Must be all numbers.'
                 log.debug(msg)
@@ -162,7 +180,12 @@ class Application:
             else:
                 id_ = int(id_)
 
-        if type_ not in self.templates:  # Check legality of _type.
+        if not type(id_) is int:  # Check legality of id_ argument.
+            msg = 'Entered id is not valid. Must be all numbers.'
+            log.debug(msg)
+            raise ApplicationError(msg)
+
+        if type_ not in self.templates:  # Check legality of type_.
             msg = 'Entered type is not valid.'
             log.debug(msg)
             raise ApplicationError(msg)
@@ -181,7 +204,7 @@ class Application:
     def display_all_of_type(self, type_):
         """Displays all note templates from specified type.
 
-        Concatenates all from type together as one long string in the form of a text document.
+        Concatenates all from type together as one long string in the form of an easily readable text document.
 
         Args:
             type_ (str): Type of note template. ex: 'Surgery'.
@@ -198,16 +221,18 @@ class Application:
             raise ApplicationError(msg)
 
         text = ''
-        num = 1
+        num = 0
         for template in self.templates[type_]:
+            num += 1
             out_str = f'\n\nNumber: {num}\n' + template.__str__() + '\n'
             text += out_str
-            num += 1
 
         log.debug('Display data compiled.')
 
-        if len(text) == 0:
+        if len(text) == 0:  # When type_ is valid but no records exist.
             text = f'No templates of type: {type_} found.'
+
+        log.debug('Display data compiled.')
 
         return text
 
@@ -219,12 +244,12 @@ class Application:
             id_ (int OR str): id number for note template to delete.
 
         Returns:
-            result (Bool): True if successful, False otherwise.
+            (Bool): True if successful.
         """
 
         log.debug(f'Deleting template. Type: {type_}, id: {id_}...')
 
-        if type(id_) is str:  # Check legality of _id.
+        if type(id_) is str:  # Check legality of id_.
             if not id_.isnumeric():
                 msg = f'Entered id: ({id_}), is not valid. Must only contain numbers.'
                 log.debug(msg)
@@ -232,15 +257,20 @@ class Application:
             else:
                 id_ = int(id_)
 
-        if type_ not in self.templates:  # Check legality of _type.
+        if not type(id_) is int:  # Check legality of id_ argument.
+            msg = 'Entered id is not valid. Must be all numbers.'
+            log.debug(msg)
+            raise ApplicationError(msg)
+
+        if type_ not in self.templates:  # Check legality of type_.
             msg = 'Entered type is not valid.'
             log.debug(msg)
             raise ApplicationError(msg)
 
         for template in self.templates[type_]:
             if template.id == id_:
-                index = self.templates[type_].index(template)
-                self.templates[type_].pop(index)
+                index = self.templates[type_].index(template)  # Identify index of template to delete.
+                self.templates[type_].pop(index)  # Remove template.
                 msg = f'Template Type: {type_}, id: {id_}, has been deleted.'
                 log.debug(msg)
                 return True
@@ -252,7 +282,7 @@ class Application:
     def edit_template(self, edited_template):
         """Edit note template attributes.
 
-        Edit all attributes of a note template except the id number.
+        Allows editing of note template attributes with exception of the id.
 
         Args:
             edited_template (dict): Dictionary of note template attributes.
@@ -271,7 +301,17 @@ class Application:
             else:
                 edited_template['id'] = int(edited_template['id'])
 
-        if edited_template['_type'] not in self.templates:  # Check legality of _type.
+        if not type(edited_template['id']) is int:  # Check legality of id key.
+            msg = 'Entered id is not valid. Must be all numbers.'
+            log.debug(msg)
+            raise ApplicationError(msg)
+
+        if edited_template['_type'] not in self.templates:  # Check legality of type_.
+            msg = f"Entered type: {edited_template['_type']}, is not valid."
+            log.debug(msg)
+            raise ApplicationError(msg)
+
+        if not type(edited_template['_type']) is str:  # Check legality of type_.
             msg = f"Entered type: {edited_template['_type']}, is not valid."
             log.debug(msg)
             raise ApplicationError(msg)
@@ -299,7 +339,8 @@ class Application:
             log.debug(msg)
             raise ApplicationError(msg)
 
-        # Delete original template.
+        # Delete original template. Delete is used rather than changing origional template attributes because templates
+        # may be of a different object class.
         self.delete_template(original_template.to_dict()['_type'], original_template.id)
 
         # Add new template.
@@ -307,10 +348,14 @@ class Application:
         msg = 'Note template has been edited.'
         log.debug(msg)
 
+        log.debug('Editing note template complete.')
+
         return result
 
     def return_date(self):
         """Return datetime object representing today's date.
+
+        Used for GUI.
 
         Args:
             None
@@ -331,7 +376,15 @@ class Application:
         """Save application data.
 
         Args:
-            templates (dict{k=type, v=list[note templates]}): Keys=template type: Values=List[note templates].
+            templates (dict): Keys=template class names, Values=[note templates].
+                Example:
+                    templates = {
+                        'LimitedExam': [LimitedExam objects],
+                        'Surgery': [Surgery objects],
+                        'HygieneExam': [HygieneExam objects],
+                        'PeriodicExam': [PeriodicExam objects],
+                        'ComprehensiveExam': [ComprehensiveExam objects]
+                    }
 
         Returns:
             None
@@ -342,12 +395,17 @@ class Application:
         if self.repo.save(templates):
             log.debug('Saved.')
         else:
-            log.critical('Data could NOT be saved.')
-            raise ApplicationError('Error while attempting to save. Data not saved.')
+            msg = 'Error while attempting to save. Data not saved.'
+            log.critical(msg)
+            raise ApplicationError(msg)
+
+        log.debug('Saving complete.')
 
 
 def persistent():
     """Run application in persistent mode.
+
+    Allows user friendly interaction with program from shell.
 
     Args:
         None
@@ -360,6 +418,7 @@ def persistent():
 
     app = Application()
 
+    # Introduction graphic formatting.
     graphic_space = 9
     graphic_indent = 8
 
@@ -370,6 +429,7 @@ def persistent():
     print('\n')
     print("Application is being run in persistent mode. Enter 'menu' for a list of options, or 'quit' to exit.")
 
+    # Menu display formatting.
     menu_space = 20
     menu_indent = 4
 
@@ -391,6 +451,7 @@ def persistent():
 
         if arg.lower() == 'menu' or arg.lower() == 'help' or arg.lower() == 'h':
             print(menu)
+            continue
 
         elif arg.lower() == 'add' or arg.lower() == 'a':
             print(f'Available types: {app.subclass_names}.')
@@ -400,11 +461,14 @@ def persistent():
                 result = app.add_template({'_type': type_, 'note': note})
                 print(f'New note template:\n\n{result}\n')
                 print('Note template has been added.')
+                continue
             except ApplicationError as ae:
                 print(ae)
+                continue
 
         elif arg.lower() == 'date' or arg.lower() == 'da':
             print(f"Today's date: {app.return_date()} (yyyy-mm-dd).")
+            continue
 
         elif arg.lower() == 'delete' or arg.lower() == 'de':
             print(f'Available types: {app.subclass_names}.')
@@ -412,8 +476,10 @@ def persistent():
             id_ = input('Id to delete: ')
             try:
                 print(app.delete_template(type_, id_))
+                continue
             except ApplicationError as ae:
                 print(ae)
+                continue
 
         elif arg.lower() == 'display' or arg.lower() == 'd':
             print(f'Available types: {app.subclass_names}.')
@@ -421,16 +487,20 @@ def persistent():
             id_ = input('Enter template id: ')
             try:
                 print(app.display_template(type_, id_))
+                continue
             except ApplicationError as ae:
                 print(ae)
+                continue
 
         elif arg.lower() == 'display type' or arg.lower() == 'dt':
             print(f'Available types: {app.subclass_names}.')
             type_ = input('Enter template type: ')
             try:
                 print(app.display_all_of_type(type_))
+                continue
             except ApplicationError as ae:
                 print(ae)
+                continue
 
         elif arg.lower() == 'edit' or arg.lower() == 'e':
             print(f'Available types: {app.subclass_names}.')
@@ -442,15 +512,19 @@ def persistent():
             try:
                 app.edit_template(argument)
                 print(f'Note template has been edited.')
+                continue
             except ApplicationError as ae:
                 print(ae)
+                continue
 
         elif arg.lower() == 'save' or arg.lower() == 's':
             try:
                 app.save(app.templates)
                 print('Program Saved.')
+                continue
             except ApplicationError as ae:
                 print(ae)
+                continue
 
         elif arg.lower() == 'quit' or arg.lower() == 'q':
             option = input('Would you like to save y/n?: ')
@@ -458,11 +532,13 @@ def persistent():
                 app.save(app.templates)
                 print('Program Saved.')
                 run = False  # Quit while loop and end program.
+                continue
             elif option.lower() != 'n':
                 print('Invalid selection.')
             else:
                 print('Program not saved.')
                 run = False  # Quit while loop and end program.
+                continue
 
         else:
             print('Invalid selection.')
@@ -471,7 +547,7 @@ def persistent():
     return
 
 
-def parse_args(argv=sys.argv):
+def parse_args(argv=sys.argv):  # TODO (GS): Fix discrepancies.
     """Run program from terminal."""
 
     log.debug('parse_args...')
@@ -479,7 +555,7 @@ def parse_args(argv=sys.argv):
     parser = argparse.ArgumentParser(description='Program for aiding in writing medical patient notes. Program provides'
                                                  ' the ability to add, edit, remove, etc., note templates. Note '
                                                  'templates provide a basic pre-written note to be used as the basis '
-                                                 'for an indepth patient note.'
+                                                 'for an in depth patient note.'
                                      )
 
     # Run Application.self_test().
