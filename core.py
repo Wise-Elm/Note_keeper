@@ -25,23 +25,39 @@ class _Template:
     """ABC. Objects of this type represent a periodontal appointment note template."""
 
     def __init__(self, template):
-        self.note = template['note']  # type(str). Content of note template.
-        self.id = template['id']  # type(int). Unique identification number for note template.
-        """
-        Args:
-            template (dict): Note template.
-            
-        Returns:
-            None
+        self.id = template['id']  # type(int). Unique identification number.
+        self.note = template['note']  # type(str). Exam note.
+        """Initialize class.
+            Args:
+                template (dict): Note template.
+                    Example:
+                        template = {
+                            'id': 0123456789, (OPTIONAL Key/Value)
+                            'note': 'This is an example'
+                        }
+                
+            Returns:
+                None
         """
 
     def __repr__(self):
-        return f'{self.__class__.__name__}, id: {self.id}'
+        """String representation of _Template containing technical information.
+
+            Args:
+                None
+
+            Returns:
+                result (str): String representation of self containing subclass name and id.
+        """
+
+        result = f'{self.__class__.__name__}, id: {self.id}'
+
+        return result
 
     def __eq__(self, other):
-        """Return true if other is deemed equal to this note template.
+        """Return true if other is deemed equal to self.
 
-        Compares dictionary exam type and id with objects.
+        Compares argument exam id with self.
 
         Args:
             other (dict OR Obj): Dictionary representation of a note template OR a _NoteTemplate obj.
@@ -67,7 +83,7 @@ class _Template:
                 raise CoreError(msg)
 
         # Handle _NoteTemplate as argument.
-        if isinstance(other, _Template):
+        elif isinstance(other, _Template):
             if self.id == other.id:
                 log.debug('__eq__ = True.')
                 return True
@@ -77,7 +93,7 @@ class _Template:
 
         # Handle illegal argument.
         else:
-            msg = 'Invalid Type.'
+            msg = 'Invalid ID. Comparison could not be made.'
             log.debug('__eq__ ' + msg)
             raise CoreError(msg)
 
@@ -89,6 +105,13 @@ class _Template:
 
         Returns:
             display_text (str): String representation of self.
+                Example:
+                    '
+                    Type: Surgery
+                    ID: 0123456789
+
+                    This is the note.
+                    '
         """
 
         _type = self.__class__.__name__  # Child class name as string.
@@ -96,13 +119,19 @@ class _Template:
         return display_text
 
     def to_dict(self):
-        """Return a dictionary representation of _Note.
+        """Return a dictionary representation of _Template.
 
         Args:
             None
 
         Returns:
             note (dict): A dictionary of this object's attrs as keys, and their values.
+                Example:
+                    note = {
+                        '_type': 'Surgery',
+                        'id': 0123456789,
+                        'note': 'This is an example'
+                    }
         """
 
         log.debug(f'{self.__repr__()} to_dict...')
@@ -154,14 +183,7 @@ def core_self_test():
 
 
 def test():
-    """Used to perform detailed module testing during development.
-
-    Args:
-        None
-
-    Returns:
-        None
-    """
+    """For development level module testing."""
 
     pass
 
