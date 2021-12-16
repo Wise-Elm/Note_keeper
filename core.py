@@ -32,7 +32,7 @@ class _Template:
                 template (dict): Note template.
                     Example:
                         template = {
-                            'id': 0123456789, (OPTIONAL Key/Value)
+                            'id': 0123456789,
                             'note': 'This is an example'
                         }
                 
