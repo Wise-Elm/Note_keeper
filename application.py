@@ -414,7 +414,7 @@ def persistent():
         None
     """
 
-    # TODO (GS): add logging.
+    log.debug('Program being run in persistent mode...')
 
     app = Application()
 
@@ -544,19 +544,24 @@ def persistent():
             print('Invalid selection.')
 
     print('Good bye!')
+
+    log.debug('Persistent mode has ended.')
+
     return
 
 
-def parse_args(argv=sys.argv):  # TODO (GS): Fix discrepancies.
-    """Run program from terminal."""
+def parse_args(argv=sys.argv):
+    """Setup shell environment to run program."""
 
     log.debug('parse_args...')
 
-    parser = argparse.ArgumentParser(description='Program for aiding in writing medical patient notes. Program provides'
-                                                 ' the ability to add, edit, remove, etc., note templates. Note '
-                                                 'templates provide a basic pre-written note to be used as the basis '
-                                                 'for an in depth patient note.'
-                                     )
+    # Program description.
+    parser = argparse.ArgumentParser(
+        description='This application is designed to aid in writing medical notes by allowing the user to construct, '
+                    'save, display, delete, and edit note templates. Note templates are intended to provide the basic '
+                    'structure of a patient note so that the ractitioner can save time by filling the details rather '
+                    'than constructing a completely new note.'
+    )
 
     # Run Application.self_test().
     parser.add_argument(
@@ -580,18 +585,28 @@ def parse_args(argv=sys.argv):  # TODO (GS): Fix discrepancies.
     parser.add_argument(
         '-a',
         '--all',
-        help='Display all note templates for argument type. Available note types: PeriodicExam, HygieneExam, Surgery, '
+        help='Display all note templates of a type. Available note types: PeriodicExam, HygieneExam, Surgery, '
              'ComprehensiveExam, LimitedExam.',
         nargs=1,
         default=False,
-        metavar='Type.',
+        metavar='Type',
+    )
+
+    # Run Application.add_template().
+    parser.add_argument(
+        '-x',
+        '--add',
+        help='Add a new note template. Note must be surrounded by quotation marks.',
+        nargs=2,
+        default=False,
+        metavar=('Type', 'Note')
     )
 
     # Run Application.display_template().
     parser.add_argument(
         '-w',
         '--display',
-        help='Display a specific note template. Args=(type, id#).',
+        help='Display a specific note template.',
         nargs=2,
         default=False,
         metavar=('Type', 'ID')
@@ -601,7 +616,7 @@ def parse_args(argv=sys.argv):  # TODO (GS): Fix discrepancies.
     parser.add_argument(
         '-l',
         '--delete',
-        help='Delete a specific note template. Args=(type, id#)',
+        help='Delete a specific note template.',
         nargs=2,
         default=False,
         metavar=('Type', 'ID')
@@ -611,9 +626,8 @@ def parse_args(argv=sys.argv):  # TODO (GS): Fix discrepancies.
     parser.add_argument(
         '-e',
         '--edit',
-        help="Edit specified note template. Args=(id, type, 'note'). Id is immutable and must exist. Type and note will"
-             " change to input. note must be surrounded by quotation marks: ''."
-             "will change to inputs.",
+        help="Edit a note template. Args=(id, type, 'note'). Id is immutable and must exist. Type and note will"
+             " change to input. Note must be surrounded by quotation marks.",
         nargs=3,
         default=False,
         metavar=('ID', 'Type', 'Note')
@@ -679,6 +693,19 @@ def handle_args(args):
     if args.date:
         print(app.return_date())
 
+    # Run Application.add_template().
+    if args.add:
+        arg = {
+            '_type': args.add[0],
+            'note': args.add[1]
+        }
+        try:
+            result = app.add_template(arg)
+            print(f"Note template Type: {result.to_dict()['_type']}, has been added.")
+            app.save(app.templates)
+        except ApplicationError as ae:
+            print(ae)
+
     # Run Application.display_all_of_type().
     if args.all:
         try:
@@ -696,7 +723,10 @@ def handle_args(args):
     # Run Application.delete_template().
     if args.delete:
         try:
-            print(app.delete_template(args.delete[0], args.delete[1]))
+            result = app.delete_template(args.delete[0], args.delete[1])
+            if result is True:
+                print('Note template has been deleted.')
+                app.save(app.templates)
         except ApplicationError as ae:
             print(ae)
 
@@ -710,6 +740,7 @@ def handle_args(args):
         try:
             result = app.edit_template(arg)
             print(result.to_dict()['_type'] + ', id: ' + str(result.to_dict()['id']) + ', has been edited.')
+            app.save(app.templates)
         except ApplicationError as ae:
             print(ae)
 
@@ -721,9 +752,6 @@ def handle_args(args):
 
 def self_test():
     """Run Unittests on module.
-
-        Runs when application.py is called directly. Creates a new yaml file with random records for testing. Conducts
-        testing with Unittest, and deletes test file when complete.
 
     Args:
         None
