@@ -15,7 +15,7 @@ from core import RUNTIME_ID
 
 DEFAULT_RECORDS_FILENAME = 'records.yaml'
 STORAGE_LOG_FILENAME = 'storage.log'  # Used when __name__ == '__main__'
-STORAGE_LOG_LEVEL = logging.DEBUG  # Used when __name__ == '__main__'
+STORAGE_LOG_LEVEL = logging.DEBUG
 
 
 # Configure logging.
@@ -69,6 +69,7 @@ class Repo:
         #       }
 
         self.id_ = []  # List storing template id's for each note template.
+        """Initialize class."""
 
         log.debug('Initializing complete.')
 
@@ -77,7 +78,7 @@ class Repo:
 
         log.debug('Loading...')
 
-        templates = self._get_from_yaml(file_path)  # List of dictionaries of each templates.
+        templates = self._get_from_yaml(file_path)  # List of dictionaries representing each template.
         self._load_obj(templates)
 
         log.debug('Loading complete.')
@@ -86,15 +87,18 @@ class Repo:
         """Retrieve data from yaml file.
 
         Args:
-            file_path (str): Filepath for yaml file.
+            file_path (str): Filepath for yaml file. New file will be constructed if it does not already exist.
 
         Returns:
-            patient_records (lst [dict]): List of dictionaries containing note templates.
+            records (lst [dict]): List of dictionaries containing note template attributes.
+                Example:
+                    records = [
+                        {'_type': 'LimitedExam', 'id': 0123456789, 'note': 'This is a note.'},
+                        {'_type': 'Surgery', 'id': 1234567890, 'note': 'This is another note.'},
+                    ]
         """
 
         log.debug(f'Retrieving data from {file_path}...')
-
-        templates = []
 
         # Check if .yaml data file exists. Create file if False.
         file_exists = exists(file_path)  # Bool
@@ -104,8 +108,6 @@ class Repo:
 
         with open(file_path, 'r') as infile:
             records = yaml.full_load(infile) or []
-            for record in records:
-                templates.append(record)
 
         log.debug(f'Retrieving data from {file_path} complete.')
 
