@@ -34,18 +34,43 @@ class Repo:
 
         log.debug('Initializing...')
 
-        # Prepare self.notes with keys and empty lists corresponding to template classes.
-        class_names = [cls.__name__ for cls in _Template.__subclasses__()]  # Generate list of template class names.
-        self.subclass_names = class_names
-        self.classes = {_class: [] for _class in class_names}  # Keys = Template class, values = [].
-        self.note_templates = self.classes  # Dictionary: keys=template class names, values=[note templates].
+        self.subclass_names = [cls.__name__ for cls in _Template.__subclasses__()]  # List of template class names.
+        #   Example:
+        #       self.class_names = ['Surgery', 'ComprehensiveExam', 'etc']
 
-        subclass_obj = _Template.__subclasses__()  # Generate list of template class objects.
-        # Generate dictionary of template class names as keys and objects as values.
-        subclasses = dict(zip(class_names, subclass_obj))
-        self.subclasses = subclasses  # Dictionary: keys=template class names, values=associated template class object.
+        self.classes = {_class: [] for _class in self.subclass_names}  # Keys = Template class, values = [empty].
+        #   Construct dictionary format for use with self.templates.
+        #   Example:
+        #       self.classes = {
+        #           'LimitedExam': [],
+        #           'Surgery': [],
+        #           'HygieneExam': [],
+        #           'PeriodicExam': [],
+        #           'ComprehensiveExam': []
+        #       }
+
+        self.templates = self.classes  # Dictionary: keys=template class names, values=[note templates].
+        #   Values will be populated with loaded data.
+
+        subclass_obj = _Template.__subclasses__()
+        #   Gather _Template child class objects and insert them into a list.
+        #   Example:
+        #       subclass_obj = [<class 'core.LimitedExam'>, <class 'core.Surgery'>, <class 'core.HygieneExam'>, etc.]
+
+        self.subclasses = dict(zip(self.subclass_names, subclass_obj))
+        #   Dictionary of template class names as keys and corresponding objects as values.
+        #   Example:
+        #       self.subclasses = {
+        #           'LimitedExam': <class 'core.LimitedExam'>,
+        #           'Surgery': <class 'core.Surgery'>,
+        #           'HygieneExam': <class 'core.HygieneExam'>,
+        #           'PeriodicExam': <class 'core.PeriodicExam'>,
+        #           'ComprehensiveExam': <class 'core.ComprehensiveExam'>
+        #       }
 
         self.id_ = []  # List storing template id's for each note template.
+
+        log.debug('Initializing complete.')
 
     def load(self, file_path=DEFAULT_RECORDS_FILENAME):
         """Load note templates from data file."""
@@ -121,7 +146,7 @@ class Repo:
         note = _class(template)
 
         try:  # Add add object to self.note_templates.
-            self.note_templates[template['_type']].append(note)
+            self.templates[template['_type']].append(note)
         except StorageError('Unable to instantiate template object for {}'.format(template['id'])) as e:
             log.critical(f'{e}')
 
