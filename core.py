@@ -10,7 +10,7 @@ import uuid
 RUNTIME_ID = uuid.uuid4()  # Set unique id for each runtime.
 ID_DIGIT_LENGTH = 10
 CORE_LOG_FILENAME = 'core.log'  # Used when __name__ == '__main__'
-CORE_LOG_LEVEL = logging.DEBUG  # Used when __name__ == '__main__'
+CORE_LOG_LEVEL = logging.DEBUG
 
 # Configure logging.
 log = logging.getLogger(__name__)
