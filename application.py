@@ -23,7 +23,6 @@ from datetime import date
 import logging
 from random import randint
 
-from core import _Template
 from core import ID_DIGIT_LENGTH
 from core import RUNTIME_ID
 from core import core_self_test
