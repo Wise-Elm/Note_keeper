@@ -10,19 +10,55 @@ from core import _Template  # ABC.
 
 from test_assets import create_random_template
 
-# Setup elements for testing.
-class_names = [cls.__name__ for cls in _Template.__subclasses__()]  # Generate list of template subclasses.
-subclass_obj = _Template.__subclasses__()  # Generate list of template subclass objects.
-# Generate dictionary of template class names as keys and objects as values.
-subclasses = dict(zip(class_names, subclass_obj))
 
-# Randomly choose instance attributes in instantiate.
+# Setup elements for testing.
+
+class_names = [cls.__name__ for cls in _Template.__subclasses__()]
+# Generate list of template subclasses.
+#   Example:
+#       class_names = ['Surgery', 'ComprehensiveExam', 'etc']
+
+subclass_obj = _Template.__subclasses__()
+# Generate list of template subclass objects.
+#   Example:
+#       subclass_obj = [<class 'core.LimitedExam'>, <class 'core.Surgery'>, <class 'core.HygieneExam'>, etc.]
+
+
+subclasses = dict(zip(class_names, subclass_obj))
+# Generate dictionary of template class names as keys and objects as values.
+#   Example:
+#       self.subclasses = {
+#           'LimitedExam': <class 'core.LimitedExam'>,
+#           'Surgery': <class 'core.Surgery'>,
+#           'HygieneExam': <class 'core.HygieneExam'>,
+#           'PeriodicExam': <class 'core.PeriodicExam'>,
+#           'ComprehensiveExam': <class 'core.ComprehensiveExam'>
+#       }
+
+
+# Randomly choose instance attributes to instantiate.
+
 choice = random.choice(class_names)  # Choose class type.
-template = create_random_template(type_=choice)  # Dictionary of randomly chosen attributes for chosen class type.
+
+template = create_random_template(type_=choice)
+# Dictionary of randomly chosen attributes for chosen class type.
+#   Example:
+#       template = {
+#           '_type': 'Surgery,
+#           'id': 0123456789,
+#           'note': 'This is a note.'
+#       }
+
 test_class = subclasses[choice]  # Identify child class object.
 instance = test_class(template)  # Instantiate instance.
 
-instance_dict = instance.to_dict()
+instance_dict = instance.to_dict()  # to_dict() used on object used to make sure it is instantiated correctly.
+#   Example:
+#       instance_dict = {
+#           '_type': 'Surgery,
+#           'id': 0123456789,
+#           'note': 'This is a note.'
+#       }
 
 
 class TestCore(unittest.TestCase):
