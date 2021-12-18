@@ -18,8 +18,26 @@ from test_assets import create_random_type
 
 # Setup instance for testing.
 app = Application()
+
 app.templates = {cls.__name__: [] for cls in _Template.__subclasses__()}  # Reset app.templates to unloaded format.
+#   Example:
+#       app.templates = {
+#           'LimitedExam': [],
+#           'Surgery': [],
+#           'HygieneExam': [],
+#           'PeriodicExam': [],
+#           'ComprehensiveExam': []
+#       }
+
 app = create_random_templates(app=app)  # Create random test data and add to instance.
+#   Example:
+#       app.templates = {
+#           'LimitedExam': [LimitedExam objects],
+#           'Surgery': [Surgery objects],
+#           'HygieneExam': [HygieneExam objects],
+#           'PeriodicExam': [PeriodicExam objects],
+#           'ComprehensiveExam': [ComprehensiveExam objects]
+#       }
 
 
 class TestApplication(unittest.TestCase):
@@ -29,7 +47,7 @@ class TestApplication(unittest.TestCase):
         """Test Application.add_template().
 
         Asserts that the template object is added correctly be checking the length of the template object list for the
-        corresponding template type before and after it is added, as asserts that the template is instantiated into the
+        corresponding template type before and after it is added, and asserts that the template is instantiated into the
         correct object parent and child classes.
         """
 
@@ -49,19 +67,27 @@ class TestApplication(unittest.TestCase):
         self.assertIsInstance(new_template_obj, app.subclasses[random_note['_type']])
         self.assertIsInstance(new_template_obj, _Template)
 
-    def test_display_template(self):  # TODO (GS): Fix docstring.
-        """Test Application.display_template()."""
+    def test_display_template(self):
+        """Test Application.display_template().
+
+        Assert that template objects are displayed correctly by using app.display_template to generate one
+        representation, and comparing that against another representation derived from template objects __str__()
+        method.
+        """
 
         random_name = random.choice(app.subclass_names)
         random_obj = random.choice(app.templates[random_name])
         first_template = random_obj.__str__()
         second_template = app.display_template(random_obj.to_dict()['_type'], random_obj.id)
 
-        # index 0 on second template since display_template() has multiple returns.
         self.assertEqual(first_template, second_template)
 
-    def test_delete_template(self):  # TODO (GS): Fix docstring.
-        """Test Application.delete_template()."""
+    def test_delete_template(self):
+        """Test Application.delete_template().
+
+        Picks a random note template from instance, asserts the existence of template, deletes template, and asserts the
+        non existence to template. After testing, adds template object back into instance.
+        """
 
         test_template = random.choice(app.subclass_names)
         test_template = random.choice(app.templates[test_template])
@@ -81,8 +107,11 @@ class TestApplication(unittest.TestCase):
         # data.
         app.add_template(test_template.to_dict())
 
-    def test_edit_template(self):  # TODO (GS): Fix docstring.
-        """Test Application.edit_template()."""
+    def test_edit_template(self):
+        """Test Application.edit_template().
+
+        Tests that objects are edited properly by editing a template and confirming the proper changes are made.
+        """
 
         _type = random.choice(app.subclass_names)
         pick = random.choice(app.templates[_type])
