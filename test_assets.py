@@ -19,21 +19,20 @@ class TestingError(RuntimeError):
 
 
 def create_random_templates(app=None, repo=None, num=10):
-    """Generate randomized note_templates for unittest and populates argument instance.
+    """Generate randomized note templates for unittest and populate argument instance.
 
-    Only one instance can be used at a time, either app OR repo. Will either populate app.templates, OR
-    repo.note_templates
+    One instance must be used, either app OR repo. Will either populate app.templates, OR repo.note_templates.
 
     Args:
-        app (instance, OPTIONAL OR None): Instance of Application class from application.py for application testing.
-        repo (instance, OPTIONAL OR None: Instance of Repo class from storage.py for storage testing.
-        num (int, OPTIONAL): Number of note templates to generate. Defaults to 10.
+        app (instance, OPTIONAL OR None): First parameter. Instance of Application class from application.py for
+            application testing.
+        repo (instance, OPTIONAL OR None): Second parameter. Instance of Repo class from storage.py for storage testing.
+        num (int, OPTIONAL): Third parameter. Number of note templates to generate. Defaults to 10.
 
     Returns:
         app OR repo (instance): app instance if app!=None, or repo instance if repo!=None.
 
-            example:
-                app instance where app.templates is populated.
+            Example of app instance after return. app.templates will be populated:
                 app.templates = {
                     'LimitedExam': [LimitedExam objects],
                     'Surgery': [Surgery objects],
@@ -128,18 +127,20 @@ def create_random_template(type_):
     return template
 
 
-def create_random_id(app=None, repo=None, id_len=ID_DIGIT_LENGTH):  # TODO (GS): Fix docstring.
+def create_random_id(app=None, repo=None, id_len=ID_DIGIT_LENGTH):
     """Generate a random template id number.
-    
-    Only one instance can be used at a time, either app OR repo.
+
+    Will generate and return a legal template id if no instance is passed. Will populate an instance if an instance is
+    passed. Only one instance can be passed at a time, either app or repo, and not both.
 
     Args:
-        app (instance, OPTIONAL OR None): Instance of Application class from application.py for application testing.
-        repo (instance, OPTIONAL OR None: Instance of Repo class from storage.py for storage testing.
-        id_len (int, OPTIONAL): Length of id number. Defaults to ID_DIGIT_LENGTH.
+        app (instance, OPTIONAL OR None): First parameter. Instance of Application class from application.py for
+            application testing.
+        repo (instance, OPTIONAL OR None): Second parameter. Instance of Repo class from storage.py for storage testing.
+        id_len (int, OPTIONAL): Third parameter. Length of id number. Defaults to ID_DIGIT_LENGTH.
 
     Returns:
-        id_ (int): Number that is of length len_, and is unique to the instance.
+        id_ (int): Integer that is of length id_len, and is unique to the instance if an instance is passed.
     """
 
     if app is not None and repo is not None:
@@ -150,28 +151,36 @@ def create_random_id(app=None, repo=None, id_len=ID_DIGIT_LENGTH):  # TODO (GS):
     len_ = False
     while not unique or not len_:
         id_ = randint(int('1' + ('0' * (id_len - 1))), int('9' * id_len))
+        #   Example if ID_DIGIT_LEN == 3:
+        #       id_ = int between 100 & 999.
 
-        if len(str(id_)) == id_len:
+        if len(str(id_)) == id_len:  # Check length.
             len_ = True
-        if app is not None:
-            if id_ not in app.id_:  # For instance of application.
+
+        if app is not None:  # If instance of app, check if id_ is a duplicate.
+            if id_ not in app.id_:
                 unique = True
-        elif repo is not None:
-            if id_ not in repo.id_:  # For instance of repo.
+
+        elif repo is not None:  # If instance of repo, check if id_ is a duplicate.
+            if id_ not in repo.id_:
                 unique = True
+
         elif app is None and repo is None:  # For generating an id outside of an instance, don't worry about uniqueness.
             unique = True
-        if len_ is False or unique is False:
+
+        if len_ is False or unique is False:  # Reset unique and len_ variables when checks are not passed.
             id_, unique = False, False
 
     return id_
 
 
 def create_random_type(subclasses):
-    """Generate a random class for note template.
+    """Generate a random class for a note template.
 
     Args:
-        subclasses (list [str(_Template.__subclasses__()])): List of class names.
+        subclasses (lst [str]): List of legal class names.
+            Example:
+                subclasses = ['Surgery', 'ComprehensiveExam', 'etc']
 
     Returns:
         choice (str): Random class chosen from subclasses.
@@ -183,11 +192,11 @@ def create_random_type(subclasses):
 
 
 def create_random_note(min_len=500, max_len=3000):
-    """Generate a random note.
+    """Generate a note filled with random alphabetical characters and spaces.
 
     Args:
-        min_len (int, OPTIONAL): Minimum character length for note. Default to 500 characters.
-        max_len (int, OPTIONAL): Maximum character length for note. Default to 3000 characters.
+        min_len (int, OPTIONAL): First parameter. Minimum character length for note. Default to 500 characters.
+        max_len (int, OPTIONAL): Second parameter. Maximum character length for note. Default to 3000 characters.
 
     Returns:
         note (str): String of random alphabetical and space characters of length between min_len and max_len.
