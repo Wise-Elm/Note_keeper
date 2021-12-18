@@ -74,7 +74,14 @@ class Repo:
         log.debug('Initializing complete.')
 
     def load(self, file_path=DEFAULT_RECORDS_FILENAME):
-        """Load note templates from data file."""
+        """Load note templates from data file.
+
+        Args:
+            file_path (str): File path with which to load program data. Must be .yaml file.
+
+        Returns:
+            None
+        """
 
         log.debug('Loading...')
 
@@ -114,10 +121,17 @@ class Repo:
         return records
 
     def _load_obj(self, templates):
-        """Iterate through dictionary records.
+        """Iterates through loaded data and feeds another method which instantiates template objects.
+
+        Passes loaded data to self._instantiate_template() for object instantiation.
 
         Args:
             templates (lst [dict]): List of each note template represented as a dictionary.
+                Example:
+                        templates = [
+                            {'_type': 'Surgery', 'id': 0123456789, 'note': 'This is a note.'},
+                            {'_type': 'Hygiene', 'id': 1234567890, 'note': 'This is another note.'}
+                        ]
 
         Returns:
             None
@@ -131,65 +145,77 @@ class Repo:
         log.debug('Instantiating template objects complete.')
 
     def _instantiate_templates(self, template):
-        """Instantiate template objects.
-
-        Populate self.note_templates with template objects, self.subclasses with _Note subclass objects, and self._id
-        with object id numbers.
+        """Instantiate a note template object and append it to self.templates.
 
         Args:
             template (dict): Dictionary representing a note template.
+                Example:
+                    template = {'_type': 'Surgery', 'id': 0123456789, 'note': 'This is a note.'}
 
         Returns:
             note (Obj): Object representing a note template.
         """
 
-        # Instantiate object.
-        _class = self.subclasses[template['_type']]
-        note = _class(template)
+        _class = self.subclasses[template['_type']]  # Identify class object.
+        note = _class(template)  # Instantiate class object.
+
+        self._add_id(template['id'])  # Add id to used id list (self.id_).
 
         try:  # Add add object to self.note_templates.
             self.templates[template['_type']].append(note)
         except StorageError('Unable to instantiate template object for {}'.format(template['id'])) as e:
             log.critical(f'{e}')
 
-        self._add_id(template['id'])
-
         return note
 
-    def _add_id(self, _id):
-        """Add template id to repo._id if unique. Return False otherwise.
+    def _add_id(self, id_):
+        """Add template id to repo._id if unique.
 
-        Makes sure template id is not already in repo._id and confirms proper length for id number.
+        Check legality of argument, then add to self.id_ if legal.
 
         Args:
-            _id (int): 10 digit id number.
+            id_ (int): Number representing a note template id..
 
         Returns:
             None
         """
 
-        if len(str(_id)) != ID_DIGIT_LENGTH:
-            msg = f'Error for ID #: {_id}. Must be {ID_DIGIT_LENGTH}.'
+        # Check length.
+        if len(str(id_)) != ID_DIGIT_LENGTH:
+            msg = f'Error for ID #: {id_}. Must be {ID_DIGIT_LENGTH}.'
             log.critical(msg)
             raise StorageError(msg)
-        elif _id in self.id_:
-            msg = f'Error for ID #: {_id}. ID already in use for another note template.'
+
+        # Check if already used.
+        elif id_ in self.id_:
+            msg = f'Error for ID #: {id_}. ID already in use for another note template.'
             log.critical(msg)
             raise StorageError(msg)
+
+        # Add id if checks passed.
         else:
-            self.id_.append(_id)
+            self.id_.append(id_)
 
     def save(self, templates, file_path=DEFAULT_RECORDS_FILENAME):
-        """Save data to source file.
+        """Save data to disc.
 
         Convert template objects to dictionary representations and store data.
 
         Args:
-            templates (dict): The first parameter. Dictionary of template objects.
-            file_path (str, OPTIONAL): The Second parameter. An optional file path with a default if left blank.
+            templates (dict): First parameter. Dictionary of template objects.
+                Example:
+                    self.templates = {
+                        'LimitedExam': [LimitedExam objects],
+                        'Surgery': [Surgery objects],
+                        'HygieneExam': [HygieneExam objects],
+                        'PeriodicExam': [PeriodicExam objects],
+                        'ComprehensiveExam': [ComprehensiveExam objects]
+                    }
+            file_path (str, OPTIONAL): Second parameter. File path within which to save data. Must be .yaml. If none
+                given a default file path will be used.
 
         Returns:
-            True (Bool): Returns True when successful.
+            True (Bool): True when successful.
         """
 
         log.debug(f'Saving data to {file_path}...')
@@ -199,7 +225,7 @@ class Repo:
             records = []
 
             for k, v in templates.items():
-                for note in v:
+                for note in v:  # Isolate individual template objects.
                     record = note.to_dict()
                     records.append(record)
 
@@ -210,15 +236,22 @@ class Repo:
             return True
 
         except RuntimeError:
-            msg = 'Error, could not save data.'
+            msg = 'An error occurred while saving data.'
+            log.critical(msg)
             raise StorageError(msg)
 
     def _save_to_yaml(self, records, file_path):
-        """Save to .yaml file.
+        """Save data to .yaml file.
 
         Args:
             records (lst [dict]): First parameter. List of dictionaries representing note templates.
-            file_path (str): Second parameter. String for .yaml file path.
+                Example:
+                    records = [
+                        {'_type': 'Surgery', 'id': 0123456789, 'note': 'This is a note.'},
+                        {'_type': 'Hygiene', 'id': 1234567890, 'note': 'This is another note.'}
+                    ]
+
+            file_path (str): Second parameter. File path within which to save data.
 
         Returns:
             None
