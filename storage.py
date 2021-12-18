@@ -156,8 +156,8 @@ class Repo:
             note (Obj): Object representing a note template.
         """
 
-        _class = self.subclasses[template['_type']]  # Identify class object.
-        note = _class(template)  # Instantiate class object.
+        class_ = self.subclasses[template['_type']]  # Identify class object.
+        note = class_(template)  # Instantiate class object.
 
         self._add_id(template['id'])  # Add id to used id list (self.id_).
 

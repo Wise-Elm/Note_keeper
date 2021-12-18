@@ -30,8 +30,8 @@ class TestStorage(unittest.TestCase):
     def test_id_duplicates(self):
         """Test Repo._id to confirm it is not storing duplicate values."""
 
-        _id_2 = set(repo.id_)  # Make a set version of repo._id to eliminate possible duplicates.
-        self.assertEqual(len(repo.id_), len(_id_2))
+        id_2 = set(repo.id_)  # Make a set version of repo._id to eliminate possible duplicates.
+        self.assertEqual(len(repo.id_), len(id_2))
 
     def test_add_id(self):
         """Test Repo._add_id to confirm that it will not add duplicate id's. or store id's of the wrong length"""
