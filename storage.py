@@ -164,7 +164,7 @@ class Repo:
         try:  # Add add object to self.note_templates.
             self.templates[template['_type']].append(note)
         except StorageError('Unable to instantiate template object for {}'.format(template['id'])) as se:
-            log.critical(f'{se}')
+            log.warning(f'{se}')
 
         return note
 
@@ -183,13 +183,13 @@ class Repo:
         # Check length.
         if len(str(id_)) != ID_DIGIT_LENGTH:
             msg = f'Error for ID #: {id_}. Must be {ID_DIGIT_LENGTH}.'
-            log.critical(msg)
+            log.warning(msg)
             raise StorageError(msg)
 
         # Check if already used.
         elif id_ in self.id_:
             msg = f'Error for ID #: {id_}. ID already in use for another note template.'
-            log.critical(msg)
+            log.warning(msg)
             raise StorageError(msg)
 
         # Add id if checks passed.
@@ -237,7 +237,7 @@ class Repo:
 
         except RuntimeError:
             msg = 'An error occurred while saving data.'
-            log.critical(msg)
+            log.warning(msg)
             raise StorageError(msg)
 
     def _save_to_yaml(self, records, file_path):
