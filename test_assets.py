@@ -62,7 +62,7 @@ def create_random_templates(app=None, repo=None, num=10):
                 'note': create_random_note()
             }
 
-            note = app.add_template(random_note, random_note['id'])  # Fill app.templates.
+            note = app.create_note(random_note, random_note['id'])  # Fill app.templates.
             notes.append(note)
 
         # Check to see if there are any missing note template types and fill them, only if the num argument is >= the
@@ -75,7 +75,7 @@ def create_random_templates(app=None, repo=None, num=10):
                         'id': create_random_id(app=app),
                         'note': create_random_note()
                     }
-                    note = app.add_template(random_note, random_note['id'])  # Fill app.templates.
+                    note = app.create_note(random_note, random_note['id'])  # Fill app.templates.
                     notes.append(note)
         return app
 
@@ -158,11 +158,11 @@ def create_random_id(app=None, repo=None, id_len=ID_DIGIT_LENGTH):
             len_ = True
 
         if app is not None:  # If instance of app, check if id_ is a duplicate.
-            if id_ not in app.id_:
+            if id_ not in app.ids:
                 unique = True
 
         elif repo is not None:  # If instance of repo, check if id_ is a duplicate.
-            if id_ not in repo.id_:
+            if id_ not in repo.ids:
                 unique = True
 
         elif app is None and repo is None:  # For generating an id outside of an instance, don't worry about uniqueness.

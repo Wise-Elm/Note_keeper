@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-__version__ = '0.0.1'  # TODO (GS): Version 0.1.0
+__version__ = '0.1.0'
 
 
 """Note organization application.
@@ -13,48 +13,45 @@ and edit note templates. Note templates are intended to provide the basic struct
 practitioner can save time by filling the details rather than constructing a completely new note.
 """
 
-
 # Todo (GS): Configure a rotating log handler.
 
-# Todo (GS): put in alphabetical order.
 import argparse
-import sys
 from datetime import date
 import logging
 from random import randint
+import sys
 
 from core import ID_DIGIT_LENGTH  # Todo (GS): either core.ID_DIGIT_LENGTH or import ID_DIGIT_LENGTH, RUNTIME_IT, ... coudl be ID_RANGE = (x, y)
 from core import RUNTIME_ID
 from core import core_self_test
 
-# Todo (GS): Just one space.
 from storage import Repo
 from storage import storage_self_test
 
 
-LOG_FILENAME = 'application.log'  # Todo (GS): DEFAULT_LOG_FILENAME = 'note_keeper_log.log'
+DEFAULT_LOG_FILENAME = 'note_keeper_log.log'
 DEFAULT_LOG_LEVEL = logging.DEBUG
 
 # Configure logging.
-log = logging.getLogger(__name__)  # Todo (GS): log = logging.getLogger()
-log.setLevel(DEFAULT_LOG_LEVEL)  # Todo (GS): dont set log level on this module. delete this line.
-# Todo (GS): add null handler.
+log = logging.getLogger()
+log.addHandler(logging.NullHandler())
 
-class ApplicationError(RuntimeError):  # Todo (GS): Too generic. Change to something like NoteKeeperApplicationError.
+
+class NoteKeeperApplicationError(RuntimeError):
     """Base class for exceptions arising from this module."""
 
 
-class Application:  # Todo (GS): Change to NoteKeeperApp
+class NoteKeeperApp:
     """Handle interaction between program modules."""
 
     def __init__(self):
 
-        log.debug('Initializing...')  # Todo (GS): 'Starting application' or Starting Note Keeper'.
+        log.debug('Starting Note Keeper...')
 
         self.repo = Repo()
         self.repo.load()  # Automatically load data.
 
-        self.templates = self.repo.templates  # Dictionary: Keys=template class names, Values=[note templates].  # TODO (GS): both self.templates = self.repo.templates both point to the same dictionary.
+        self.templates = self.repo.templates  # Dictionary: Keys=template class names, Values=[note templates].
         #   Example:
         #       self.templates = {
         #           'LimitedExam': [LimitedExam objects],
@@ -64,13 +61,13 @@ class Application:  # Todo (GS): Change to NoteKeeperApp
         #           'ComprehensiveExam': [ComprehensiveExam objects]
         #       }
 
-        self.id_ = self.repo.id_  # List storing template id's for each note template.  # Todo (GS): self.id is not protected. change to self.ids.
+        self.ids = self.repo.ids  # List storing template id's for each note template.
 
         self.subclass_names = self.repo.subclass_names  # List of valid template classes.  # Todo (GS): drop class names because ther are already in self.subclasses.
         #   Example:  # Todo (GS): when call to self.subclass_names it should just be a calculation of self.subclasses.
         #       self.subclass_names = ['Surgery', 'ComprehensiveExam', 'etc']
 
-        self.subclasses = self.repo.subclasses  # Dict: keys = class names, values = class objects.  # Todo (GS): self.note_classes.
+        self.note_classes = self.repo.note_classes  # Dict: keys = class names, values = class objects.
         #   Example:
         #       self.subclasses = {
         #           'LimitedExam': <class 'core.LimitedExam'>,
@@ -80,13 +77,13 @@ class Application:  # Todo (GS): Change to NoteKeeperApp
         #           'ComprehensiveExam': <class 'core.ComprehensiveExam'>
         #       }
 
-        log.debug('Initializing complete.')
+        log.debug('Note Keeper has started.')
 
-    def add_template(self, new_template, id_=None):  # TODO (GS): drop new in new_template argument. method called something like create_note
-        """Add new note template.
+    def create_note(self, new_template, id_=None):
+        """Add new note.
 
         Args:
-            new_template (dict): Dictionary representation of a note template. The id key/value is optional.
+            new_template (dict): Dictionary representation of a note. The id key/value is optional.
                 Example:
                     new_template = {
                         '_type': 'Surgery,
@@ -94,38 +91,38 @@ class Application:  # Todo (GS): Change to NoteKeeperApp
                         'note': 'This is an example'
                     }
 
-            id_ (int, OPTIONAL): Used to assign specific id number to new note template if desired.
+            id_ (int, OPTIONAL): Used to assign specific id number to new note note if desired.
 
         Returns:
-            template (obj): Note template object.  # TODO (GS): word template should be note. Don't say object. Say Return: note (_Template): New note.
+            note (_Template): New note.
         """
 
-        log.debug('Add new template...')  # TODO (GS): ('creating new note...')
+        log.debug('Creating new note...')
 
         # Check if new_template can be associated with a valid class.
         if new_template['_type'] not in self.subclass_names:
-            msg = 'Note Template type not allowed.'  # TODO (GS): add which _type is not allowed.
-            log.critical(msg)  # TODO (GS): log.critical(msg)
-            raise ApplicationError(msg)
+            msg = 'Note Template type: {}, not allowed.'.format(new_template['_type'])
+            log.warning(msg)
+            raise NoteKeeperApplicationError(msg)
 
         # If id_ is None generate a new unique id.
         if id_ is None:
             id_ = self._generate_random_id()
 
-        output_template = {  # TODO (GS): note
+        note_template = {
             'id': id_,
             'note': new_template['note']
         }
 
-        _class = self.subclasses[new_template['_type']]  # Select appropriate object class for new template.  # TODO (GS): more typical 'cls'
-        template = _class(output_template)  # Instantiate template object.  # TODO (GS): note = cls(output_template).
+        cls = self.note_classes[new_template['_type']]  # Select appropriate object class for new note.
+        note = cls(note_template)  # Instantiate note object.
 
         # Add new object to appropriate dictionary value in self.templates.
-        self.templates[str(template.__class__.__name__)].append(template)  # TODO (GS): use pointer from line 120. both line 120 & 124 point to the same thing.
+        self.templates[cls.__name__].append(note)
 
-        log.debug('New template added.')
+        log.debug('New note created and added.')
 
-        return template  # Object.  # TODO (GS): get rid of comment. return note.
+        return note
 
     def _generate_random_id(self):  # TODO (GS):  could give the note class itself the ability to generate id numbers if needed.
         """Generate a unique id.
@@ -138,21 +135,22 @@ class Application:  # Todo (GS): Change to NoteKeeperApp
         """
         # TODO (GS): classic way is to just generate a uuid module. uuid.uid4(). could use just first 5 digits, check if unique.
         log.debug('Generate new id number...')
-        # TODO (GS): bools are an exception to hungarian notation.
-        unique = False  # TODO (GS): is_unique.
-        len_ = False  # TODO (GS): is_long_enough
-        while not unique or not len_:
+
+        is_unique = False
+        is_long_enough = False
+        while not is_unique or not is_long_enough:
             id_ = randint(int('1' + ('0' * (ID_DIGIT_LENGTH - 1))), int('9' * ID_DIGIT_LENGTH))  # TODO (GS): just use randint(min, max)
             #   Example if ID_DIGIT_LEN == 3:
             #       id_ = int between 100 & 999.
 
             if len(str(id_)) == ID_DIGIT_LENGTH:  # TODO (GS):  could check it number is less than min.
-                len_ = True  # TODO (GS): add extra line :)
-            if id_ not in self.id_:
-                unique = True
+                is_long_enough = True
 
-            if id_ is False or unique is False:
-                id_, unique = False, False
+            if id_ not in self.ids:
+                is_unique = True
+
+            if id_ is False or is_unique is False:
+                id_, is_unique = False, False
 
         log.debug('New id number generated.')
 
@@ -175,19 +173,19 @@ class Application:  # Todo (GS): Change to NoteKeeperApp
             if not id_.isnumeric():
                 msg = 'Entered id is not valid. Must be all numbers.'
                 log.debug(msg)
-                raise ApplicationError(msg)
+                raise NoteKeeperApplicationError(msg)
             else:
                 id_ = int(id_)
 
         if not type(id_) is int:  # Check legality of id_ argument.
             msg = 'Entered id is not valid. Must be all numbers.'
             log.debug(msg)
-            raise ApplicationError(msg)
+            raise NoteKeeperApplicationError(msg)
 
         if type_ not in self.templates:  # Check legality of type_.
             msg = 'Entered type is not valid.'
             log.debug(msg)
-            raise ApplicationError(msg)
+            raise NoteKeeperApplicationError(msg)
 
         for template in self.templates[type_]:
             if template.id == id_:
@@ -198,7 +196,7 @@ class Application:  # Todo (GS): Change to NoteKeeperApp
         # When template not found.
         msg = f'Template with type: {type_}, id: {type_} NOT found.'
         log.debug(msg)
-        raise ApplicationError(msg)
+        raise NoteKeeperApplicationError(msg)
 
     def display_all_of_type(self, type_):  # TODO (GS): junk function. whatever calls this should concatinate the notes.
         """Displays all note templates from specified type.
@@ -217,7 +215,7 @@ class Application:  # Todo (GS): Change to NoteKeeperApp
         if type_ not in self.templates:  # Check legality of _type.
             msg = f'Entered type: ({type_}), is not valid.'
             log.debug(msg)
-            raise ApplicationError(msg)
+            raise NoteKeeperApplicationError(msg)
 
         text = ''
         num = 0
@@ -252,19 +250,19 @@ class Application:  # Todo (GS): Change to NoteKeeperApp
             if not id_.isnumeric():
                 msg = f'Entered id: ({id_}), is not valid. Must only contain numbers.'
                 log.debug(msg)
-                raise ApplicationError(msg)
+                raise NoteKeeperApplicationError(msg)
             else:
                 id_ = int(id_)
 
         if not type(id_) is int:  # Check legality of id_ argument.
             msg = 'Entered id is not valid. Must be all numbers.'
             log.debug(msg)
-            raise ApplicationError(msg)
+            raise NoteKeeperApplicationError(msg)
 
         if type_ not in self.templates:  # Check legality of type_.
             msg = 'Entered type is not valid.'
             log.debug(msg)
-            raise ApplicationError(msg)
+            raise NoteKeeperApplicationError(msg)
 
         for template in self.templates[type_]:
             if template.id == id_:
@@ -276,9 +274,9 @@ class Application:  # Todo (GS): Change to NoteKeeperApp
 
         msg = f'Template Type: {type_}, id: {id_}, cannot be found and has NOT been deleted.'
         log.debug(msg)
-        raise ApplicationError(msg)
+        raise NoteKeeperApplicationError(msg)
 
-    def edit_template(self, edited_template):  # TODO (GS): edit_note.
+    def edit_note(self, edited_template):
         """Edit note template attributes.
 
         Allows editing of note template attributes with exception of the id.
@@ -296,24 +294,24 @@ class Application:  # Todo (GS): Change to NoteKeeperApp
             if not edited_template['id'].isnumeric():
                 msg = f"Entered id: {edited_template['id']}, is not valid. Must be all numbers."
                 log.debug(msg)
-                raise ApplicationError(msg)
+                raise NoteKeeperApplicationError(msg)
             else:
                 edited_template['id'] = int(edited_template['id'])
 
         if not type(edited_template['id']) is int:  # Check legality of id key.
             msg = 'Entered id is not valid. Must be all numbers.'
             log.debug(msg)
-            raise ApplicationError(msg)
+            raise NoteKeeperApplicationError(msg)
 
         if edited_template['_type'] not in self.templates:  # Check legality of type_.
             msg = f"Entered type: {edited_template['_type']}, is not valid."
             log.debug(msg)
-            raise ApplicationError(msg)
+            raise NoteKeeperApplicationError(msg)
 
         if not type(edited_template['_type']) is str:  # Check legality of type_.
             msg = f"Entered type: {edited_template['_type']}, is not valid."
             log.debug(msg)
-            raise ApplicationError(msg)
+            raise NoteKeeperApplicationError(msg)
 
         # Search same template type for matching ID. (Attempt a O(log(n)) search.)
         original_template = None  # Filled with original template if found within same note template type.
@@ -336,14 +334,14 @@ class Application:  # Todo (GS): Change to NoteKeeperApp
         if original_template is None:  # When template is not found.
             msg = 'Edit failed! Template not found for ID: {}.'.format(edited_template['id'])
             log.debug(msg)
-            raise ApplicationError(msg)
+            raise NoteKeeperApplicationError(msg)
 
         # Delete original template. Delete is used rather than changing origional template attributes because templates
         # may be of a different object class.
         self.delete_template(original_template.to_dict()['_type'], original_template.id)
 
         # Add new template.
-        result = self.add_template(new_template=edited_template, id_=edited_template['id'])
+        result = self.create_note(new_template=edited_template, id_=edited_template['id'])
         msg = 'Note template has been edited.'
         log.debug(msg)
 
@@ -351,28 +349,8 @@ class Application:  # Todo (GS): Change to NoteKeeperApp
 
         return result
 
-    def return_date(self):  # TODO (GS): all methods return. take return out.
-        """Return datetime object representing today's date.
-        # TODO (GS): whatever the ui is should just call date.today() iteself. Get rid of this function.
-        Used for GUI.
-
-        Args:
-            None
-
-        Returns:
-            today_date (datetime obj): datetime object.
-        """
-
-        log.debug("""Retrieve today's date...""")
-
-        today_date = date.today()
-
-        log.debug("""Today's date found.""")
-
-        return today_date
-
     def save(self, templates):  # TODO (GS): templates should not be an argument because it already know its own templates.
-        """Save application data.
+        """Save application data.  # TODO (GS): Remove argument from function.
         # TODO (GS): object already know the templates.
         Args:
             templates (dict): Keys=template class names, Values=[note templates].
@@ -396,7 +374,7 @@ class Application:  # Todo (GS): Change to NoteKeeperApp
         else:
             msg = 'Error while attempting to save. Data not saved.'  # TODO (GS): should say where it was trying to save.
             log.critical(msg)
-            raise ApplicationError(msg)  # TODO (GS): Let repo do the crashing. this error will suppress the repo error.
+            raise NoteKeeperApplicationError(msg)  # TODO (GS): Let repo do the crashing. this error will suppress the repo error.
 
         log.debug('Saving complete.')
 
@@ -415,7 +393,7 @@ def persistent():  # TODO (GS): run_application(). should be a method within the
 
     log.debug('Program being run in persistent mode...')
 
-    app = Application()
+    app = NoteKeeperApp()
 
     # Introduction graphic formatting.
     graphic_space = 9
@@ -457,16 +435,16 @@ def persistent():  # TODO (GS): run_application(). should be a method within the
             type_ = input('Enter note type: ')
             note = input('Enter note: ')
             try:
-                result = app.add_template({'_type': type_, 'note': note})
+                result = app.create_note({'_type': type_, 'note': note})
                 print(f'New note template:\n\n{result}\n')
                 print('Note template has been added.')
                 continue
-            except ApplicationError as ae:
+            except NoteKeeperApplicationError as ae:
                 print(ae)
                 continue
 
         elif arg.lower() == 'date' or arg.lower() == 'da':
-            print(f"Today's date: {app.return_date()} (yyyy-mm-dd).")
+            print(f"Today's date: {date.today()} (yyyy-mm-dd).")
             continue
 
         elif arg.lower() == 'delete' or arg.lower() == 'de':
@@ -476,7 +454,7 @@ def persistent():  # TODO (GS): run_application(). should be a method within the
             try:
                 print(app.delete_template(type_, id_))
                 continue
-            except ApplicationError as ae:
+            except NoteKeeperApplicationError as ae:
                 print(ae)
                 continue
 
@@ -487,7 +465,7 @@ def persistent():  # TODO (GS): run_application(). should be a method within the
             try:
                 print(app.display_template(type_, id_))
                 continue
-            except ApplicationError as ae:
+            except NoteKeeperApplicationError as ae:
                 print(ae)
                 continue
 
@@ -497,7 +475,7 @@ def persistent():  # TODO (GS): run_application(). should be a method within the
             try:
                 print(app.display_all_of_type(type_))
                 continue
-            except ApplicationError as ae:
+            except NoteKeeperApplicationError as ae:
                 print(ae)
                 continue
 
@@ -509,10 +487,10 @@ def persistent():  # TODO (GS): run_application(). should be a method within the
             note = input('Enter new note: \n')
             argument = {'_type': type_, 'id': id_, 'note': note}
             try:
-                app.edit_template(argument)
+                app.edit_note(argument)
                 print(f'Note template has been edited.')
                 continue
-            except ApplicationError as ae:
+            except NoteKeeperApplicationError as ae:
                 print(ae)
                 continue
 
@@ -521,7 +499,7 @@ def persistent():  # TODO (GS): run_application(). should be a method within the
                 app.save(app.templates)
                 print('Program Saved.')
                 continue
-            except ApplicationError as ae:
+            except NoteKeeperApplicationError as ae:
                 print(ae)
                 continue
 
@@ -685,12 +663,12 @@ def handle_args(args):
 
         log.debug('Unittest complete.')
 
-    app = Application()
+    app = NoteKeeperApp()
     log.debug('Parsing arguments through application...')
 
     # Run Application.today_date().
     if args.date:
-        print(app.return_date())
+        print(date.today())
 
     # Run Application.add_template().
     if args.add:
@@ -699,24 +677,24 @@ def handle_args(args):
             'note': args.add[1]
         }
         try:
-            result = app.add_template(arg)
+            result = app.create_note(arg)
             print(f"Note template Type: {result.to_dict()['_type']}, has been added.")
             app.save(app.templates)
-        except ApplicationError as ae:
+        except NoteKeeperApplicationError as ae:
             print(ae)
 
     # Run Application.display_all_of_type().
     if args.all:
         try:
             print(app.display_all_of_type(args.all[0]))
-        except ApplicationError as ae:
+        except NoteKeeperApplicationError as ae:
             print(ae)
 
     # Run Application.display_template().
     if args.display:
         try:
             print(app.display_template(args.display[0], args.display[1]))
-        except ApplicationError as ae:
+        except NoteKeeperApplicationError as ae:
             print(ae)
 
     # Run Application.delete_template().
@@ -726,7 +704,7 @@ def handle_args(args):
             if result is True:
                 print('Note template has been deleted.')
                 app.save(app.templates)
-        except ApplicationError as ae:
+        except NoteKeeperApplicationError as ae:
             print(ae)
 
     # Run Application.edit_template().
@@ -737,10 +715,10 @@ def handle_args(args):
             'note': args.edit[2]
         }
         try:
-            result = app.edit_template(arg)
+            result = app.edit_note(arg)
             print(result.to_dict()['_type'] + ', id: ' + str(result.to_dict()['id']) + ', has been edited.')
             app.save(app.templates)
-        except ApplicationError as ae:
+        except NoteKeeperApplicationError as ae:
             print(ae)
 
     if args.persistent:
@@ -781,7 +759,7 @@ def main():  # TODO (GS): main should start the application.
     logging.basicConfig(
         level=DEFAULT_LOG_LEVEL,
         format=f'[%(asctime)s] - {RUNTIME_ID} - %(levelname)s - [%(name)s:%(lineno)s] - %(message)s',
-        filename=LOG_FILENAME,
+        filename=DEFAULT_LOG_FILENAME,
     )
 
     log.debug('main...')

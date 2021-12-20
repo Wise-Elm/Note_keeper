@@ -25,18 +25,18 @@ class TestStorage(unittest.TestCase):
         # Confirm that created objects are of the appropriate class.
         for objects, templates in repo.templates.items():
             for template in templates:
-                self.assertIsInstance(template, repo.subclasses[objects])
+                self.assertIsInstance(template, repo.note_classes[objects])
 
     def test_id_duplicates(self):
         """Test Repo._id to confirm it is not storing duplicate values."""
 
-        id_2 = set(repo.id_)  # Make a set version of repo._id to eliminate possible duplicates.
-        self.assertEqual(len(repo.id_), len(id_2))
+        id_2 = set(repo.ids)  # Make a set version of repo._id to eliminate possible duplicates.
+        self.assertEqual(len(repo.ids), len(id_2))
 
     def test_add_id(self):
         """Test Repo._add_id to confirm that it will not add duplicate id's. or store id's of the wrong length"""
 
-        duplicate = random.choice(repo.id_)
+        duplicate = random.choice(repo.ids)
         with self.assertRaises(StorageError):
             repo._add_id(duplicate)
         with self.assertRaises(StorageError):

@@ -6,7 +6,7 @@
 import random
 import unittest
 
-from application import Application
+from notekeeperapp import NoteKeeperApp
 
 from core import _Template
 
@@ -17,7 +17,7 @@ from test_assets import create_random_type
 
 
 # Setup instance for testing.
-app = Application()
+app = NoteKeeperApp()
 
 app.templates = {cls.__name__: [] for cls in _Template.__subclasses__()}  # Reset app.templates to unloaded format.
 #   Example:
@@ -60,11 +60,11 @@ class TestApplication(unittest.TestCase):
         }
 
         len_before = len(app.templates[random_note['_type']])
-        new_template_obj = app.add_template(random_note)
+        new_template_obj = app.create_note(random_note)
         len_after = len(app.templates[random_note['_type']])
 
         self.assertEqual(len_before+1, len_after)
-        self.assertIsInstance(new_template_obj, app.subclasses[random_note['_type']])
+        self.assertIsInstance(new_template_obj, app.note_classes[random_note['_type']])
         self.assertIsInstance(new_template_obj, _Template)
 
     def test_display_template(self):
@@ -105,7 +105,7 @@ class TestApplication(unittest.TestCase):
 
         # Add template back to prevent testing problems that arise from other unitests checking for the original testing
         # data.
-        app.add_template(test_template.to_dict())
+        app.create_note(test_template.to_dict())
 
     def test_edit_template(self):
         """Test Application.edit_template().
@@ -122,7 +122,7 @@ class TestApplication(unittest.TestCase):
             'note': 'This is a test'
         }
 
-        result = app.edit_template(modified_template)
+        result = app.edit_note(modified_template)
 
         # Confirm accuracy of edited note template.
         self.assertDictEqual(modified_template, result.to_dict())

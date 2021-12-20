@@ -57,7 +57,7 @@ class Repo:
         #   Example:
         #       subclass_obj = [<class 'core.LimitedExam'>, <class 'core.Surgery'>, <class 'core.HygieneExam'>, etc.]
 
-        self.subclasses = dict(zip(self.subclass_names, subclass_obj))
+        self.note_classes = dict(zip(self.subclass_names, subclass_obj))
         #   Dictionary of template class names as keys and corresponding objects as values.
         #   Example:
         #       self.subclasses = {
@@ -68,7 +68,7 @@ class Repo:
         #           'ComprehensiveExam': <class 'core.ComprehensiveExam'>
         #       }
 
-        self.id_ = []  # List storing template id's for each note template.
+        self.ids = []  # List storing template id's for each note template.
         """Initialize class."""
 
         log.debug('Initializing complete.')
@@ -156,7 +156,7 @@ class Repo:
             note (Obj): Object representing a note template.
         """
 
-        class_ = self.subclasses[template['_type']]  # Identify class object.
+        class_ = self.note_classes[template['_type']]  # Identify class object.
         note = class_(template)  # Instantiate class object.
 
         self._add_id(template['id'])  # Add id to used id list (self.id_).
@@ -187,14 +187,14 @@ class Repo:
             raise StorageError(msg)
 
         # Check if already used.
-        elif id_ in self.id_:
+        elif id_ in self.ids:
             msg = f'Error for ID #: {id_}. ID already in use for another note template.'
             log.warning(msg)
             raise StorageError(msg)
 
         # Add id if checks passed.
         else:
-            self.id_.append(id_)
+            self.ids.append(id_)
 
     def save(self, templates, file_path=DEFAULT_RECORDS_FILENAME):
         """Save data to disc.
