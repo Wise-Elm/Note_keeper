@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-__version__ = '0.0.1'
+__version__ = '0.0.1'  # TODO (GS): Version 0.1.0
 
 
 """Note organization application.
@@ -11,50 +11,50 @@ __version__ = '0.0.1'
 This application is designed to aid in writing medical notes by allowing the user to construct, save, display, delete, 
 and edit note templates. Note templates are intended to provide the basic structure of a patient note so that the 
 practitioner can save time by filling the details rather than constructing a completely new note.
-
-Todo:
-    Configure a rotating log handler.
 """
 
 
+# Todo (GS): Configure a rotating log handler.
+
+# Todo (GS): put in alphabetical order.
 import argparse
 import sys
 from datetime import date
 import logging
 from random import randint
 
-from core import ID_DIGIT_LENGTH
+from core import ID_DIGIT_LENGTH  # Todo (GS): either core.ID_DIGIT_LENGTH or import ID_DIGIT_LENGTH, RUNTIME_IT, ... coudl be ID_RANGE = (x, y)
 from core import RUNTIME_ID
 from core import core_self_test
 
-
+# Todo (GS): Just one space.
 from storage import Repo
 from storage import storage_self_test
 
 
-LOG_FILENAME = 'application.log'
+LOG_FILENAME = 'application.log'  # Todo (GS): DEFAULT_LOG_FILENAME = 'note_keeper_log.log'
 DEFAULT_LOG_LEVEL = logging.DEBUG
 
 # Configure logging.
-log = logging.getLogger(__name__)
-log.setLevel(DEFAULT_LOG_LEVEL)
+log = logging.getLogger(__name__)  # Todo (GS): log = logging.getLogger()
+log.setLevel(DEFAULT_LOG_LEVEL)  # Todo (GS): dont set log level on this module. delete this line.
+# Todo (GS): add null handler.
 
-
-class ApplicationError(RuntimeError):
+class ApplicationError(RuntimeError):  # Todo (GS): Too generic. Change to something like NoteKeeperApplicationError.
     """Base class for exceptions arising from this module."""
 
 
-class Application:
+class Application:  # Todo (GS): Change to NoteKeeperApp
     """Handle interaction between program modules."""
 
     def __init__(self):
 
-        log.debug('Initializing...')
+        log.debug('Initializing...')  # Todo (GS): 'Starting application' or Starting Note Keeper'.
 
         self.repo = Repo()
         self.repo.load()  # Automatically load data.
 
-        self.templates = self.repo.templates  # Dictionary: Keys=template class names, Values=[note templates].
+        self.templates = self.repo.templates  # Dictionary: Keys=template class names, Values=[note templates].  # TODO (GS): both self.templates = self.repo.templates both point to the same dictionary.
         #   Example:
         #       self.templates = {
         #           'LimitedExam': [LimitedExam objects],
@@ -64,13 +64,13 @@ class Application:
         #           'ComprehensiveExam': [ComprehensiveExam objects]
         #       }
 
-        self.id_ = self.repo.id_  # List storing template id's for each note template.
+        self.id_ = self.repo.id_  # List storing template id's for each note template.  # Todo (GS): self.id is not protected. change to self.ids.
 
-        self.subclass_names = self.repo.subclass_names  # List of valid template classes.
-        #   Example:
+        self.subclass_names = self.repo.subclass_names  # List of valid template classes.  # Todo (GS): drop class names because ther are already in self.subclasses.
+        #   Example:  # Todo (GS): when call to self.subclass_names it should just be a calculation of self.subclasses.
         #       self.subclass_names = ['Surgery', 'ComprehensiveExam', 'etc']
 
-        self.subclasses = self.repo.subclasses  # Dict: keys = class names, values = class objects.
+        self.subclasses = self.repo.subclasses  # Dict: keys = class names, values = class objects.  # Todo (GS): self.note_classes.
         #   Example:
         #       self.subclasses = {
         #           'LimitedExam': <class 'core.LimitedExam'>,
@@ -82,7 +82,7 @@ class Application:
 
         log.debug('Initializing complete.')
 
-    def add_template(self, new_template, id_=None):
+    def add_template(self, new_template, id_=None):  # TODO (GS): drop new in new_template argument. method called something like create_note
         """Add new note template.
 
         Args:
@@ -97,57 +97,57 @@ class Application:
             id_ (int, OPTIONAL): Used to assign specific id number to new note template if desired.
 
         Returns:
-            template (obj): Note template object.
+            template (obj): Note template object.  # TODO (GS): word template should be note. Don't say object. Say Return: note (_Template): New note.
         """
 
-        log.debug('Add new template...')
+        log.debug('Add new template...')  # TODO (GS): ('creating new note...')
 
         # Check if new_template can be associated with a valid class.
         if new_template['_type'] not in self.subclass_names:
-            msg = 'Note Template type not allowed.'
-            log.critical(msg)
+            msg = 'Note Template type not allowed.'  # TODO (GS): add which _type is not allowed.
+            log.critical(msg)  # TODO (GS): log.critical(msg)
             raise ApplicationError(msg)
 
         # If id_ is None generate a new unique id.
         if id_ is None:
             id_ = self._generate_random_id()
 
-        output_template = {
+        output_template = {  # TODO (GS): note
             'id': id_,
             'note': new_template['note']
         }
 
-        _class = self.subclasses[new_template['_type']]  # Select appropriate object class for new template.
-        template = _class(output_template)  # Instantiate template object.
+        _class = self.subclasses[new_template['_type']]  # Select appropriate object class for new template.  # TODO (GS): more typical 'cls'
+        template = _class(output_template)  # Instantiate template object.  # TODO (GS): note = cls(output_template).
 
         # Add new object to appropriate dictionary value in self.templates.
-        self.templates[str(template.__class__.__name__)].append(template)
+        self.templates[str(template.__class__.__name__)].append(template)  # TODO (GS): use pointer from line 120. both line 120 & 124 point to the same thing.
 
         log.debug('New template added.')
 
-        return template  # Object.
+        return template  # Object.  # TODO (GS): get rid of comment. return note.
 
-    def _generate_random_id(self):
+    def _generate_random_id(self):  # TODO (GS):  could give the note class itself the ability to generate id numbers if needed.
         """Generate a unique id.
 
         Args:
             None
 
         Returns:
-            id_ (int): A unique id number of the proper length (ID_DIGIT_LENGTH).
+            id_ (int): A unique id number of the proper length (ID_DIGIT_LENGTH).  # TODO (GS):  ids should be strings.
         """
-
+        # TODO (GS): classic way is to just generate a uuid module. uuid.uid4(). could use just first 5 digits, check if unique.
         log.debug('Generate new id number...')
-
-        unique = False
-        len_ = False
+        # TODO (GS): bools are an exception to hungarian notation.
+        unique = False  # TODO (GS): is_unique.
+        len_ = False  # TODO (GS): is_long_enough
         while not unique or not len_:
-            id_ = randint(int('1' + ('0' * (ID_DIGIT_LENGTH - 1))), int('9' * ID_DIGIT_LENGTH))
+            id_ = randint(int('1' + ('0' * (ID_DIGIT_LENGTH - 1))), int('9' * ID_DIGIT_LENGTH))  # TODO (GS): just use randint(min, max)
             #   Example if ID_DIGIT_LEN == 3:
             #       id_ = int between 100 & 999.
 
-            if len(str(id_)) == ID_DIGIT_LENGTH:
-                len_ = True
+            if len(str(id_)) == ID_DIGIT_LENGTH:  # TODO (GS):  could check it number is less than min.
+                len_ = True  # TODO (GS): add extra line :)
             if id_ not in self.id_:
                 unique = True
 
@@ -158,9 +158,9 @@ class Application:
 
         return id_
 
-    def display_template(self, type_, id_):
-        """Display a note template.
-
+    def display_template(self, type_, id_):  # TODO (GS): should not be called display. to_pretty_note, or something lol
+        """Display a note template.  # TODO (GS): redundant.
+      # TODO (GS): replace display_template with get_note. just return note. Call repo to get note.
         Args:
             type_ (str): Template class type. ex: 'Surgery'.
             id_ (str OR int): id number for desired template.
@@ -200,7 +200,7 @@ class Application:
         log.debug(msg)
         raise ApplicationError(msg)
 
-    def display_all_of_type(self, type_):
+    def display_all_of_type(self, type_):  # TODO (GS): junk function. whatever calls this should concatinate the notes.
         """Displays all note templates from specified type.
 
         Concatenates all from type together as one long string in the form of an easily readable text document.
@@ -235,9 +235,9 @@ class Application:
 
         return text
 
-    def delete_template(self, type_, id_):
+    def delete_template(self, type_, id_):  # TODO (GS): delete_note. get ride of argument(type_).
         """Delete note template.
-
+        # TODO (GS): should just tell repo to delete. should be a delete method in repo.
         Args:
             type_ (str): Template type. ex: 'Surgery'.
             id_ (int OR str): id number for note template to delete.
@@ -245,7 +245,7 @@ class Application:
         Returns:
             (Bool): True if successful.
         """
-
+        # TODO (GS): be aware that old numbers should be tracked.
         log.debug(f'Deleting template. Type: {type_}, id: {id_}...')
 
         if type(id_) is str:  # Check legality of id_.
@@ -278,7 +278,7 @@ class Application:
         log.debug(msg)
         raise ApplicationError(msg)
 
-    def edit_template(self, edited_template):
+    def edit_template(self, edited_template):  # TODO (GS): edit_note.
         """Edit note template attributes.
 
         Allows editing of note template attributes with exception of the id.
@@ -289,9 +289,9 @@ class Application:
         Returns:
             result (_NoteTemplate[obj]): Template object.
         """
-
+        # TODO (GS): a note object should be editable. Get repo to change object type and return object. then user edits objects attributes.
         log.debug('Editing note template...')
-
+        # TODO (GS): repo manages life cycle of objects. manufacture of id should probably be done in the repo.
         if type(edited_template['id']) is str:  # Check legality of id key.
             if not edited_template['id'].isnumeric():
                 msg = f"Entered id: {edited_template['id']}, is not valid. Must be all numbers."
@@ -351,9 +351,9 @@ class Application:
 
         return result
 
-    def return_date(self):
+    def return_date(self):  # TODO (GS): all methods return. take return out.
         """Return datetime object representing today's date.
-
+        # TODO (GS): whatever the ui is should just call date.today() iteself. Get rid of this function.
         Used for GUI.
 
         Args:
@@ -371,9 +371,9 @@ class Application:
 
         return today_date
 
-    def save(self, templates):
+    def save(self, templates):  # TODO (GS): templates should not be an argument because it already know its own templates.
         """Save application data.
-
+        # TODO (GS): object already know the templates.
         Args:
             templates (dict): Keys=template class names, Values=[note templates].
                 Example:
@@ -391,17 +391,17 @@ class Application:
 
         log.debug('Saving...')
 
-        if self.repo.save(templates):
+        if self.repo.save(templates):  # TODO (GS): just self.repo.save()
             log.debug('Saved.')
         else:
-            msg = 'Error while attempting to save. Data not saved.'
+            msg = 'Error while attempting to save. Data not saved.'  # TODO (GS): should say where it was trying to save.
             log.critical(msg)
-            raise ApplicationError(msg)
+            raise ApplicationError(msg)  # TODO (GS): Let repo do the crashing. this error will suppress the repo error.
 
         log.debug('Saving complete.')
 
 
-def persistent():
+def persistent():  # TODO (GS): run_application(). should be a method within the application, which gets passed the args object.
     """Run application in persistent mode.
 
     Allows user friendly interaction with program from shell.
@@ -421,7 +421,7 @@ def persistent():
     graphic_space = 9
     graphic_indent = 8
 
-    print('Welcome to:')
+    print('Welcome to:')  # TODO (GS): method print_welcome()
     print(f"{' ' * graphic_indent}         __  _____  __{' ' * graphic_space}      __   __   __   __   __   ")
     print(f"{' ' * graphic_indent} /\  /  /  \   |   |__{' ' * graphic_space}|_/  |__  |__  |_/  |__  |__|  ")
     print(f"{' ' * graphic_indent}/  \/   \__/   |   |__{' ' * graphic_space}| \  |__  |__  |    |__  |  \  ")
@@ -431,7 +431,7 @@ def persistent():
     # Menu display formatting.
     menu_space = 20
     menu_indent = 4
-
+    # TODO (GS): method print_menu(). Argument determins if returns print or returns string. method get_welcome, and method print_welcome.
     menu = f"Optional inputs:\n" \
            f"{' ' * menu_indent}add OR a{' ' * (menu_space - len('add OR a'))} Add a new note template.\n" \
            f"{' ' * menu_indent}date OR da{' ' * (menu_space - len('date OR da'))} Display today's date\n" \
@@ -444,15 +444,15 @@ def persistent():
            f"{' ' * menu_indent}quit OR q{' ' * (menu_space - len('quit OR q'))} Quit Program."
 
     run = True
-    while run is True:
+    while run is True:  # TODO (GS): while is running. Called main event loop. put into method main_event_loop that gets called if args calls for persistent method.
 
-        arg = input('\nEnter your selection: ')
+        arg = input('\nEnter your selection: ')  # TODO (GS): change arg to user_input.
 
-        if arg.lower() == 'menu' or arg.lower() == 'help' or arg.lower() == 'h':
+        if arg.lower() == 'menu' or arg.lower() == 'help' or arg.lower() == 'h':  # TODO (GS): leave out 'h'.
             print(menu)
             continue
-
-        elif arg.lower() == 'add' or arg.lower() == 'a':
+        # TODO (GS): if users input is in map, call corresponding function, else: syntax error.
+        elif arg.lower() == 'add' or arg.lower() == 'a':  # TODO (GS): make each block a function since they are each little work pieces.
             print(f'Available types: {app.subclass_names}.')
             type_ = input('Enter note type: ')
             note = input('Enter note: ')
@@ -558,10 +558,10 @@ def parse_args(argv=sys.argv):
     parser = argparse.ArgumentParser(
         description='This application is designed to aid in writing medical notes by allowing the user to construct, '
                     'save, display, delete, and edit note templates. Note templates are intended to provide the basic '
-                    'structure of a patient note so that the ractitioner can save time by filling the details rather '
+                    'structure of a patient note so that the practitioner can save time by filling the details rather '
                     'than constructing a completely new note.'
     )
-
+    # TODO (GS): hand a help epilogue.
     # Run Application.self_test().
     parser.add_argument(
         '-t',
@@ -575,7 +575,7 @@ def parse_args(argv=sys.argv):
     parser.add_argument(
         '-d',
         '--date',
-        help="""Return today's date and exit.""",
+        help="Return today's date and exit.",
         action='store_true',
         default=False
     )
@@ -640,9 +640,9 @@ def parse_args(argv=sys.argv):
         default=False,
         action='store_true'
     )
-
+    # TODO (GS): if user --h will print help and exit program on line 644.
     args = parser.parse_args()  # Collect arguments.
-
+    # TODO (GS): look up help eppilogue in argparse
     log.debug(f'args: {args}')
     log.debug('parse_args complete.')
 
@@ -774,7 +774,7 @@ def test():
     pass
 
 
-def main():
+def main():  # TODO (GS): main should start the application.
 
     # TODO (GS): Add rotating logging.
     # Configure logging.
@@ -795,3 +795,4 @@ if __name__ == '__main__':
     # self_test()
     # test()
     main()
+    # TODO (GS): sys.exit(0) from module level.
