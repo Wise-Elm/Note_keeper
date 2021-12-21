@@ -24,7 +24,7 @@ import sys
 # Todo (GS): Possibly change ID_DIGIT_LENGTH to a range, ex: ID_RANGE = (x, y)
 from core import core_self_test, ID_DIGIT_LENGTH, RUNTIME_ID
 
-from storage import Repo, storage_self_test
+from storage import Repo, storage_self_test, StorageError
 
 
 DEFAULT_LOG_FILENAME = 'note_keeper_log.log'
@@ -151,82 +151,19 @@ class NoteKeeperApp:
 
         return id_
 
-    def display_template(self, type_, id_):  # TODO (GS): Change method name to_pretty_note, or something similar since method does not display.
-        """Display a note template.  # TODO (GS): Redundant.
-      # TODO (GS): Could replace display_template with get_note. just return note. Call repo to get note.
+    def get_note(self, id_):  # TODO (GS): Change method name to_pretty_note, or something similar since method does not display.
+        """Return a note displayed in a nice readable format.
+
         Args:
-            type_ (str): Template class type. ex: 'Surgery'.
             id_ (str OR int): id number for desired template.
 
         Returns:
-            template (str): Note template matching the id number and type_ from arguments.
+            result (str): Note formatted into an easy to read string.
         """
 
-        log.debug('Finding template to display...')
+        result = self.repo.get_note(id_)
 
-        if type(id_) is str:  # Check legality of id_ argument.
-            if not id_.isnumeric():
-                msg = 'Entered id is not valid. Must be all numbers.'
-                log.debug(msg)
-                raise NoteKeeperApplicationError(msg)
-            else:
-                id_ = int(id_)
-
-        if not type(id_) is int:  # Check legality of id_ argument.
-            msg = 'Entered id is not valid. Must be all numbers.'
-            log.debug(msg)
-            raise NoteKeeperApplicationError(msg)
-
-        if type_ not in self.templates:  # Check legality of type_.
-            msg = 'Entered type is not valid.'
-            log.debug(msg)
-            raise NoteKeeperApplicationError(msg)
-
-        for template in self.templates[type_]:
-            if template.id == id_:
-                msg = 'Template found.'
-                log.debug(msg)
-                return template.__str__()
-
-        # When template not found.
-        msg = f'Template with type: {type_}, id: {id_} NOT found.'
-        log.debug(msg)
-        raise NoteKeeperApplicationError(msg)
-
-    def display_all_of_type(self, type_):  # TODO (GS): Remove method and have whatever calls this concatinate the notes.
-        """Displays all note templates from specified type.
-
-        Concatenates all from type together as one long string in the form of an easily readable text document.
-
-        Args:
-            type_ (str): Type of note template. ex: 'Surgery'.
-
-        Returns:
-            text (str): Formatted string containing all note templates from argument type.
-        """
-
-        log.debug('Compiling display data...')
-
-        if type_ not in self.templates:  # Check legality of _type.
-            msg = f'Entered type: ({type_}), is not valid.'
-            log.debug(msg)
-            raise NoteKeeperApplicationError(msg)
-
-        text = ''
-        num = 0
-        for template in self.templates[type_]:
-            num += 1
-            out_str = f'\n\nNumber: {num}\n' + template.__str__() + '\n'
-            text += out_str
-
-        log.debug('Display data compiled.')
-
-        if len(text) == 0:  # When type_ is valid but no records exist.
-            text = f'No templates of type: {type_} found.'
-
-        log.debug('Display data compiled.')
-
-        return text
+        return result
 
     def delete_note(self, id_):  # TODO (GS): Develop way to track deleted ids.
         """Delete note.
@@ -415,10 +352,9 @@ def persistent():  # TODO (GS): run_application(). should be a method within the
 
         elif arg.lower() == 'display' or arg.lower() == 'd':
             print(f'Available types: {[k for k in app.note_classes.keys()]}.')  # Generate list of note class names.
-            type_ = input('Enter template type: ')
             id_ = input('Enter template id: ')
             try:
-                print(app.display_template(type_, id_))
+                print(app.get_note(id_))
                 continue
             except NoteKeeperApplicationError as ae:
                 print(ae)
@@ -428,10 +364,20 @@ def persistent():  # TODO (GS): run_application(). should be a method within the
             print(f'Available types: {[k for k in app.note_classes.keys()]}.')  # Generate list of note class names.
             type_ = input('Enter template type: ')
             try:
-                print(app.display_all_of_type(type_))
-                continue
-            except NoteKeeperApplicationError as ae:
-                print(ae)
+                text = ''
+                num = 0
+                for note in app.templates[type_]:
+                    num += 1
+                    out_str = f'\n\nNumber: {num}\n' + note.__str__() + '\n'
+                    text += out_str
+
+                if len(text) == 0:
+                    text = f'No notes found for type: {type_}'
+
+                return text
+
+            except StorageError as se:
+                print(se)
                 continue
 
         elif arg.lower() == 'edit' or arg.lower() == 'e':
@@ -513,11 +459,11 @@ def parse_args(argv=sys.argv):
         default=False
     )
 
-    # Run Application.display_all_of_type().
+    # Concatenate notes of argument type using Application.get_note().
     parser.add_argument(
         '-a',
         '--all',
-        help='Display all note templates of a type. Available note types: PeriodicExam, HygieneExam, Surgery, '
+        help='Display all notes of a type. Available note types: PeriodicExam, HygieneExam, Surgery, '
              'ComprehensiveExam, LimitedExam.',
         nargs=1,
         default=False,
@@ -539,9 +485,9 @@ def parse_args(argv=sys.argv):
         '-w',
         '--display',
         help='Display a specific note template.',
-        nargs=2,
+        nargs=1,
         default=False,
-        metavar=('Type', 'ID')
+        metavar='ID'
     )
 
     # Run Application.delete_note().
@@ -638,17 +584,28 @@ def handle_args(args):
         except NoteKeeperApplicationError as ae:
             print(ae)
 
-    # Run Application.display_all_of_type().
+    # Concatenate notes of argument type using Application.get_note().
     if args.all:
         try:
-            print(app.display_all_of_type(args.all[0]))
-        except NoteKeeperApplicationError as ae:
-            print(ae)
+            text = ''
+            num = 0
+            for note in app.templates[args.all[0]]:
+                num += 1
+                out_str = f'\n\nNumber: {num}\n' + note.__str__() + '\n'
+                text += out_str
 
-    # Run Application.display_template().
+            if len(text) == 0:
+                text = f'No notes found for type: {args.all[0]}'
+
+            return text
+
+        except StorageError as se:
+            print(se)
+
+    # Run Application.get_note().
     if args.display:
         try:
-            print(app.display_template(args.display[0], args.display[1]))
+            print(app.get_note(args.display[0]))
         except NoteKeeperApplicationError as ae:
             print(ae)
 

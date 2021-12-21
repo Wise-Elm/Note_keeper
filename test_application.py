@@ -70,10 +70,10 @@ class TestApplication(unittest.TestCase):
         self.assertIsInstance(new_template_obj, app.note_classes[random_note['_type']])
         self.assertIsInstance(new_template_obj, _Template)
 
-    def test_display_template(self):
-        """Test Application.display_template().
+    def test_get_note(self):
+        """Test Application.get_note().
 
-        Assert that template objects are displayed correctly by using app.display_template to generate one
+        Assert that template objects are displayed correctly by using app.get_note to generate one
         representation, and comparing that against another representation derived from template objects __str__()
         method.
         """
@@ -82,7 +82,7 @@ class TestApplication(unittest.TestCase):
         random_name = random.choice(cls_names)
         random_obj = random.choice(app.templates[random_name])
         first_template = random_obj.__str__()
-        second_template = app.display_template(random_obj.to_dict()['_type'], random_obj.id)
+        second_template = app.get_note(random_obj.id)
 
         self.assertEqual(first_template, second_template)
 

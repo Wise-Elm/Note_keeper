@@ -263,6 +263,8 @@ class Repo:
             (Bool): True if successful.
         """
 
+        log.debug('Deleting note...')
+
         if type(id_) is str:  # Check legality of id_.
             if not id_.isnumeric():
                 msg = f'Entered id: ({id_}), is not valid. Must only contain numbers.'
@@ -286,6 +288,42 @@ class Repo:
                     return True
 
         msg = f'Template id: {id_}, cannot be found and has NOT been deleted.'
+        log.debug(msg)
+        raise StorageError(msg)
+
+    def get_note(self, id_):
+        """Return a note displayed in a nice readable format.
+
+        Args:
+            id_ (str OR int): id number for desired template.
+
+        Returns:
+            result (str): Note formatted into an easy to read string.
+        """
+
+        log.debug('Finding note...')
+
+        if type(id_) is str:  # Check legality of id_ argument.
+            if not id_.isnumeric():
+                msg = 'Entered id is not valid. Must be all numbers.'
+                log.debug(msg)
+                raise StorageError(msg)
+            else:
+                id_ = int(id_)
+
+        if not type(id_) is int:  # Check legality of id_ argument.
+            msg = 'Entered id is not valid. Must be all numbers.'
+            log.debug(msg)
+            raise StorageError(msg)
+
+        for name, notes in self.templates.items():
+            for note in notes:
+                if note.id == id_:
+                    msg = 'Note found.'
+                    log.debug(msg)
+                    return note.__str__()
+
+        msg = f'Note with id: {id_}, cannot be found.'
         log.debug(msg)
         raise StorageError(msg)
 
