@@ -73,18 +73,16 @@ class TestApplication(unittest.TestCase):
     def test_get_note(self):
         """Test Application.get_note().
 
-        Assert that template objects are displayed correctly by using app.get_note to generate one
-        representation, and comparing that against another representation derived from template objects __str__()
-        method.
+        Assert Application.get_note() returns the correct note.
         """
 
         cls_names = [k for k in app.note_classes.keys()]  # Generate list of note class names.
         random_name = random.choice(cls_names)
         random_obj = random.choice(app.templates[random_name])
-        first_template = random_obj.__str__()
+        first_template = random_obj
         second_template = app.get_note(random_obj.id)
 
-        self.assertEqual(first_template, second_template)
+        self.assertIs(first_template, second_template)
 
     def test_delete_template(self):
         """Test Application.delete_template().

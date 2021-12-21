@@ -151,19 +151,36 @@ class NoteKeeperApp:
 
         return id_
 
-    def get_note(self, id_):  # TODO (GS): Change method name to_pretty_note, or something similar since method does not display.
+    def get_note(self, id_):
         """Return a note displayed in a nice readable format.
 
         Args:
             id_ (str OR int): id number for desired template.
 
         Returns:
-            result (str): Note formatted into an easy to read string.
+            note (_Template): Returns the note with a id that matches argument.
         """
 
-        result = self.repo.get_note(id_)
+        log.debug('Finding note...')
 
-        return result
+        if type(id_) is str:  # Check legality of id_ argument.
+            if not id_.isnumeric():
+                msg = 'Entered id is not valid. Must be all numbers.'
+                log.debug(msg)
+                raise NoteKeeperApplicationError(msg)
+            else:
+                id_ = int(id_)
+
+        if not type(id_) is int:  # Check legality of id_ argument.
+            msg = 'Entered id is not valid. Must be all numbers.'
+            log.debug(msg)
+            raise NoteKeeperApplicationError(msg)
+
+        note = self.repo.get_note(id_)
+
+        log.debug('Note found, returning note.')
+
+        return note
 
     def delete_note(self, id_):  # TODO (GS): Develop way to track deleted ids.
         """Delete note.
@@ -351,10 +368,9 @@ def persistent():  # TODO (GS): run_application(). should be a method within the
                 continue
 
         elif arg.lower() == 'display' or arg.lower() == 'd':
-            print(f'Available types: {[k for k in app.note_classes.keys()]}.')  # Generate list of note class names.
             id_ = input('Enter template id: ')
             try:
-                print(app.get_note(id_))
+                print(app.get_note(id_).__str__())
                 continue
             except NoteKeeperApplicationError as ae:
                 print(ae)
@@ -435,11 +451,13 @@ def parse_args(argv=sys.argv):
 
     # Program description.
     parser = argparse.ArgumentParser(
-        description='This application is designed to aid in writing medical notes by allowing the user to construct, '
-                    'save, display, delete, and edit note templates. Note templates are intended to provide the basic '
-                    'structure of a patient note so that the practitioner can save time by filling the details rather '
-                    'than constructing a completely new note.'
+        description='Welcome to Note Keeper.',
+        epilog='This application is designed to aid in writing medical notes by allowing the user to construct, save, '
+               'display, delete, and edit note templates. Note templates are intended to provide the basic structure '
+               'of a patient note so that the practitioner can save time by filling the details rather than '
+               'constructing a completely new note.'
     )
+
     # TODO (GS): hand a help epilogue.
     # Run Application.self_test().
     parser.add_argument(
@@ -605,7 +623,7 @@ def handle_args(args):
     # Run Application.get_note().
     if args.display:
         try:
-            print(app.get_note(args.display[0]))
+            print(app.get_note(args.display[0]).__str__())
         except NoteKeeperApplicationError as ae:
             print(ae)
 
