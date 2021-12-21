@@ -6,8 +6,7 @@
 import random
 import unittest
 
-from storage import Repo
-from storage import StorageError
+from storage import Repo, StorageError
 
 from test_assets import create_random_templates
 

@@ -196,23 +196,14 @@ class Repo:
         else:
             self.ids.append(id_)
 
-    def save(self, templates, file_path=DEFAULT_RECORDS_FILENAME):
+    def save(self, file_path=DEFAULT_RECORDS_FILENAME):
         """Save data to disc.
 
-        Convert template objects to dictionary representations and store data.
+        Convert note objects to dictionary representations and store data.
 
         Args:
-            templates (dict): First parameter. Dictionary of template objects.
-                Example:
-                    self.templates = {
-                        'LimitedExam': [LimitedExam objects],
-                        'Surgery': [Surgery objects],
-                        'HygieneExam': [HygieneExam objects],
-                        'PeriodicExam': [PeriodicExam objects],
-                        'ComprehensiveExam': [ComprehensiveExam objects]
-                    }
-            file_path (str, OPTIONAL): Second parameter. File path within which to save data. Must be .yaml. If none
-                given a default file path will be used.
+            file_path (str, OPTIONAL): File path within which to save data. Must be .yaml. If none given a default file
+            path will be used.
 
         Returns:
             True (Bool): True when successful.
@@ -221,6 +212,8 @@ class Repo:
         log.debug(f'Saving data to {file_path}...')
 
         try:
+
+            templates = self.templates
 
             records = []
 
@@ -236,7 +229,7 @@ class Repo:
             return True
 
         except RuntimeError:
-            msg = 'An error occurred while saving data.'
+            msg = f'An error occurred while saving data to {file_path}.'
             log.warning(msg)
             raise StorageError(msg)
 
@@ -259,6 +252,42 @@ class Repo:
 
         with open(file_path, 'w') as yaml_outfile:
             yaml.dump(records, yaml_outfile)
+
+    def delete_note(self, id_):  # TODO (GS): be aware that old numbers should be tracked.
+        """Delete note.
+
+        Args:
+            id_ (int OR str): id number for note template to delete.
+
+        Returns:
+            (Bool): True if successful.
+        """
+
+        if type(id_) is str:  # Check legality of id_.
+            if not id_.isnumeric():
+                msg = f'Entered id: ({id_}), is not valid. Must only contain numbers.'
+                log.debug(msg)
+                raise StorageError(msg)
+            else:
+                id_ = int(id_)
+
+        if not type(id_) is int:  # Check legality of id_ argument.
+            msg = 'Entered id is not valid. Must be numeric.'
+            log.debug(msg)
+            raise StorageError(msg)
+
+        for name, notes in self.templates.items():
+            for note in notes:
+                if note.id == id_:
+                    index = self.templates[name].index(note)
+                    self.templates[name].pop(index)
+                    msg = f'Template Type: {name}, id: {id_}, has been deleted.'
+                    log.debug(msg)
+                    return True
+
+        msg = f'Template id: {id_}, cannot be found and has NOT been deleted.'
+        log.debug(msg)
+        raise StorageError(msg)
 
 
 def storage_self_test():

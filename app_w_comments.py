@@ -717,9 +717,9 @@ def handle_args(args):
             print(ae)
 
     # Run Application.delete_template().
-    if args.delete:
+    if args.delete_note:
         try:
-            result = app.delete_template(args.delete[0], args.delete[1])
+            result = app.delete_template(args.delete_note[0], args.delete_note[1])
             if result is True:
                 print('Note template has been deleted.')
                 app.save(app.templates)

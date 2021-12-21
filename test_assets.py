@@ -52,7 +52,7 @@ def create_random_templates(app=None, repo=None, num=10):
 
     if app:
 
-        subclasses = app.subclass_names
+        subclasses = [k for k in app.note_classes.keys()]  # List of note class names as strings.
         notes = []
 
         for n in range(num):

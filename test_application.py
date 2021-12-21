@@ -39,6 +39,9 @@ app = create_random_templates(app=app)  # Create random test data and add to ins
 #           'ComprehensiveExam': [ComprehensiveExam objects]
 #       }
 
+# Since app was instantiated upon testing, point repo.templates at new templates.
+app.repo.templates = app.templates
+
 
 class TestApplication(unittest.TestCase):
     """Test application.py."""
@@ -51,10 +54,10 @@ class TestApplication(unittest.TestCase):
         correct object parent and child classes.
         """
 
-        subclasses = app.subclass_names
+        cls_names = [k for k in app.note_classes.keys()]  # Generate list of note class names.
 
         random_note = {
-            '_type': create_random_type(subclasses),
+            '_type': create_random_type(cls_names),
             'id': create_random_id(app),
             'note': create_random_note()
         }
@@ -75,7 +78,8 @@ class TestApplication(unittest.TestCase):
         method.
         """
 
-        random_name = random.choice(app.subclass_names)
+        cls_names = [k for k in app.note_classes.keys()]  # Generate list of note class names.
+        random_name = random.choice(cls_names)
         random_obj = random.choice(app.templates[random_name])
         first_template = random_obj.__str__()
         second_template = app.display_template(random_obj.to_dict()['_type'], random_obj.id)
@@ -89,14 +93,15 @@ class TestApplication(unittest.TestCase):
         non existence to template. After testing, adds template object back into instance.
         """
 
-        test_template = random.choice(app.subclass_names)
+        cls_names = [k for k in app.note_classes.keys()]  # Generate list of note class names.
+        test_template = random.choice(cls_names)
         test_template = random.choice(app.templates[test_template])
 
-        # Confirm length of list before object is removed.
+        # Confirm that note is included in program.
         self.assertIn(test_template, app.templates[test_template.__class__.__name__])
 
         first_len = len(app.templates[test_template.__class__.__name__])
-        app.delete_template(test_template.__class__.__name__, test_template.id)
+        app.delete_note(test_template.id)
 
         # Confirm object has been removed.
         self.assertNotIn(test_template, app.templates[test_template.__class__.__name__])
@@ -112,8 +117,8 @@ class TestApplication(unittest.TestCase):
 
         Tests that objects are edited properly by editing a template and confirming the proper changes are made.
         """
-
-        _type = random.choice(app.subclass_names)
+        cls_names = [k for k in app.note_classes.keys()]
+        _type = random.choice(cls_names)
         pick = random.choice(app.templates[_type])
 
         modified_template = {
