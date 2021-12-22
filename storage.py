@@ -3,8 +3,11 @@
 
 """This module saves and loads data for application.py."""
 
+# TODO (GS): Generate ids using uuid.uuid4.
+
 import logging
 from os.path import exists
+from random import randint
 
 import yaml
 
@@ -292,7 +295,9 @@ class Repo:
         raise StorageError(msg)
 
     def get_note(self, id_):
-        """Return a note displayed in a nice readable format.
+        """Return desired note.
+
+        Finds note by matching ids.
 
         Args:
             id_ (int): id number for desired template.
@@ -314,17 +319,82 @@ class Repo:
         log.debug(msg)
         raise StorageError(msg)
 
-    def edit_note(self, new_attributes):  # TODO (GS): Develop from app.
-        """Change the attributes of a note.
+    def edit_type(self, note, desired_type):
+        """Change the type of a note.
 
-        Finds
+        Original id will be kept.
 
         Args:
-            new_attributes (dict): Dictionary of desired note attributes.
+            note (_Template): First argument. Note on which to change type.
+            desired_type (_Template): Second argument. _Template subclass in which to change the first argument.
 
+        Returns:
+            edited (_Template): Note with class determined from new_type argument.
         """
 
-        pass
+        log.debug('Editing note type...')
+
+        # Check legality of desired_type.
+        if desired_type not in [cls for cls in self.classes.values()]:
+            msg = f'Desired type: {desired_type.__class__.__name__}, is not an available type.'
+            log.warning(msg)
+            raise StorageError(msg)
+
+        # Check legality of note.
+        if not isinstance(note, _Template):
+            msg = f'Note to edit: {note}, is not a legal object.'
+            log.warning(msg)
+            raise StorageError(msg)
+
+        note = note.to_dict()  # Note is dict.
+
+        # Remove note original object.
+        self.delete_note(note.id)
+
+        # Add edited note.
+        note = self._instantiate_templates(note)  # Note is obj.
+
+        log.debug('Editing of note type is complete.')
+
+        return note
+
+    def generate_id(self):
+        """Generate a unique id.
+
+        Args:
+            None
+
+        Returns:
+            id_ (int): A unique id number of the proper length (ID_DIGIT_LENGTH).
+
+            # TODO (GS): Should ids be strings?
+            # TODO (GS): Should ids be generated using uuid.uuid4?
+            # TODO (GS): If range is implemented just use randint(min, max)
+        """
+
+        log.debug('Generating new id number...')
+
+        is_unique = False
+        is_long_enough = False
+        while not is_unique or not is_long_enough:
+            id_ = randint(int('1' + ('0' * (ID_DIGIT_LENGTH - 1))), int('9' * ID_DIGIT_LENGTH))
+            #   Example if ID_DIGIT_LEN == 3:
+            #       id_ = int between 100 & 999.
+
+            if len(str(id_)) == ID_DIGIT_LENGTH:
+                is_long_enough = True
+
+            if id_ not in self.ids:
+                is_unique = True
+
+            if id_ is False or is_unique is False:
+                id_, is_unique = False, False
+
+        log.debug('New id number generated.')
+
+        return id_
+
+
 
 def storage_self_test():
     """Run Unittests on module.

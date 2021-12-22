@@ -87,7 +87,7 @@ class NoteKeeperApp:
 
             id_ (int, OPTIONAL): Used to assign specific id number to new note note if desired.
 
-        Returns:
+        Returns:  # TODO (GS): Change all Returns to Return?
             note (_Template): New note.
         """
 
@@ -102,7 +102,7 @@ class NoteKeeperApp:
 
         # If id_ is None generate a new unique id.
         if id_ is None:
-            id_ = self._generate_random_id()
+            id_ = self.generate_id()
 
         note_template = {
             'id': id_,
@@ -119,35 +119,17 @@ class NoteKeeperApp:
 
         return note
 
-    def _generate_random_id(self):  # TODO (GS): Think about the note class itself having the ability to generate id numbers.
+    def generate_id(self):
         """Generate a unique id.
 
         Args:
             None
 
         Returns:
-            id_ (int): A unique id number of the proper length (ID_DIGIT_LENGTH).  # TODO (GS): Should ids be strings?
+            id_ (int): A unique id number of the proper length (ID_DIGIT_LENGTH).
         """
-        # TODO (GS): Should this module just use the uuid module. uuid.uid4(). Could use just first 5 digits, check if unique.
-        log.debug('Generate new id number...')
 
-        is_unique = False
-        is_long_enough = False
-        while not is_unique or not is_long_enough:
-            id_ = randint(int('1' + ('0' * (ID_DIGIT_LENGTH - 1))), int('9' * ID_DIGIT_LENGTH))  # TODO (GS): If range is implemented just use randint(min, max)
-            #   Example if ID_DIGIT_LEN == 3:
-            #       id_ = int between 100 & 999.
-
-            if len(str(id_)) == ID_DIGIT_LENGTH:  # TODO (GS): Could check if number is less than min.
-                is_long_enough = True
-
-            if id_ not in self.ids:
-                is_unique = True
-
-            if id_ is False or is_unique is False:
-                id_, is_unique = False, False
-
-        log.debug('New id number generated.')
+        id_ = self.repo.generate_id()
 
         return id_
 
@@ -208,67 +190,50 @@ class NoteKeeperApp:
         Returns:
             result (_NoteTemplate[obj]): Template object.
         """
-        # TODO (GS): A note object should be editable. Get repo to change object type and return object. then user edits objects attributes.
+
         log.debug('Editing note template...')
-        # TODO (GS): repo manages life cycle of objects. manufacture of id should probably be done in the repo.
+
         if type(edited_template['id']) is str:  # Check legality of id key.
             if not edited_template['id'].isnumeric():
                 msg = f"Entered id: {edited_template['id']}, is not valid. Must be all numbers."
-                log.debug(msg)
+                log.warning(msg)
                 raise NoteKeeperApplicationError(msg)
             else:
                 edited_template['id'] = int(edited_template['id'])
 
         if not type(edited_template['id']) is int:  # Check legality of id key.
             msg = 'Entered id is not valid. Must be all numbers.'
-            log.debug(msg)
+            log.warning(msg)
             raise NoteKeeperApplicationError(msg)
 
-        if edited_template['_type'] not in self.templates:  # Check legality of type_.
+        if edited_template['_type'] not in self.templates:  # Check legality of _type.
             msg = f"Entered type: {edited_template['_type']}, is not valid."
-            log.debug(msg)
+            log.warning(msg)
             raise NoteKeeperApplicationError(msg)
 
-        if not type(edited_template['_type']) is str:  # Check legality of type_.
+        if not type(edited_template['_type']) is str:  # Check legality of _type.
             msg = f"Entered type: {edited_template['_type']}, is not valid."
-            log.debug(msg)
+            log.warning(msg)
             raise NoteKeeperApplicationError(msg)
 
-        # Search same template type for matching ID. (Attempt a O(log(n)) search.)
-        original_template = None  # Filled with original template if found within same note template type.
-        for template in self.templates[edited_template['_type']]:  # Find template.
-            if template.id == edited_template['id']:
-                original_template = template
-                break
+        original = self.repo.get_note(edited_template['id'])  # Find note to edit.
 
-        # If ID not found within note template type, search other template types. (Go ahead with O(N) search.)
-        if original_template is None:
-            for k, v in self.templates.items():
-                if k == edited_template['_type']:  # Skip already searched template type.
-                    continue
-                else:
-                    for template in v:
-                        if template.id == edited_template['id']:
-                            original_template = template
-                            break
+        # Check type.
+        if edited_template['_type'] == original.to_dict()['_type']:  # If note type is not going to change.
+            original.note = edited_template['note']
+            new = original
+        else:
+            # Change note type.
+            new = self.repo.edit_type(
+                self.repo.get_note(edited_template['id']),  # Note on which to change.
+                self.note_classes[edited_template['_type']]  # Desired _Template subclass.
+                )
+            new.note = original.note
 
-        if original_template is None:  # When template is not found.
-            msg = 'Edit failed! Template not found for ID: {}.'.format(edited_template['id'])
-            log.debug(msg)
-            raise NoteKeeperApplicationError(msg)
-
-        # Delete original template. Delete is used rather than changing original template attributes because templates
-        # may be of a different object class.
-        self.delete_note(original_template.id)
-
-        # Add new template.
-        result = self.create_note(new_template=edited_template, id_=edited_template['id'])
-        msg = 'Note template has been edited.'
+        msg = 'Note has been edited.'
         log.debug(msg)
 
-        log.debug('Editing note template complete.')
-
-        return result
+        return new  # Return resultant note.
 
     def save(self):
         """Save application data.
