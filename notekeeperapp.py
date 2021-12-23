@@ -255,7 +255,7 @@ class NoteKeeperApp:
     def run_application(self):
         """Run application in persistent mode.
 
-        Allows user friendly interaction with program from shell.
+        Provides a user friendly interaction with program from shell. Program stay running until user quits.
 
         Args:
             None
@@ -272,7 +272,7 @@ class NoteKeeperApp:
         log.debug('Persistent mode has ended.')
 
     def _main_event_loop(self):
-        """Main event loop for program which determines when application ends.
+        """Main event loop for program.
 
         Args:
             None
@@ -294,13 +294,13 @@ class NoteKeeperApp:
         return
 
     def _parse_user_inputs(self):
-        """Prompt user and handle inputs.
+        """Prompts user if initial selection, then passes selection to appropriate methods.
 
         Args:
             None
 
         Returns:
-            None
+            (False OR None): Returns to _main_event_loop(), False to end program, OR None to continue loop.
         """
 
         log.debug('Prompting user.')
@@ -329,18 +329,18 @@ class NoteKeeperApp:
             else:
                 return
         else:
-            self._user_invalid()
+            self._user_invalid()  # Handle indecipherable input.
 
     def _user_add(self):
         """Add new note.
 
-        Prompts user and add new note based on inputs.
+        Prompts user for note attributes and adds new note based on inputs.
 
         Args:
             None
 
         Returns:
-            None (NoteKeeperApp OR False): Instance of NoteKeeperApp.
+            None
         """
 
         print(f'Available types: {[k for k in self.note_classes.keys()]}.')  # Generate list of note class names.
@@ -360,6 +360,15 @@ class NoteKeeperApp:
             return
 
     def _user_date(self):
+        """Display current date.
+
+        Args:
+            None
+
+        Returns:
+            None
+        """
+
         result = date.today()
         if result is None:
             msg = f'An error occurred while retrieving the date.'
@@ -368,7 +377,17 @@ class NoteKeeperApp:
             print(f"Today's date: {result}")
 
     def _user_delete(self):
-        print(f'Available types: {[k for k in self.note_classes.keys()]}.')  # Generate list of note class names.
+        """Delete note.
+
+        Prompts user for note id and deletes associated note.
+
+        Args:
+            None
+
+        Returns:
+            None
+        """
+
         id_ = input('Id of note to delete: ')
         try:
             print(self.delete_note(id_))
@@ -382,6 +401,17 @@ class NoteKeeperApp:
             return
 
     def _user_display(self):
+        """Displays a note.
+
+        Prompts user for note id and displays associated note.
+
+        Args:
+            None
+
+        Returns:
+            None
+        """
+
         id_ = input('Enter template id: ')
         try:
             print(self.get_note(id_).__str__())
@@ -395,7 +425,19 @@ class NoteKeeperApp:
             return
 
     def _user_display_type(self):
+        """Displays all notes of a type.
+
+        Prompts user for note type and displays all notes of that type.
+
+        Args:
+            None
+
+        Returns:
+            None
+        """
+
         print(f'Available types: {[k for k in self.note_classes.keys()]}.')  # Generate list of note class names.
+        print('Entry is case sensitive.')
         type_ = input('Enter template type: ')
         try:
             text = ''
@@ -420,30 +462,44 @@ class NoteKeeperApp:
             return
 
     def _user_edit(self):
+        """Allows user to edit the attributes of a note, including type, and note content.
 
+        Prompts user for note id, finds associated note, and prompts user for new attributes for associated note.
+
+        Args:
+            None
+
+        Returns:
+            None
+        """
+
+        # Determine id of note to edit.
         try:
             id_ = int(input('Enter id of note to edit: '))
         except ValueError:
             print('Input id must be an integer.')
-            self._main_event_loop()
+            return
 
+        # Display note when found.
         try:
             print('\n' + self.get_note(id_).__str__() + '\n')
         except CoreError as ce:
             print(ce)
-            self._main_event_loop()
+            return
         except NoteKeeperApplicationError as ae:
             print(ae)
-            self._main_event_loop()
+            return
         except StorageError as se:
             print(se)
-            self._main_event_loop()
+            return
 
+        # Prompt user for new attributes.
         print('You are allowed to edit the type and note content.')
         type_ = input('Enter type for note: ')
         note = input('Enter new note content. Pressing Enter will input the note: \n')
         argument = {'_type': type_, 'id': id_, 'note': note}
 
+        # Change attributes of associated note.
         try:
             new = self.edit_note(argument)
             msg = f"Note template has been edited:\n{new.__str__()}"
@@ -455,9 +511,18 @@ class NoteKeeperApp:
         except StorageError as se:
             print(se)
         finally:
-            self._main_event_loop()
+            return
 
     def _user_save(self):
+        """Save application data.
+
+        Args:
+            None
+
+        Returns:
+            None
+        """
+
         try:
             self.save()
             print('Data saved.')
@@ -471,6 +536,18 @@ class NoteKeeperApp:
             return
 
     def _user_quit(self):
+        """Quit application.
+
+        Prompts user to save application before ending program, performs save if requested, then returns False to end
+        the Main Event Loop.
+
+        Args:
+            None
+
+        Returns:
+            None
+        """
+
         option = input('Would you like to save y/n?: ')
         if option.lower() == 'y':
             self.save()
@@ -484,18 +561,26 @@ class NoteKeeperApp:
             return False  # Quit main_event_loop and end program.
 
     def _user_invalid(self):
+        """Signifies to user when prompts entered during _parse_user_inputs() are invalid.
+
+        Args:
+            None
+
+        Returns:
+            None
+        """
+
         print('Invalid input.')
         self._parse_user_inputs()
 
     def _get_welcome(self, return_str=False):
-        """Display a welcome message and graphic.
+        """Display a welcome message and graphic, OR return a string representation of the welcome message.
 
         Args:
             return_str (bool): Defaults to False, and prints to screen. When true, returns the welcome as a string.
 
         Returns:
             welcome (str): Returns welcome when return_str is True.
-
         """
 
         log.debug('Getting welcome...')
@@ -519,7 +604,7 @@ class NoteKeeperApp:
             print(welcome)
 
     def _get_menu(self, return_str=False):
-        """Display the options menu.
+        """Display an options menu, OR return a string representation of the options menu.
 
         Args:
             return_str (bool): Defaults to False, and prints to screen. When true, returns the menu as a string.
@@ -790,8 +875,7 @@ def self_test():
 def test():
     """For development level module testing."""
 
-    app = NoteKeeperApp()
-    app._user_edit()
+    pass
 
 
 def main():  # TODO (GS): main should start the application.

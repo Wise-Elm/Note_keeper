@@ -42,6 +42,13 @@ app = create_random_templates(app=app)  # Create random test data and add to ins
 # Since app was instantiated upon testing, point repo.templates at new templates.
 app.repo.templates = app.templates
 
+# Repopulate repo.ids with current ids.
+ids = []
+for class_name, notes in app.repo.templates.items():
+    for note in notes:
+        ids.append(note.id)
+app.repo.ids = ids
+
 
 class TestApplication(unittest.TestCase):
     """Test application.py."""
