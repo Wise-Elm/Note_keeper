@@ -1,10 +1,12 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""This module saves and loads data for application.py."""
+"""This module saves and loads data for application.py.
 
 # TODO (GS): Generate ids using uuid.uuid4.
+"""
 
+import copy
 import logging
 from os.path import exists
 from random import randint
@@ -39,7 +41,7 @@ class Repo:
 
         self.subclass_names = [cls.__name__ for cls in _Template.__subclasses__()]  # List of template class names.
         #   Example:
-        #       self.class_names = ['Surgery', 'ComprehensiveExam', 'etc']
+        #       self.subclass_names = ['Surgery', 'ComprehensiveExam', 'etc']
 
         self.classes = {_class: [] for _class in self.subclass_names}  # Keys = Template class, values = [empty].
         #   Construct dictionary format for use with self.templates.
@@ -63,7 +65,7 @@ class Repo:
         self.note_classes = dict(zip(self.subclass_names, subclass_obj))
         #   Dictionary of template class names as keys and corresponding objects as values.
         #   Example:
-        #       self.subclasses = {
+        #       self.note_classes = {
         #           'LimitedExam': <class 'core.LimitedExam'>,
         #           'Surgery': <class 'core.Surgery'>,
         #           'HygieneExam': <class 'core.HygieneExam'>,
@@ -286,6 +288,7 @@ class Repo:
                 if note.id == id_:
                     index = self.templates[name].index(note)
                     self.templates[name].pop(index)
+                    self.ids.remove(id_)
                     msg = f'Template Type: {name}, id: {id_}, has been deleted.'
                     log.debug(msg)
                     return True
@@ -335,7 +338,7 @@ class Repo:
         log.debug('Editing note type...')
 
         # Check legality of desired_type.
-        if desired_type not in [cls for cls in self.classes.values()]:
+        if desired_type not in [cls for cls in self.note_classes.values()]:
             msg = f'Desired type: {desired_type.__class__.__name__}, is not an available type.'
             log.warning(msg)
             raise StorageError(msg)
@@ -346,13 +349,22 @@ class Repo:
             log.warning(msg)
             raise StorageError(msg)
 
-        note = note.to_dict()  # Note is dict.
+        note_attrs = copy.deepcopy(note.to_dict())  # Note is dict.
 
         # Remove note original object.
-        self.delete_note(note.id)
+        self.delete_note(note_attrs['id'])
+
+        # Identify string name for desired_type.
+        new_type = None
+        for k, v in self.note_classes.items():
+            if v == desired_type:
+                new_type = k
+                break
+
+        note_attrs['_type'] = new_type
 
         # Add edited note.
-        note = self._instantiate_templates(note)  # Note is obj.
+        note = self._instantiate_templates(note_attrs)  # Note is obj.
 
         log.debug('Editing of note type is complete.')
 
@@ -369,6 +381,7 @@ class Repo:
 
             # TODO (GS): Should ids be strings?
             # TODO (GS): Should ids be generated using uuid.uuid4?
+            # Todo (GS): Possibly change ID_DIGIT_LENGTH to a range, ex: ID_RANGE = (x, y)
             # TODO (GS): If range is implemented just use randint(min, max)
         """
 
@@ -393,7 +406,6 @@ class Repo:
         log.debug('New id number generated.')
 
         return id_
-
 
 
 def storage_self_test():

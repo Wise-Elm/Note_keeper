@@ -3,6 +3,7 @@
 
 __version__ = '0.1.0'
 
+import copy
 
 """Note organization application.
 
@@ -13,16 +14,14 @@ and edit note templates. Note templates are intended to provide the basic struct
 practitioner can save time by filling the details rather than constructing a completely new note.
 """
 
-# Todo (GS): Configure a rotating log handler.
+# TODO (GS): Configure a rotating log handler.
 
 import argparse
 from datetime import date
 import logging
-from random import randint
 import sys
 
-# Todo (GS): Possibly change ID_DIGIT_LENGTH to a range, ex: ID_RANGE = (x, y)
-from core import core_self_test, ID_DIGIT_LENGTH, RUNTIME_ID
+from core import CoreError, core_self_test, RUNTIME_ID
 
 from storage import Repo, storage_self_test, StorageError
 
@@ -63,7 +62,7 @@ class NoteKeeperApp:
 
         self.note_classes = self.repo.note_classes  # Dict: keys = class names, values = class objects.
         #   Example:
-        #       self.subclasses = {
+        #       self.note_classes = {
         #           'LimitedExam': <class 'core.LimitedExam'>,
         #           'Surgery': <class 'core.Surgery'>,
         #           'HygieneExam': <class 'core.HygieneExam'>,
@@ -228,7 +227,7 @@ class NoteKeeperApp:
                 self.repo.get_note(edited_template['id']),  # Note on which to change.
                 self.note_classes[edited_template['_type']]  # Desired _Template subclass.
                 )
-            new.note = original.note
+            new.note = edited_template['note']
 
         msg = 'Note has been edited.'
         log.debug(msg)
@@ -253,160 +252,306 @@ class NoteKeeperApp:
 
         return result
 
+    def run_application(self):
+        """Run application in persistent mode.
 
-def persistent():  # TODO (GS): run_application(). should be a method within the application, which gets passed the args object.
-    """Run application in persistent mode.
+        Allows user friendly interaction with program from shell.
 
-    Allows user friendly interaction with program from shell.
+        Args:
+            None
 
-    Args:
-        None
+        Returns:
+            None
+        """
 
-    Returns:
-        None
-    """
+        log.debug('Program being run in persistent mode...')
 
-    log.debug('Program being run in persistent mode...')
+        self._get_welcome()  # Print welcome message.
+        self._main_event_loop()
 
-    app = NoteKeeperApp()
+        log.debug('Persistent mode has ended.')
 
-    # Introduction graphic formatting.
-    graphic_space = 9
-    graphic_indent = 8
+    def _main_event_loop(self):
+        """Main event loop for program which determines when application ends.
 
-    print('Welcome to:')  # TODO (GS): method print_welcome()
-    print(f"{' ' * graphic_indent}         __  _____  __{' ' * graphic_space}      __   __   __   __   __   ")
-    print(f"{' ' * graphic_indent} /\  /  /  \   |   |__{' ' * graphic_space}|_/  |__  |__  |_/  |__  |__|  ")
-    print(f"{' ' * graphic_indent}/  \/   \__/   |   |__{' ' * graphic_space}| \  |__  |__  |    |__  |  \  ")
-    print('\n')
-    print("Application is being run in persistent mode. Enter 'menu' for a list of options, or 'quit' to exit.")
+        Args:
+            None
 
-    # Menu display formatting.
-    menu_space = 20
-    menu_indent = 4
-    # TODO (GS): method print_menu(). Argument determins if returns print or returns string. method get_welcome, and method print_welcome.
-    menu = f"Optional inputs:\n" \
-           f"{' ' * menu_indent}add OR a{' ' * (menu_space - len('add OR a'))} Add a new note template.\n" \
-           f"{' ' * menu_indent}date OR da{' ' * (menu_space - len('date OR da'))} Display today's date\n" \
-           f"{' ' * menu_indent}delete OR de{' ' * (menu_space - len('delete OR de'))} Delete a note template.\n" \
-           f"{' ' * menu_indent}display OR d{' ' * (menu_space - len('display OR d'))} Display note template.\n" \
-           f"{' ' * menu_indent}display type OR dt{' ' * (menu_space - len('display type OR dt'))} Display all note " \
-           f"templates of a type.\n" \
-           f"{' ' * menu_indent}edit OR e{' ' * (menu_space - len('edit OR e'))} Edit a note template.\n" \
-           f"{' ' * menu_indent}save OR s{' ' * (menu_space - len('save OR s'))} Option to save changes.\n" \
-           f"{' ' * menu_indent}quit OR q{' ' * (menu_space - len('quit OR q'))} Quit Program."
+        Returns:
+            None
+        """
 
-    run = True
-    while run is True:  # TODO (GS): while is running. Called main event loop. put into method main_event_loop that gets called if args calls for persistent method.
+        log.debug('Entering Main Event Loop...')
 
-        arg = input('\nEnter your selection: ')  # TODO (GS): change arg to user_input.
+        run = True
+        while run is True:
+            result = self._parse_user_inputs()
+            if result is False:
+                run = False
 
-        if arg.lower() == 'menu' or arg.lower() == 'help' or arg.lower() == 'h':  # TODO (GS): leave out 'h'.
-            print(menu)
-            continue
-        # TODO (GS): if users input is in map, call corresponding function, else: syntax error.
-        elif arg.lower() == 'add' or arg.lower() == 'a':  # TODO (GS): make each block a function since they are each little work pieces.
-            print(f'Available types: {[k for k in app.note_classes.keys()]}.')  # Generate list of note class names.
-            type_ = input('Enter note type: ')
-            note = input('Enter note: ')
-            try:
-                result = app.create_note({'_type': type_, 'note': note})
-                print(f'New note template:\n\n{result}\n')
-                print('Note template has been added.')
-                continue
-            except NoteKeeperApplicationError as ae:
-                print(ae)
-                continue
+        log.debug('Main Event Log has ended.')
 
-        elif arg.lower() == 'date' or arg.lower() == 'da':
-            print(f"Today's date: {date.today()} (yyyy-mm-dd).")
-            continue
+        return
 
-        elif arg.lower() == 'delete' or arg.lower() == 'de':
-            print(f'Available types: {[k for k in app.note_classes.keys()]}.')  # Generate list of note class names.
-            id_ = input('Id to delete: ')
-            try:
-                print(app.delete_note(id_))
-                continue
-            except NoteKeeperApplicationError as ae:
-                print(ae)
-                continue
+    def _parse_user_inputs(self):
+        """Prompt user and handle inputs.
 
-        elif arg.lower() == 'display' or arg.lower() == 'd':
-            id_ = input('Enter template id: ')
-            try:
-                print(app.get_note(id_).__str__())
-                continue
-            except NoteKeeperApplicationError as ae:
-                print(ae)
-                continue
+        Args:
+            None
 
-        elif arg.lower() == 'display type' or arg.lower() == 'dt':
-            print(f'Available types: {[k for k in app.note_classes.keys()]}.')  # Generate list of note class names.
-            type_ = input('Enter template type: ')
-            try:
-                text = ''
-                num = 0
-                for note in app.templates[type_]:
-                    num += 1
-                    out_str = f'\n\nNumber: {num}\n' + note.__str__() + '\n'
-                    text += out_str
+        Returns:
+            None
+        """
 
-                if len(text) == 0:
-                    text = f'No notes found for type: {type_}'
+        log.debug('Prompting user.')
 
-                return text
+        user_input = input('\nEnter your selection: ')
 
-            except StorageError as se:
-                print(se)
-                continue
+        log.debug(f'User selection: {user_input}.')
 
-        elif arg.lower() == 'edit' or arg.lower() == 'e':
-            print(f'Available types: {[k for k in app.note_classes.keys()]}.')  # Generate list of note class names.
-            type_ = input('Type to edit: ')
-            id_ = int(input('Id to edit: '))
-            print('Enter key will input the note.')
-            note = input('Enter new note: \n')
-            argument = {'_type': type_, 'id': id_, 'note': note}
-            try:
-                app.edit_note(argument)
-                print(f'Note template has been edited.')
-                continue
-            except NoteKeeperApplicationError as ae:
-                print(ae)
-                continue
+        # Keys = inputs, Values = functions.
+        options = {
+            'add': self._user_add,
+            'date': self._user_date,
+            'delete': self._user_delete,
+            'display': self._user_display,
+            'display type': self._user_display_type,
+            'edit': self._user_edit,
+            'menu': self._get_menu,
+            'save': self._user_save,
+            'quit': self._user_quit
+        }
 
-        elif arg.lower() == 'save' or arg.lower() == 's':
-            try:
-                app.save()
-                print('Program Saved.')
-                continue
-            except NoteKeeperApplicationError as ae:
-                print(ae)
-                continue
-
-        elif arg.lower() == 'quit' or arg.lower() == 'q':
-            option = input('Would you like to save y/n?: ')
-            if option.lower() == 'y':
-                app.save()
-                print('Program Saved.')
-                run = False  # Quit while loop and end program.
-                continue
-            elif option.lower() != 'n':
-                print('Invalid selection.')
+        if user_input.lower() in options:  # Check if user input is legal.
+            result = options[user_input]()
+            if result is False:  # Quit main_event_loop and end program.
+                return False
             else:
-                print('Program not saved.')
-                run = False  # Quit while loop and end program.
-                continue
+                return
+        else:
+            self._user_invalid()
+
+    def _user_add(self):
+        """Add new note.
+
+        Prompts user and add new note based on inputs.
+
+        Args:
+            None
+
+        Returns:
+            None (NoteKeeperApp OR False): Instance of NoteKeeperApp.
+        """
+
+        print(f'Available types: {[k for k in self.note_classes.keys()]}.')  # Generate list of note class names.
+        type_ = input('Enter note type: ')
+        note = input('Enter note: ')
+        try:
+            result = self.create_note({'_type': type_, 'note': note})
+            print(f'New note template:\n\n{result}\n')
+            print('Note template has been added.')
+        except CoreError as ce:
+            print(ce)
+        except NoteKeeperApplicationError as ae:
+            print(ae)
+        except StorageError as se:
+            print(se)
+        finally:
+            return
+
+    def _user_date(self):
+        result = date.today()
+        if result is None:
+            msg = f'An error occurred while retrieving the date.'
+            raise NoteKeeperApplicationError(msg)
+        else:
+            print(f"Today's date: {result}")
+
+    def _user_delete(self):
+        print(f'Available types: {[k for k in self.note_classes.keys()]}.')  # Generate list of note class names.
+        id_ = input('Id of note to delete: ')
+        try:
+            print(self.delete_note(id_))
+        except CoreError as ce:
+            print(ce)
+        except NoteKeeperApplicationError as ae:
+            print(ae)
+        except StorageError as se:
+            print(se)
+        finally:
+            return
+
+    def _user_display(self):
+        id_ = input('Enter template id: ')
+        try:
+            print(self.get_note(id_).__str__())
+        except CoreError as ce:
+            print(ce)
+        except NoteKeeperApplicationError as ae:
+            print(ae)
+        except StorageError as se:
+            print(se)
+        finally:
+            return
+
+    def _user_display_type(self):
+        print(f'Available types: {[k for k in self.note_classes.keys()]}.')  # Generate list of note class names.
+        type_ = input('Enter template type: ')
+        try:
+            text = ''
+            num = 0
+            for note in self.templates[type_]:
+                num += 1
+                out_str = f'\n\nNumber: {num}\n' + note.__str__() + '\n'
+                text += out_str
+
+            if len(text) == 0:
+                text = f'No notes found for type: {type_}'
+
+            print(text)
+
+        except CoreError as ce:
+            print(ce)
+        except NoteKeeperApplicationError as ae:
+            print(ae)
+        except StorageError as se:
+            print(se)
+        finally:
+            return
+
+    def _user_edit(self):
+
+        try:
+            id_ = int(input('Enter id of note to edit: '))
+        except ValueError:
+            print('Input id must be an integer.')
+            self._main_event_loop()
+
+        try:
+            print('\n' + self.get_note(id_).__str__() + '\n')
+        except CoreError as ce:
+            print(ce)
+            self._main_event_loop()
+        except NoteKeeperApplicationError as ae:
+            print(ae)
+            self._main_event_loop()
+        except StorageError as se:
+            print(se)
+            self._main_event_loop()
+
+        print('You are allowed to edit the type and note content.')
+        type_ = input('Enter type for note: ')
+        note = input('Enter new note content. Pressing Enter will input the note: \n')
+        argument = {'_type': type_, 'id': id_, 'note': note}
+
+        try:
+            new = self.edit_note(argument)
+            msg = f"Note template has been edited:\n{new.__str__()}"
+            print(msg)
+        except CoreError as ce:
+            print(ce)
+        except NoteKeeperApplicationError as ae:
+            print(ae)
+        except StorageError as se:
+            print(se)
+        finally:
+            self._main_event_loop()
+
+    def _user_save(self):
+        try:
+            self.save()
+            print('Data saved.')
+        except CoreError as ce:
+            print(ce)
+        except NoteKeeperApplicationError as ae:
+            print(ae)
+        except StorageError as se:
+            print(se)
+        finally:
+            return
+
+    def _user_quit(self):
+        option = input('Would you like to save y/n?: ')
+        if option.lower() == 'y':
+            self.save()
+            print('Program Saved.')
+            return False  # Quit main_event_loop and end program.
+        elif option.lower() != 'n':
+            print('Invalid selection.')
+            return
+        else:
+            print('Program not saved.')
+            return False  # Quit main_event_loop and end program.
+
+    def _user_invalid(self):
+        print('Invalid input.')
+        self._parse_user_inputs()
+
+    def _get_welcome(self, return_str=False):
+        """Display a welcome message and graphic.
+
+        Args:
+            return_str (bool): Defaults to False, and prints to screen. When true, returns the welcome as a string.
+
+        Returns:
+            welcome (str): Returns welcome when return_str is True.
+
+        """
+
+        log.debug('Getting welcome...')
+
+        # Welcome graphic formatting.
+        graphic_space = 9
+        graphic_indent = 8
+
+        welcome = f"Welcome to:\n" \
+            f"{' ' * graphic_indent}         __  _____  __{' ' * graphic_space}      __   __   __   __   __   \n" \
+            f"{' ' * graphic_indent} /\  /  /  \   |   |__{' ' * graphic_space}|_/  |__  |__  |_/  |__  |__|  \n" \
+            f"{' ' * graphic_indent}/  \/   \__/   |   |__{' ' * graphic_space}| \  |__  |__  |    |__  |  \  \n\n" \
+            "Application is being run in persistent mode. Enter 'menu' for a list of options, or 'quit' to exit."
+
+        if return_str is True:
+            log.debug('Returning welcome as string.')
+            return welcome
 
         else:
-            print('Invalid selection.')
+            log.debug('Printing welcome to screen.')
+            print(welcome)
 
-    print('Good bye!')
+    def _get_menu(self, return_str=False):
+        """Display the options menu.
 
-    log.debug('Persistent mode has ended.')
+        Args:
+            return_str (bool): Defaults to False, and prints to screen. When true, returns the menu as a string.
 
-    return
+        Returns:
+            menu (str): Returns menu when return_str is True.
+        """
+
+        log.debug('Getting menu...')
+
+        # Menu display formatting.
+        menu_space = 20
+        menu_indent = 4
+
+        menu = f"Optional inputs:\n" \
+               f"{' ' * menu_indent}add{' ' * (menu_space - len('add'))} Add a new note template.\n" \
+               f"{' ' * menu_indent}date{' ' * (menu_space - len('date'))} Display today's date\n" \
+               f"{' ' * menu_indent}delete{' ' * (menu_space - len('delete'))} Delete a note template.\n" \
+               f"{' ' * menu_indent}display{' ' * (menu_space - len('display'))} Display note template.\n" \
+               f"{' ' * menu_indent}display type{' ' * (menu_space - len('display type'))} Display all note " \
+               f"templates of a type.\n" \
+               f"{' ' * menu_indent}edit{' ' * (menu_space - len('edit'))} Edit a note template.\n" \
+               f"{' ' * menu_indent}save{' ' * (menu_space - len('save'))} Option to save changes.\n" \
+               f"{' ' * menu_indent}quit{' ' * (menu_space - len('quit'))} Quit Program."
+
+        if return_str is True:
+            log.debug('Returning menu as string.')
+            return menu
+
+        else:
+            log.debug('Printing menu to screen.')
+            print(menu)
 
 
 def parse_args(argv=sys.argv):
@@ -617,7 +762,8 @@ def handle_args(args):
             print(ae)
 
     if args.persistent:
-        persistent()
+        app.run_application()
+        # persistent()
 
     return app
 
@@ -644,7 +790,8 @@ def self_test():
 def test():
     """For development level module testing."""
 
-    pass
+    app = NoteKeeperApp()
+    app._user_edit()
 
 
 def main():  # TODO (GS): main should start the application.
@@ -668,4 +815,4 @@ if __name__ == '__main__':
     # self_test()
     # test()
     main()
-    # TODO (GS): sys.exit(0) from module level.
+    # TODO (GS): sys.exit(0) from module level.t
