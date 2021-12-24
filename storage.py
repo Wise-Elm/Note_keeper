@@ -273,14 +273,14 @@ class Repo:
         if type(id_) is str:  # Check legality of id_.
             if not id_.isnumeric():
                 msg = f'Entered id: ({id_}), is not valid. Must only contain numbers.'
-                log.debug(msg)
+                log.warning(msg)
                 raise StorageError(msg)
             else:
                 id_ = int(id_)
 
         if not type(id_) is int:  # Check legality of id_ argument.
             msg = 'Entered id is not valid. Must be numeric.'
-            log.debug(msg)
+            log.warning(msg)
             raise StorageError(msg)
 
         for name, notes in self.templates.items():

@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""This module is used to test application.py"""
+"""This module is used to test notekeeperapp.py"""
 
 import random
 import unittest
@@ -30,6 +30,8 @@ app.templates = {cls.__name__: [] for cls in _Template.__subclasses__()}  # Rese
 #       }
 
 app = create_random_templates(app=app)  # Create random test data and add to instance.
+#   Uses create_random_templates() from test_assets to return the same instance of app as in the argument, but with
+#   app.templates populated with test data.
 #   Example:
 #       app.templates = {
 #           'LimitedExam': [LimitedExam objects],
@@ -53,8 +55,8 @@ app.repo.ids = ids
 class TestApplication(unittest.TestCase):
     """Test application.py."""
 
-    def test_add_template(self):
-        """Test Application.add_template().
+    def test_create_note(self):
+        """Test Application.create_note().
 
         Asserts that the template object is added correctly be checking the length of the template object list for the
         corresponding template type before and after it is added, and asserts that the template is instantiated into the
@@ -71,11 +73,39 @@ class TestApplication(unittest.TestCase):
 
         len_before = len(app.templates[random_note['_type']])
         new_template_obj = app.create_note(random_note)
+        app.repo.ids.append(new_template_obj.id)  # Add id to repo.ids to prevent error when testing delete.
         len_after = len(app.templates[random_note['_type']])
 
         self.assertEqual(len_before+1, len_after)
         self.assertIsInstance(new_template_obj, app.note_classes[random_note['_type']])
         self.assertIsInstance(new_template_obj, _Template)
+
+    def test_delete_note(self):
+        """Test Application.delete_note().
+
+        Picks a random note template from instance, asserts the existence of template, deletes template, and asserts the
+        non existence to template. After testing, adds template object back into instance.
+        """
+
+        cls_names = [k for k in app.note_classes.keys()]  # Generate list of note class names.
+        test_template = random.choice(cls_names)
+        test_template = random.choice(app.templates[test_template])
+
+        # Confirm that note is included in program.
+        self.assertIn(test_template, app.templates[test_template.__class__.__name__])
+
+        first_len = len(app.templates[test_template.__class__.__name__])
+
+        app.delete_note(test_template.id)
+
+        # Confirm object has been removed.
+        self.assertNotIn(test_template, app.templates[test_template.__class__.__name__])
+        # Confirm that the list the object was in is now one shorter.
+        self.assertEqual(first_len, len(app.templates[test_template.__class__.__name__]) + 1)
+
+        # Add template back to prevent testing problems that arise from other unitest methods checking for the original
+        # testing data.
+        app.create_note(test_template.to_dict())
 
     def test_get_note(self):
         """Test Application.get_note().
@@ -91,34 +121,8 @@ class TestApplication(unittest.TestCase):
 
         self.assertIs(first_template, second_template)
 
-    def test_delete_template(self):
-        """Test Application.delete_template().
-
-        Picks a random note template from instance, asserts the existence of template, deletes template, and asserts the
-        non existence to template. After testing, adds template object back into instance.
-        """
-
-        cls_names = [k for k in app.note_classes.keys()]  # Generate list of note class names.
-        test_template = random.choice(cls_names)
-        test_template = random.choice(app.templates[test_template])
-
-        # Confirm that note is included in program.
-        self.assertIn(test_template, app.templates[test_template.__class__.__name__])
-
-        first_len = len(app.templates[test_template.__class__.__name__])
-        app.delete_note(test_template.id)
-
-        # Confirm object has been removed.
-        self.assertNotIn(test_template, app.templates[test_template.__class__.__name__])
-        # Confirm that the list the object was in is now one shorter.
-        self.assertEqual(first_len, len(app.templates[test_template.__class__.__name__]) + 1)
-
-        # Add template back to prevent testing problems that arise from other unitests checking for the original testing
-        # data.
-        app.create_note(test_template.to_dict())
-
-    def test_edit_template(self):
-        """Test Application.edit_template().
+    def test_edit_note(self):
+        """Test Application.edit_note().
 
         Tests that objects are edited properly by editing a template and confirming the proper changes are made.
         """

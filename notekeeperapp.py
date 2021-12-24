@@ -19,6 +19,7 @@ practitioner can save time by filling the details rather than constructing a com
 import argparse
 from datetime import date
 import logging
+from logging import handlers
 import sys
 
 from core import CoreError, core_self_test, RUNTIME_ID
@@ -252,7 +253,7 @@ class NoteKeeperApp:
 
         return result
 
-    def run_application(self):
+    def run_application(self):  # TODO (GS): Should this and all methods used to run app in persistent mode be put into a subclass of NoteKeeperApp?
         """Run application in persistent mode.
 
         Provides a user friendly interaction with program from shell. Program stay running until user quits.
@@ -311,15 +312,15 @@ class NoteKeeperApp:
 
         # Keys = inputs, Values = functions.
         options = {
-            'add': self._user_add,
-            'date': self._user_date,
-            'delete': self._user_delete,
-            'display': self._user_display,
-            'display type': self._user_display_type,
-            'edit': self._user_edit,
+            'add': self._get_add,
+            'date': self._get_date,
+            'delete': self._get_delete,
+            'display': self._get_display,
+            'display type': self._get_display_type,
+            'edit': self._get_edit,
             'menu': self._get_menu,
-            'save': self._user_save,
-            'quit': self._user_quit
+            'save': self._get_save,
+            'quit': self._get_quit
         }
 
         if user_input.lower() in options:  # Check if user input is legal.
@@ -329,9 +330,9 @@ class NoteKeeperApp:
             else:
                 return
         else:
-            self._user_invalid()  # Handle indecipherable input.
+            self._get_invalid()  # Handle indecipherable input.
 
-    def _user_add(self):
+    def _get_add(self):
         """Add new note.
 
         Prompts user for note attributes and adds new note based on inputs.
@@ -359,7 +360,7 @@ class NoteKeeperApp:
         finally:
             return
 
-    def _user_date(self):
+    def _get_date(self):
         """Display current date.
 
         Args:
@@ -376,7 +377,7 @@ class NoteKeeperApp:
         else:
             print(f"Today's date: {result}")
 
-    def _user_delete(self):
+    def _get_delete(self):
         """Delete note.
 
         Prompts user for note id and deletes associated note.
@@ -400,7 +401,7 @@ class NoteKeeperApp:
         finally:
             return
 
-    def _user_display(self):
+    def _get_display(self):
         """Displays a note.
 
         Prompts user for note id and displays associated note.
@@ -424,7 +425,7 @@ class NoteKeeperApp:
         finally:
             return
 
-    def _user_display_type(self):
+    def _get_display_type(self):
         """Displays all notes of a type.
 
         Prompts user for note type and displays all notes of that type.
@@ -461,7 +462,7 @@ class NoteKeeperApp:
         finally:
             return
 
-    def _user_edit(self):
+    def _get_edit(self):
         """Allows user to edit the attributes of a note, including type, and note content.
 
         Prompts user for note id, finds associated note, and prompts user for new attributes for associated note.
@@ -513,7 +514,7 @@ class NoteKeeperApp:
         finally:
             return
 
-    def _user_save(self):
+    def _get_save(self):
         """Save application data.
 
         Args:
@@ -535,7 +536,7 @@ class NoteKeeperApp:
         finally:
             return
 
-    def _user_quit(self):
+    def _get_quit(self):
         """Quit application.
 
         Prompts user to save application before ending program, performs save if requested, then returns False to end
@@ -560,7 +561,7 @@ class NoteKeeperApp:
             print('Program not saved.')
             return False  # Quit main_event_loop and end program.
 
-    def _user_invalid(self):
+    def _get_invalid(self):
         """Signifies to user when prompts entered during _parse_user_inputs() are invalid.
 
         Args:
@@ -734,7 +735,7 @@ def parse_args(argv=sys.argv):
     )
     # TODO (GS): if user --h will print help and exit program on line 644.
     args = parser.parse_args()  # Collect arguments.
-    # TODO (GS): look up help eppilogue in argparse
+    # TODO (GS): look up help epilogue in argparse
     log.debug(f'args: {args}')
     log.debug('parse_args complete.')
 
@@ -880,13 +881,11 @@ def test():
 
 def main():  # TODO (GS): main should start the application.
 
-    # TODO (GS): Add rotating logging.
-    # Configure logging.
-    logging.basicConfig(
-        level=DEFAULT_LOG_LEVEL,
-        format=f'[%(asctime)s] - {RUNTIME_ID} - %(levelname)s - [%(name)s:%(lineno)s] - %(message)s',
-        filename=DEFAULT_LOG_FILENAME,
-    )
+    handler = handlers.RotatingFileHandler(filename=DEFAULT_LOG_FILENAME, maxBytes=500)
+    formatter = logging.Formatter(f'[%(asctime)s] - {RUNTIME_ID} - %(levelname)s - [%(name)s:%(lineno)s] - %(message)s')
+    handler.setFormatter(formatter)
+    log.addHandler(handler)
+    log.setLevel(DEFAULT_LOG_LEVEL)
 
     log.debug('main...')
 

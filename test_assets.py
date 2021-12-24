@@ -47,7 +47,7 @@ def create_random_templates(app=None, repo=None, num=10):
         raise TestingError(msg)
 
     if app is None and repo is None:
-        msg = 'Eight app OR repo MUST be passed as an argument.'
+        msg = 'Either app OR repo MUST be passed as an argument.'
         raise TestingError(msg)
 
     if app:
