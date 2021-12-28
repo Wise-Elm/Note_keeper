@@ -3,7 +3,7 @@
 
 __version__ = '0.1.0'
 
-import copy
+import copy# TODO (GS): move to imports.
 
 """Note organization application.
 
@@ -14,7 +14,6 @@ and edit note templates. Note templates are intended to provide the basic struct
 practitioner can save time by filling the details rather than constructing a completely new note.
 """
 
-# TODO (GS): Configure a rotating log handler.
 
 import argparse
 from datetime import date
@@ -23,13 +22,12 @@ from logging import handlers
 import sys
 
 from core import CoreError, core_self_test, RUNTIME_ID
-
 from storage import Repo, storage_self_test, StorageError
 
 
 DEFAULT_LOG_FILENAME = 'note_keeper_log.log'
 DEFAULT_LOG_LEVEL = logging.DEBUG
-
+# TODO (GS): Should have parameter such as auto load = False.
 # Configure logging.
 log = logging.getLogger()
 log.addHandler(logging.NullHandler())
@@ -39,7 +37,7 @@ class NoteKeeperApplicationError(RuntimeError):
     """Base class for exceptions arising from this module."""
 
 
-class NoteKeeperApp:
+class NoteKeeper:
     """Handle interaction between program modules."""
 
     def __init__(self):
@@ -70,6 +68,22 @@ class NoteKeeperApp:
         #           'PeriodicExam': <class 'core.PeriodicExam'>,
         #           'ComprehensiveExam': <class 'core.ComprehensiveExam'>
         #       }
+
+        self.welcome_message = self._get_welcome()  # Welcome message to display on program startup.
+
+        # Map of program methods that are intended for use during main_event_loop().
+        # Keys = inputs, Values = functions.
+        self.options = {
+            'add': self._get_add,
+            'date': self._get_date,
+            'delete': self._get_delete,
+            'display': self._get_display,
+            'display type': self._get_display_type,
+            'edit': self._get_edit,
+            'menu': self._get_menu,
+            'save': self._get_save,
+            'quit': self._get_quit
+        }
 
         log.debug('Note Keeper has started.')
 
@@ -253,8 +267,8 @@ class NoteKeeperApp:
 
         return result
 
-    def run_application(self):  # TODO (GS): Should this and all methods used to run app in persistent mode be put into a subclass of NoteKeeperApp?
-        """Run application in persistent mode.
+    def main_event_loop(self):
+        """Run application.
 
         Provides a user friendly interaction with program from shell. Program stay running until user quits.
 
@@ -265,36 +279,21 @@ class NoteKeeperApp:
             None
         """
 
-        log.debug('Program being run in persistent mode...')
-
-        self._get_welcome()  # Print welcome message.
-        self._main_event_loop()
-
-        log.debug('Persistent mode has ended.')
-
-    def _main_event_loop(self):
-        """Main event loop for program.
-
-        Args:
-            None
-
-        Returns:
-            None
-        """
+        self.welcome_message  # Print welcome message to screen.
 
         log.debug('Entering Main Event Loop...')
 
         run = True
         while run is True:
-            result = self._parse_user_inputs()
+            result = self._get_user_inputs()
             if result is False:
                 run = False
 
-        log.debug('Main Event Log has ended.')
+        log.debug('Main Event Loop has ended.')
 
         return
 
-    def _parse_user_inputs(self):
+    def _get_user_inputs(self):
         """Prompts user if initial selection, then passes selection to appropriate methods.
 
         Args:
@@ -310,21 +309,8 @@ class NoteKeeperApp:
 
         log.debug(f'User selection: {user_input}.')
 
-        # Keys = inputs, Values = functions.
-        options = {
-            'add': self._get_add,
-            'date': self._get_date,
-            'delete': self._get_delete,
-            'display': self._get_display,
-            'display type': self._get_display_type,
-            'edit': self._get_edit,
-            'menu': self._get_menu,
-            'save': self._get_save,
-            'quit': self._get_quit
-        }
-
-        if user_input.lower() in options:  # Check if user input is legal.
-            result = options[user_input]()
+        if user_input.lower() in self.options:  # Check if user input is legal.
+            result = self.options[user_input]()
             if result is False:  # Quit main_event_loop and end program.
                 return False
             else:
@@ -360,22 +346,42 @@ class NoteKeeperApp:
         finally:
             return
 
-    def _get_date(self):
+    @staticmethod
+    def _get_date(as_str=False):
         """Display current date.
 
         Args:
-            None
+            as_str (bool, OPTIONAL): When True returns string, else prints to screen.
 
         Returns:
-            None
+            result (str, OPTIONAL): Return string representation of date when as_str is True, prints to screen
+            otherwise.
         """
 
         result = date.today()
         if result is None:
             msg = f'An error occurred while retrieving the date.'
             raise NoteKeeperApplicationError(msg)
+        elif as_str is True:
+            return result
         else:
             print(f"Today's date: {result}")
+
+    @staticmethod
+    def _is_workday(day):
+        """Determines if day is a regular workday: Monday-Friday.
+
+        Args:
+            day (datetime obj): datetime object representing a date.
+
+        Returns:
+            (Bool): True if workday (Monday-Friday), False otherwise (Saturday or Sunday).
+        """
+
+        # Within the datetime module days to the week are represented by the integers 0-6, with Monday being 0.
+        if day.weekday() < 5:
+            return False
+        return True
 
     def _get_delete(self):
         """Delete note.
@@ -572,7 +578,7 @@ class NoteKeeperApp:
         """
 
         print('Invalid input.')
-        self._parse_user_inputs()
+        self._get_user_inputs()
 
     def _get_welcome(self, return_str=False):
         """Display a welcome message and graphic, OR return a string representation of the welcome message.
@@ -640,7 +646,7 @@ class NoteKeeperApp:
             print(menu)
 
 
-def parse_args(argv=sys.argv):
+def parse_args(argv=sys.argv):  # TODO (GS): bind to a variable: args = parse_args().
     """Setup shell environment to run program."""
 
     log.debug('parse_args...')
@@ -654,7 +660,6 @@ def parse_args(argv=sys.argv):
                'constructing a completely new note.'
     )
 
-    # TODO (GS): hand a help epilogue.
     # Run Application.self_test().
     parser.add_argument(
         '-t',
@@ -755,18 +760,18 @@ def handle_args(args):
     log.debug('Checking for arguments from shell...')
 
     # Check for arguments from arg_parse()
-    run_args = False
+    run_args = False      # TODO (GS): This should not be a thing.
     arguments = args.__dict__
     for k, v in arguments.items():
         if v is not False:
             run_args = True
             continue
-
+    # TODO (GS): runs self test also on 775.
     if run_args is False:  # When no arguments from arg_parse() run self_test()
         log.debug('No arguments from arg_parse. Running self_test()...')
         self_test()
         log.debug('self_test() complete.')
-
+    # TODO (GS): running applicaiton without args shoudl just run the applicaiton in persistent mode.
     log.debug('arg_parse() arguments found.')
 
     if args.test:
@@ -775,32 +780,32 @@ def handle_args(args):
         self_test()  # Test application.py
         storage_self_test()  # Test storage.py
         core_self_test()  # Test core.py
-
+        # TODO (GS): does not exit early and boots app anyways. Should return.
         log.debug('Unittest complete.')
 
-    app = NoteKeeperApp()
+    app = NoteKeeper()
     log.debug('Parsing arguments through application...')
 
     # Run Application.today_date().
     if args.date:
         print(date.today())
-
+    # TODO (GS): should return. should come before 781. does not use the applicaiton.
     # Run Application.add_template().
-    if args.add:
-        arg = {
+    if args.add:  # TODO (GS): get rid of yellow pad.
+        arg = {  # TODO (GS): should just be passed to app.create_note as arguments.
             '_type': args.add[0],
             'note': args.add[1]
         }
         try:
-            result = app.create_note(arg)
+            result = app.create_note(arg)  # TODO (GS): note = app.create_note(arg) Should either create a note or raise an exception.
             print(f"Note template Type: {result.to_dict()['_type']}, has been added.")
-            app.save()
+            app.save()  # TODO (GS): create context manager for application so it saves automatically when app ends.
         except NoteKeeperApplicationError as ae:
             print(ae)
-
+        # TODO (GS): ask program for a note, returns blank note. then arge are arguments for filling a note with a method.
     # Concatenate notes of argument type using Application.get_note().
-    if args.all:
-        try:
+    if args.all:  # TODO (GS): should be elif args.all, and should return after each one.
+        try:  # TODO (GS): should say something like display_all.
             text = ''
             num = 0
             for note in app.templates[args.all[0]]:
@@ -848,10 +853,11 @@ def handle_args(args):
             print(ae)
 
     if args.persistent:
-        app.run_application()
+        app.main_event_loop()
         # persistent()
 
-    return app
+    return app  # TODO (GS): if none of the if or elif pass the app shoudl be run in persistent mode.
+  # TODO (GS): remove return app until I want it to actually do something with with the app.
 
 
 def self_test():
@@ -890,7 +896,7 @@ def main():  # TODO (GS): main should start the application.
     log.debug('main...')
 
     handle_args(parse_args())  # Returns instance of application.
-
+    # TODO (GS): rename handle_arge to something like run_applicaiton.
     log.debug('main.')
 
 

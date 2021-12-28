@@ -16,7 +16,7 @@ CORE_LOG_LEVEL = logging.DEBUG
 log = logging.getLogger(__name__)
 log.addHandler(logging.NullHandler())
 
-
+# TODO (GS): make function that returns note classes.
 class CoreError(RuntimeError):
     """Base class for exceptions arising from this module."""
 
