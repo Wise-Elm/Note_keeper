@@ -21,7 +21,7 @@ import logging
 from logging import handlers
 import sys
 
-from core import CoreError, core_self_test, RUNTIME_ID
+from core import CoreError, core_self_test, RUNTIME_ID, _Template
 from storage import Repo, storage_self_test, StorageError
 
 
@@ -69,7 +69,7 @@ class NoteKeeper:
         #           'ComprehensiveExam': <class 'core.ComprehensiveExam'>
         #       }
 
-        self.welcome_message = self._get_welcome()  # Welcome message to display on program startup.
+        self.welcome_message = self._get_welcome(return_str=True)  # Welcome message to display on program startup.
 
         # Map of program methods that are intended for use during main_event_loop().
         # Keys = inputs, Values = functions.
@@ -87,11 +87,16 @@ class NoteKeeper:
 
         log.debug('Note Keeper has started.')
 
-    def create_note(self, new_template, id_=None):
-        """Add new note.
+    def create_note(self, new_template=None, id_=None, blank=False):
+        """Create new note.
+
+        Will create a new note with supplied argument data, or return a 'blank' note with attributes yet to be filled.
+
+        When blank is True other arguments will be ignored.
 
         Args:
-            new_template (dict): Dictionary representation of a note. The id key/value is optional.
+            new_template (dict, OPTIONAL): First parameter. Dictionary representation of a note. The id key/value is
+                optional.
                 Example:
                     new_template = {
                         '_type': 'Surgery,
@@ -99,7 +104,14 @@ class NoteKeeper:
                         'note': 'This is an example'
                     }
 
-            id_ (int, OPTIONAL): Used to assign specific id number to new note note if desired.
+            id_ (int, OPTIONAL): Second parameter. Used to assign specific id number to new note note if desired.
+
+            blank (Bool, OPTIONAL): Third parameter. When True method will generate a note with an id, _Template as
+                type, and an empty string as note.
+                Example:
+                      type(note) = _Template
+                      note.id = randomly generated integer that complies with id requirements.
+                      note.note = '' (empty string)
 
         Returns:  # TODO (GS): Change all Returns to Return?
             note (_Template): New note.
@@ -107,29 +119,64 @@ class NoteKeeper:
 
         log.debug('Creating new note...')
 
-        # Check if new_template can be associated with a valid class.
-        cls_names = [k for k in self.note_classes.keys()]  # Generate list of note class names.
-        if new_template['_type'] not in cls_names:
-            msg = 'Note Template type: {}, not allowed.'.format(new_template['_type'])
-            log.warning(msg)
-            raise NoteKeeperApplicationError(msg)
+        if blank is True:  # User wants a note without a designated subclass of _Template, and a randomly generated id.
+            note_template = {
+                'id': self.generate_id(),
+                'note': ''
+            }
 
-        # If id_ is None generate a new unique id.
-        if id_ is None:
-            id_ = self.generate_id()
+            note = _Template(note_template)
 
-        note_template = {
-            'id': id_,
-            'note': new_template['note']
+            return note
+
+        else:  # User wants a note with a designated subclass of _Template.
+            # Check if new_template can be associated with a valid class.
+            cls_names = [k for k in self.note_classes.keys()]  # Generate list of note class names.
+            if new_template['_type'] not in cls_names:
+                msg = 'Note Template type: {}, not allowed.'.format(new_template['_type'])
+                log.warning(msg)
+                raise NoteKeeperApplicationError(msg)
+
+            # If id_ is None generate a new unique id.
+            if id_ is None:
+                id_ = self.generate_id()
+
+            note_template = {
+                'id': id_,
+                'note': new_template['note']
+            }
+
+            cls = self.note_classes[new_template['_type']]  # Select appropriate object class for new note.
+            note = cls(note_template)  # Instantiate note object.
+
+            # Add new object to appropriate dictionary value in self.templates.
+            self.templates[cls.__name__].append(note)
+
+            log.debug('New note created and added.')
+
+            return note
+
+    def create_from_attributes(self, type_, notes, id_=None):
+        """Helper method for create_note().
+
+        Takes arguments and converts them to a dictionary representation of a note, then uses create_note() to return
+        a note.
+
+        Args:
+            type_ (str): First parameter. A subclass of _Templates.
+            notes (str): Second parameter.
+            id_ (int, OPTIONAL): Third parameter. A note id. None will generate a randomized id.
+
+        Returns:
+            note
+        """
+
+        template = {
+            '_type': type_,
+            'note': notes
         }
 
-        cls = self.note_classes[new_template['_type']]  # Select appropriate object class for new note.
-        note = cls(note_template)  # Instantiate note object.
-
-        # Add new object to appropriate dictionary value in self.templates.
-        self.templates[cls.__name__].append(note)
-
-        log.debug('New note created and added.')
+        note = self.create_note(new_template=template, id_=id_)
 
         return note
 
@@ -157,26 +204,23 @@ class NoteKeeper:
             note (_Template): Returns the note with a id that matches argument.
         """
 
-        log.debug('Finding note...')
-
-        if type(id_) is str:  # Check legality of id_ argument.
-            if not id_.isnumeric():
-                msg = 'Entered id is not valid. Must be all numbers.'
-                log.debug(msg)
-                raise NoteKeeperApplicationError(msg)
-            else:
-                id_ = int(id_)
-
-        if not type(id_) is int:  # Check legality of id_ argument.
-            msg = 'Entered id is not valid. Must be all numbers.'
-            log.debug(msg)
-            raise NoteKeeperApplicationError(msg)
-
         note = self.repo.get_note(id_)
 
-        log.debug('Note found, returning note.')
-
         return note
+
+    def get_notes_of_type(self, type_):
+        """Return all notes of type in argument.
+
+        Args:
+            type_ (str): Type.
+
+        Returns:
+            notes (lst): All notes of argument type.
+        """
+
+        notes = self.repo.get_notes_of_type(type_)
+
+        return notes
 
     def delete_note(self, id_):  # TODO (GS): Develop way to track deleted ids.
         """Delete note.
@@ -279,7 +323,7 @@ class NoteKeeper:
             None
         """
 
-        self.welcome_message  # Print welcome message to screen.
+        print(self.welcome_message)  # Print welcome message to screen.
 
         log.debug('Entering Main Event Loop...')
 
@@ -294,7 +338,7 @@ class NoteKeeper:
         return
 
     def _get_user_inputs(self):
-        """Prompts user if initial selection, then passes selection to appropriate methods.
+        """Prompts user for initial selection, then passes selection to appropriate methods.
 
         Args:
             None
@@ -314,9 +358,10 @@ class NoteKeeper:
             if result is False:  # Quit main_event_loop and end program.
                 return False
             else:
-                return
+                return True
         else:
             self._get_invalid()  # Handle indecipherable input.
+            return True
 
     def _get_add(self):
         """Add new note.
@@ -578,7 +623,7 @@ class NoteKeeper:
         """
 
         print('Invalid input.')
-        self._get_user_inputs()
+        return
 
     def _get_welcome(self, return_str=False):
         """Display a welcome message and graphic, OR return a string representation of the welcome message.
@@ -646,18 +691,18 @@ class NoteKeeper:
             print(menu)
 
 
-def parse_args(argv=sys.argv):  # TODO (GS): bind to a variable: args = parse_args().
+def parse_args(argv=sys.argv):
     """Setup shell environment to run program."""
 
     log.debug('parse_args...')
 
     # Program description.
     parser = argparse.ArgumentParser(
-        description='Welcome to Note Keeper.',
-        epilog='This application is designed to aid in writing medical notes by allowing the user to construct, save, '
-               'display, delete, and edit note templates. Note templates are intended to provide the basic structure '
-               'of a patient note so that the practitioner can save time by filling the details rather than '
-               'constructing a completely new note.'
+        description='Welcome to Note Keeper. This application is designed to aid in writing medical notes by allowing '
+                    'the user to construct, save, display, delete, and edit note templates. Note templates are '
+                    'intended to provide the basic structure of a patient note so that the practitioner can save time '
+                    'by filling the details rather than constructing a completely new note.',
+        epilog='When no arguments are present application will run from shell in persistent mode.'
     )
 
     # Run Application.self_test().
@@ -730,25 +775,16 @@ def parse_args(argv=sys.argv):  # TODO (GS): bind to a variable: args = parse_ar
         metavar=('ID', 'Type', 'Note')
     )
 
-    # Run Application in persistent mode through terminal.
-    parser.add_argument(
-        '-p',
-        '--persistent',
-        help='Run application in persistent mode through the terminal.',
-        default=False,
-        action='store_true'
-    )
-    # TODO (GS): if user --h will print help and exit program on line 644.
     args = parser.parse_args()  # Collect arguments.
-    # TODO (GS): look up help epilogue in argparse
+
     log.debug(f'args: {args}')
     log.debug('parse_args complete.')
 
     return args
 
 
-def handle_args(args):
-    """Handle args when parse_args() receives inputs.
+def run_application(args):
+    """Run application based on shell commands.
 
     Args:
         args (List [args]): List of arguments from argument parser.
@@ -759,105 +795,45 @@ def handle_args(args):
 
     log.debug('Checking for arguments from shell...')
 
-    # Check for arguments from arg_parse()
-    run_args = False      # TODO (GS): This should not be a thing.
-    arguments = args.__dict__
-    for k, v in arguments.items():
-        if v is not False:
-            run_args = True
-            continue
-    # TODO (GS): runs self test also on 775.
-    if run_args is False:  # When no arguments from arg_parse() run self_test()
-        log.debug('No arguments from arg_parse. Running self_test()...')
-        self_test()
-        log.debug('self_test() complete.')
-    # TODO (GS): running applicaiton without args shoudl just run the applicaiton in persistent mode.
-    log.debug('arg_parse() arguments found.')
-
     if args.test:
-        log.debug('Begin unittest...')
+        log.debug('Begin unittests on notekeeper.py, storage.py, and core.py...')
 
         self_test()  # Test application.py
         storage_self_test()  # Test storage.py
         core_self_test()  # Test core.py
-        # TODO (GS): does not exit early and boots app anyways. Should return.
-        log.debug('Unittest complete.')
+        return
 
-    app = NoteKeeper()
-    log.debug('Parsing arguments through application...')
-
-    # Run Application.today_date().
-    if args.date:
+    elif args.date:
         print(date.today())
-    # TODO (GS): should return. should come before 781. does not use the applicaiton.
-    # Run Application.add_template().
-    if args.add:  # TODO (GS): get rid of yellow pad.
-        arg = {  # TODO (GS): should just be passed to app.create_note as arguments.
-            '_type': args.add[0],
-            'note': args.add[1]
-        }
-        try:
-            result = app.create_note(arg)  # TODO (GS): note = app.create_note(arg) Should either create a note or raise an exception.
-            print(f"Note template Type: {result.to_dict()['_type']}, has been added.")
-            app.save()  # TODO (GS): create context manager for application so it saves automatically when app ends.
-        except NoteKeeperApplicationError as ae:
-            print(ae)
-        # TODO (GS): ask program for a note, returns blank note. then arge are arguments for filling a note with a method.
-    # Concatenate notes of argument type using Application.get_note().
-    if args.all:  # TODO (GS): should be elif args.all, and should return after each one.
-        try:  # TODO (GS): should say something like display_all.
-            text = ''
-            num = 0
-            for note in app.templates[args.all[0]]:
-                num += 1
-                out_str = f'\n\nNumber: {num}\n' + note.__str__() + '\n'
-                text += out_str
+        return
 
-            if len(text) == 0:
-                text = f'No notes found for type: {args.all[0]}'
+    app = NoteKeeper()  # Begin application instance.
+    log.debug('NoteKeeper instantiated.')
 
-            return text
+    if args.add:
+        note = app.create_from_attributes(type_=args.add[0], notes=args.add[1])
+        print(f'Note: {note}, has been created.')
+        return
 
-        except StorageError as se:
-            print(se)
+    elif args.all:
+        print(app.get_notes_of_type(args.all[0]))
+        return
 
-    # Run Application.get_note().
-    if args.display:
-        try:
-            print(app.get_note(args.display[0]).__str__())
-        except NoteKeeperApplicationError as ae:
-            print(ae)
+    elif args.display:
+        print(app.get_note(args.display[0]).__str__())
+        return
 
-    # Run Application.delete_template().
-    if args.delete:
-        try:
-            result = app.delete_note(args.delete_note[0])
-            if result is True:
-                print('Note template has been deleted.')
-                app.save()
-        except NoteKeeperApplicationError as ae:
-            print(ae)
+    elif args.delete:
+        app.delete_note(args.delete_note[0])
+        return
 
-    # Run Application.edit_template().
-    if args.edit:
-        arg = {
-            'id': int(args.edit[0]),
-            '_type': args.edit[1],
-            'note': args.edit[2]
-        }
-        try:
-            result = app.edit_note(arg)
-            print(result.to_dict()['_type'] + ', id: ' + str(result.to_dict()['id']) + ', has been edited.')
-            app.save()
-        except NoteKeeperApplicationError as ae:
-            print(ae)
+    elif args.edit:
+        app.edit_note(edited_template={'id': args.edit[0], 'type_': args.edit[1], 'note': args.edit[2]})
+        return
 
-    if args.persistent:
+    else:
         app.main_event_loop()
-        # persistent()
-
-    return app  # TODO (GS): if none of the if or elif pass the app shoudl be run in persistent mode.
-  # TODO (GS): remove return app until I want it to actually do something with with the app.
+        return
 
 
 def self_test():
@@ -882,8 +858,9 @@ def self_test():
 def test():
     """For development level module testing."""
 
-    pass
-
+    app = NoteKeeper()
+    x = app.create_note(blank=True)
+    print(x)
 
 def main():  # TODO (GS): main should start the application.
 
@@ -895,8 +872,9 @@ def main():  # TODO (GS): main should start the application.
 
     log.debug('main...')
 
-    handle_args(parse_args())  # Returns instance of application.
-    # TODO (GS): rename handle_arge to something like run_applicaiton.
+    args = parse_args()
+    run_application(args)  # Returns instance of application.
+
     log.debug('main.')
 
 

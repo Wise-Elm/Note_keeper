@@ -56,6 +56,14 @@ class Repo:
 
         self.templates = self.classes  # Dictionary: keys=template class names, values=[note templates].
         #   Values will be populated with loaded data.
+        #   Example:
+        #       self.templates = {
+        #           'LimitedExam': [LimitedExam objects],
+        #           'Surgery': [Surgery objects],
+        #           'HygieneExam': [HygieneExam objects],
+        #           'PeriodicExam': [PeriodicExam objects],
+        #           'ComprehensiveExam': [ComprehensiveExam objects]
+        #       }
 
         subclass_obj = _Template.__subclasses__()
         #   Gather _Template child class objects and insert them into a list.
@@ -303,13 +311,21 @@ class Repo:
         Finds note by matching ids.
 
         Args:
-            id_ (int): id number for desired template.
+            id_ (int OR str): id number for desired template.
 
         Returns:
             note (_Template): Returns the note with a id that matches argument.
         """
 
         log.debug('Finding note...')
+
+        if type(id_) is str:  # Check legality of id_ argument.
+            if not id_.isnumeric():
+                msg = 'Entered id is not valid. Must be all numbers.'
+                log.warning(msg)
+                raise StorageError(msg)
+            else:
+                id_ = int(id_)
 
         for name, notes in self.templates.items():
             for note in notes:
@@ -321,6 +337,27 @@ class Repo:
         msg = f'Note with id: {id_}, cannot be found.'
         log.debug(msg)
         raise StorageError(msg)
+
+    def get_notes_of_type(self, type_):
+        """Return all notes of type in argument.
+
+        Args:
+            type_ (str): Type.
+
+        Returns:
+            notes (lst): All notes of argument type.
+        """
+
+        log.debug(f'Retrieving all notes of type: {type_}.')
+
+        if not self.templates[type_]:
+            msg = f'Could not find type: {type_} in stored notes.'
+            log.warning(msg)
+            raise StorageError(msg)
+        else:
+            notes = [note for note in self.templates[type_]]
+            log.debug(f'All notes of type: {type_} retrieved.')
+            return notes
 
     def edit_type(self, note, desired_type):
         """Change the type of a note.
