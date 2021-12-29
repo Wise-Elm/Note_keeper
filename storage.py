@@ -16,6 +16,7 @@ import yaml
 from core import _Template
 from core import ID_DIGIT_LENGTH
 from core import RUNTIME_ID
+from test_assets import create_mock_templates
 
 
 DEFAULT_RECORDS_FILENAME = 'records.yaml'
@@ -85,6 +86,30 @@ class Repo:
         """Initialize class."""
 
         log.debug('Initializing complete.')
+
+    def load_test(self):
+        """Loads creates test data and loads into program.
+
+        Intended for use with unittest.
+
+        Args:
+            None
+
+        Returns:
+            None
+        """
+
+        log.debug('Generating test data...')
+
+        # Get list[Dict], where each dictionary is a representation of a note containing test data.
+        notes = create_mock_templates(self.subclass_names)
+
+        log.debug('Generation of test data complete.')
+        log.debug('Instantiating test data...')
+
+        self._load_obj(notes)
+
+        log.debug('Instantiation of test data complete.')
 
     def load(self, file_path=DEFAULT_RECORDS_FILENAME):
         """Load note templates from data file.

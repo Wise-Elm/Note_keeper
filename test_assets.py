@@ -13,139 +13,74 @@ import unittest
 
 from core import ID_DIGIT_LENGTH
 
+IDS = []  # Keep list of used ids to make sure create_random_id() generates unique ids.
+
 
 class TestingError(RuntimeError):
     """Base class for exceptions arising from this module."""
 
 
-def create_random_templates(app=None, repo=None, num=10):
-    """Generate randomized note templates for unittest and populate argument instance.
+def create_mock_templates(classes, num=10):
+    """Creates note templates fill with randomized attributes.
 
-    One instance must be used, either app OR repo. Will either populate app.templates, OR repo.note_templates.
+    Intended to be used for unittest. Will create templates using each class in argument classes in order until each
+    class has been used. Once each class type in classes has been used for a template, random template classes from
+    classes will be used. This is intended for the purposes of creating at least one template for each available class.
 
     Args:
-        app (instance, OPTIONAL OR None): First parameter. Instance of Application class from application.py for
-            application testing.
-        repo (instance, OPTIONAL OR None): Second parameter. Instance of Repo class from storage.py for storage testing.
-        num (int, OPTIONAL): Third parameter. Number of note templates to generate. Defaults to 10.
+        classes (lst): First Parameter. Classes for which a note can me instantiated.
+        num (int, OPTIONAL): Second Parameter. Number of templates to generate. Must be greater than 0. Defaults to 10.
 
     Returns:
-        app OR repo (instance): app instance if app!=None, or repo instance if repo!=None.
-
-            Example of app instance after return. app.templates will be populated:
-                app.templates = {
-                    'LimitedExam': [LimitedExam objects],
-                    'Surgery': [Surgery objects],
-                    'HygieneExam': [HygieneExam objects],
-                    'PeriodicExam': [PeriodicExam objects],
-                    'ComprehensiveExam': [ComprehensiveExam objects]
+        notes (lst[dict]): Each dictionary contains a template of attributes intended to represent a note.
+            Example:
+                dict = {
+                    '_type': 'SomeClass',
+                    'id': 0123456789,
+                    'note': 'This is a note example.'
                 }
     """
 
-    if app is not None and repo is not None:
-        msg = 'Function can only accept either app OR repo as arguments, not both.'
+    if num < 1:
+        msg = f'Argument num: {num}, must be greater than 0.'
         raise TestingError(msg)
 
-    if app is None and repo is None:
-        msg = 'Either app OR repo MUST be passed as an argument.'
-        raise TestingError(msg)
+    notes = []
+    all_cls_represented = False
+    cls_to_represent = 0
 
-    if app:
+    for n in range(num):
 
-        subclasses = [k for k in app.note_classes.keys()]  # List of note class names as strings.
-        notes = []
+        if all_cls_represented is True:
+            type_ = random.choice(classes)
+        # If num >= the number of available note classes make sure each class is represented with a template.
+        elif cls_to_represent >= len(classes):
+            all_cls_represented = True
+            type_ = random.choice(classes)
+        else:
+            type_ = classes[cls_to_represent]
+            cls_to_represent += 1
 
-        for n in range(num):
-            random_note = {
-                '_type': create_random_type(subclasses),
-                'id': create_random_id(app=app),
-                'note': create_random_note()
-            }
-
-            note = app.create_note(random_note, random_note['id'])  # Fill app.templates.
-            notes.append(note)
-
-        # Check to see if there are any missing note template types and fill them, only if the num argument is >= the
-        # number of possible note template types.
-        if num >= len(app.templates):
-            for _type in app.templates:
-                if len(app.templates[_type]) == 0:
-                    random_note = {
-                        '_type': _type,
-                        'id': create_random_id(app=app),
-                        'note': create_random_note()
-                    }
-                    note = app.create_note(random_note, random_note['id'])  # Fill app.templates.
-                    notes.append(note)
-        return app
-
-    elif repo:
-
-        subclasses = repo.subclass_names
-        notes = []
-
-        for n in range(num):
-            random_note = {
-                '_type': create_random_type(subclasses),
-                'id': create_random_id(repo=repo),
-                'note': create_random_note()
-            }
-
-            note = repo._instantiate_templates(random_note)  # Fill repo.note_templates.
-            notes.append(note)
-
-        # Check to see if there are any missing note template types and fill them, only if the num argument is >= the
-        # number of possible note template types.
-        if num >= len(repo.templates):
-            for _type in repo.templates:
-                if len(repo.templates[_type]) == 0:
-                    random_note = {
-                        '_type': _type,
-                        'id': create_random_id(repo=repo),
-                        'note': create_random_note()
-                    }
-                    note = repo._instantiate_templates(random_note)  # Fill repo.note_templates.
-                    notes.append(note)
-        return repo
-
-
-def create_random_template(type_):
-    """Create a single randomized template in the for of a dictionary.
-
-    Args:
-        type_ (str): String representing the name of a class.
-
-    Returns:
-        template (dict): Dictionary representing a randomized note template.
-    """
-
-    template = {
+        randomized_note = {
             '_type': type_,
-            'id': create_random_id(),
-            'note': create_random_note()
-    }
-    return template
+            'id': create_mock_id(),
+            'note': create_mock_note()
+        }
+
+        notes.append(randomized_note)
+
+    return notes
 
 
-def create_random_id(app=None, repo=None, id_len=ID_DIGIT_LENGTH):
-    """Generate a random template id number.
-
-    Will generate and return a legal template id if no instance is passed. Will populate an instance if an instance is
-    passed. Only one instance can be passed at a time, either app or repo, and not both.
+def create_mock_id(id_len=ID_DIGIT_LENGTH):
+    """Generate a randomized template id number.
 
     Args:
-        app (instance, OPTIONAL OR None): First parameter. Instance of Application class from application.py for
-            application testing.
-        repo (instance, OPTIONAL OR None): Second parameter. Instance of Repo class from storage.py for storage testing.
-        id_len (int, OPTIONAL): Third parameter. Length of id number. Defaults to ID_DIGIT_LENGTH.
+        id_len (int, OPTIONAL):
 
     Returns:
-        id_ (int): Integer that is of length id_len, and is unique to the instance if an instance is passed.
+        id_ (int): Id number. Length of id number. Defaults to ID_DIGIT_LENGTH.
     """
-
-    if app is not None and repo is not None:
-        msg = 'Function can only accept either app OR repo as arguments, not both.'
-        raise TestingError(msg)
 
     unique = False
     len_ = False
@@ -157,41 +92,17 @@ def create_random_id(app=None, repo=None, id_len=ID_DIGIT_LENGTH):
         if len(str(id_)) == id_len:  # Check length.
             len_ = True
 
-        if app is not None:  # If instance of app, check if id_ is a duplicate.
-            if id_ not in app.ids:
-                unique = True
-
-        elif repo is not None:  # If instance of repo, check if id_ is a duplicate.
-            if id_ not in repo.ids:
-                unique = True
-
-        elif app is None and repo is None:  # For generating an id outside of an instance, don't worry about uniqueness.
+        if id_ not in IDS:
             unique = True
 
         if len_ is False or unique is False:  # Reset unique and len_ variables when checks are not passed.
             id_, unique = False, False
 
+    IDS.append(id_)  # Add id_ to list of used ids.
     return id_
 
 
-def create_random_type(subclasses):
-    """Generate a random class for a note template.
-
-    Args:
-        subclasses (lst [str]): List of legal class names.
-            Example:
-                subclasses = ['Surgery', 'ComprehensiveExam', 'etc']
-
-    Returns:
-        choice (str): Random class chosen from subclasses.
-    """
-
-    choice = random.choice(subclasses)
-
-    return choice
-
-
-def create_random_note(min_len=500, max_len=3000):
+def create_mock_note(min_len=500, max_len=3000):
     """Generate a note filled with random alphabetical characters and spaces.
 
     Args:
@@ -202,11 +113,12 @@ def create_random_note(min_len=500, max_len=3000):
         note (str): String of random alphabetical and space characters of length between min_len and max_len.
     """
 
-    letters = '  abcdefghijklmnopqrstuvwxyz'
+    characters = '  abcdefghijklmnopqrstuvwxyz'
     note = ''
     for i in range(min_len, max_len):
-        letter = random.choice(letters)
+        letter = random.choice(characters)
         note += letter
+
     return note
 
 

@@ -3,8 +3,6 @@
 
 __version__ = '0.1.0'
 
-import copy# TODO (GS): move to imports.
-
 """Note organization application.
 
 -This program is currently in production, and is primarily derived for the purpose of learning Python.-
@@ -40,12 +38,16 @@ class NoteKeeperApplicationError(RuntimeError):
 class NoteKeeper:
     """Handle interaction between program modules."""
 
-    def __init__(self):
+    def __init__(self, test_=False):
 
         log.debug('Starting Note Keeper...')
 
         self.repo = Repo()
-        self.repo.load()  # Automatically load data.
+
+        if test_ is True:
+            self.repo.load_test()  # Load mock data for testing.
+        else:
+            self.repo.load()  # Load patient notes.
 
         self.templates = self.repo.templates  # Dictionary: Keys=template class names, Values=[note templates].
         #   Example:
@@ -96,7 +98,7 @@ class NoteKeeper:
 
         Args:
             new_template (dict, OPTIONAL): First parameter. Dictionary representation of a note. The id key/value is
-                optional.
+            optional.
                 Example:
                     new_template = {
                         '_type': 'Surgery,
@@ -310,6 +312,21 @@ class NoteKeeper:
         log.debug('Saving complete.')
 
         return result
+
+    def get_class(self, note):
+        """Get class object.
+
+        Args:
+            note (_Template): Note
+
+        Returns:
+            cls (_Template): Corresponding child class of _Template.
+        """
+
+        template = note.to_dict()
+        cls = self.note_classes[template['_type']]
+
+        return cls
 
     def main_event_loop(self):
         """Run application.
@@ -862,6 +879,7 @@ def test():
     x = app.create_note(blank=True)
     print(x)
 
+
 def main():  # TODO (GS): main should start the application.
 
     handler = handlers.RotatingFileHandler(filename=DEFAULT_LOG_FILENAME, maxBytes=500)
@@ -879,7 +897,7 @@ def main():  # TODO (GS): main should start the application.
 
 
 if __name__ == '__main__':
-    # self_test()
+    self_test()
     # test()
-    main()
+    # main()
     # TODO (GS): sys.exit(0) from module level.t
