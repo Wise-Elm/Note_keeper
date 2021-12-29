@@ -13,6 +13,8 @@ import unittest
 
 from core import ID_DIGIT_LENGTH
 
+DEFAULT_MOCK_TEMPLATE_NUM = 10
+
 IDS = []  # Keep list of used ids to make sure create_random_id() generates unique ids.
 
 
@@ -20,7 +22,7 @@ class TestingError(RuntimeError):
     """Base class for exceptions arising from this module."""
 
 
-def create_mock_templates(classes, num=10):
+def create_mock_templates(classes, num=DEFAULT_MOCK_TEMPLATE_NUM):
     """Creates note templates fill with randomized attributes.
 
     Intended to be used for unittest. Will create templates using each class in argument classes in order until each
@@ -29,7 +31,8 @@ def create_mock_templates(classes, num=10):
 
     Args:
         classes (lst): First Parameter. Classes for which a note can me instantiated.
-        num (int, OPTIONAL): Second Parameter. Number of templates to generate. Must be greater than 0. Defaults to 10.
+        num (int, OPTIONAL): Second Parameter. Number of templates to generate. Must be greater than 0. Defaults to
+            DEFAULT_MOCK_TEMPLATE_NUM.
 
     Returns:
         notes (lst[dict]): Each dictionary contains a template of attributes intended to represent a note.

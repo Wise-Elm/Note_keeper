@@ -145,5 +145,6 @@ class TestApplication(unittest.TestCase):
 
         self.assertIsInstance(note, test)
 
+
 if __name__ == '__main__':
     unittest.main()

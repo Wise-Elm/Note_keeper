@@ -8,6 +8,7 @@
 
 import copy
 import logging
+from logging import handlers
 from os.path import exists
 from random import randint
 
@@ -20,7 +21,7 @@ from test_assets import create_mock_templates
 
 
 DEFAULT_RECORDS_FILENAME = 'records.yaml'
-STORAGE_LOG_FILENAME = 'storage.log'  # Used when __name__ == '__main__'
+DEFAULT_STORAGE_LOG_FILENAME = 'storage.log'  # Used when __name__ == '__main__'
 STORAGE_LOG_LEVEL = logging.DEBUG
 
 
@@ -55,7 +56,7 @@ class Repo:
         #           'ComprehensiveExam': []
         #       }
 
-        self.templates = self.classes  # Dictionary: keys=template class names, values=[note templates].
+        self.templates = copy.deepcopy(self.classes)  # Dictionary: keys=template class names, values=[note templates].
         #   Values will be populated with loaded data.
         #   Example:
         #       self.templates = {
@@ -230,6 +231,12 @@ class Repo:
             log.warning(msg)
             raise StorageError(msg)
 
+        # Check if id is an integer.
+        elif type(id_) is not int:
+            msg = f'Error for ID #: {id_}. ID must be an integer.'
+            log.warning(msg)
+            raise StorageError(msg)
+
         # Add id if checks passed.
         else:
             self.ids.append(id_)
@@ -249,27 +256,19 @@ class Repo:
 
         log.debug(f'Saving data to {file_path}...')
 
-        try:
+        templates = self.templates
+        records = []
 
-            templates = self.templates
+        for k, v in templates.items():
+            for note in v:  # Isolate individual template objects.
+                record = note.to_dict()
+                records.append(record)
 
-            records = []
+        self._save_to_yaml(records, file_path)
 
-            for k, v in templates.items():
-                for note in v:  # Isolate individual template objects.
-                    record = note.to_dict()
-                    records.append(record)
+        log.debug(f'Saving data to {file_path} complete.')
 
-            self._save_to_yaml(records, file_path)
-
-            log.debug(f'Saving data to {file_path} complete.')
-
-            return True
-
-        except RuntimeError:
-            msg = f'An error occurred while saving data to {file_path}.'
-            log.warning(msg)
-            raise StorageError(msg)
+        return True
 
     def _save_to_yaml(self, records, file_path):
         """Save data to .yaml file.
@@ -282,11 +281,18 @@ class Repo:
                         {'_type': 'Hygiene', 'id': 1234567890, 'note': 'This is another note.'}
                     ]
 
-            file_path (str): Second parameter. File path within which to save data.
+            file_path (str): Second parameter. File path within which to save data. Must be a yaml file.
 
         Returns:
             None
         """
+
+        # Check legality of file type.
+        if file_path.split('.')[1] != 'yaml' and file_path.split('.')[1] != 'yml':
+            msg = f'An error occurred while attempting to save to .yaml file. File path: {file_path} must end in ' \
+                  f'.yaml, or .yml to be a legal yaml file.'
+            log.warning(msg)
+            raise StorageError(msg)
 
         with open(file_path, 'w') as yaml_outfile:
             yaml.dump(records, yaml_outfile)
@@ -375,7 +381,7 @@ class Repo:
 
         log.debug(f'Retrieving all notes of type: {type_}.')
 
-        if not self.templates[type_]:
+        if type_ not in self.templates.keys():
             msg = f'Could not find type: {type_} in stored notes.'
             log.warning(msg)
             raise StorageError(msg)
@@ -504,13 +510,12 @@ def test():
 
 if __name__ == '__main__':
 
-    # Used during development. Log only stores data from latest run of if __name__ == '__main__'.
-    logging.basicConfig(
-        level=STORAGE_LOG_LEVEL,
-        format=f'[%(asctime)s] - {RUNTIME_ID} - %(levelname)s - [%(name)s:%(lineno)s] - %(message)s',
-        filename=STORAGE_LOG_FILENAME,
-        filemode='w'
-    )
+    # Configure Rotating Log. Only runs when module is called directly.
+    handler = handlers.RotatingFileHandler(filename=DEFAULT_STORAGE_LOG_FILENAME, maxBytes=50)
+    formatter = logging.Formatter(f'[%(asctime)s] - {RUNTIME_ID} - %(levelname)s - [%(name)s:%(lineno)s] - %(message)s')
+    handler.setFormatter(formatter)
+    log.addHandler(handler)
+    log.setLevel(STORAGE_LOG_LEVEL)
 
     storage_self_test()
     # test()

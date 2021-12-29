@@ -5,18 +5,19 @@
 
 import copy
 import logging
+from logging import handlers
 import uuid
 
 RUNTIME_ID = uuid.uuid4()  # Set unique id for each runtime.
 ID_DIGIT_LENGTH = 10
-CORE_LOG_FILENAME = 'core.log'  # Used when __name__ == '__main__'
+DEFAULT_CORE_LOG_FILENAME = 'core.log'  # Used when __name__ == '__main__'
 CORE_LOG_LEVEL = logging.DEBUG
 
 # Configure logging.
 log = logging.getLogger(__name__)
 log.addHandler(logging.NullHandler())
 
-# TODO (GS): make function that returns note classes.
+
 class CoreError(RuntimeError):
     """Base class for exceptions arising from this module."""
 
@@ -70,7 +71,7 @@ class _Template:
 
         # Handle dictionary as argument.
         if type(other) is dict:
-            if other['id']:
+            if 'id' in other:
                 if self.id == other['id']:
                     log.debug('__eq__ = True.')
                     return True
@@ -78,7 +79,7 @@ class _Template:
                     log.debug('__eq__ = False.')
                     return False
             else:
-                msg = 'Invalid id.'
+                msg = 'Invalid id. Dictionary must contain an id as a key.'
                 log.debug('__eq__ ' + msg)
                 raise CoreError(msg)
 
@@ -175,6 +176,7 @@ def core_self_test():
     """
 
     import unittest
+
     import test_core
 
     # Conduct unittest.
@@ -190,13 +192,12 @@ def test():
 
 if __name__ == '__main__':
 
-    # Used during development. Log only stores data from latest run of if __name__ == '__main__'.
-    logging.basicConfig(
-        level=CORE_LOG_LEVEL,
-        format=f'[%(asctime)s] - {RUNTIME_ID} - %(levelname)s - [%(name)s:%(lineno)s] - %(message)s',
-        filename=CORE_LOG_FILENAME,
-        filemode='w'
-    )
+    # Configure Rotating Log. Only runs when module is called directly.
+    handler = handlers.RotatingFileHandler(filename=DEFAULT_CORE_LOG_FILENAME, maxBytes=50)
+    formatter = logging.Formatter(f'[%(asctime)s] - {RUNTIME_ID} - %(levelname)s - [%(name)s:%(lineno)s] - %(message)s')
+    handler.setFormatter(formatter)
+    log.addHandler(handler)
+    log.setLevel(CORE_LOG_LEVEL)
 
     core_self_test()
     # test()

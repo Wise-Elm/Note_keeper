@@ -880,9 +880,10 @@ def test():
     print(x)
 
 
-def main():  # TODO (GS): main should start the application.
+def main():
 
-    handler = handlers.RotatingFileHandler(filename=DEFAULT_LOG_FILENAME, maxBytes=500)
+    # Configure Rotating Log.
+    handler = handlers.RotatingFileHandler(filename=DEFAULT_LOG_FILENAME, maxBytes=50)
     formatter = logging.Formatter(f'[%(asctime)s] - {RUNTIME_ID} - %(levelname)s - [%(name)s:%(lineno)s] - %(message)s')
     handler.setFormatter(formatter)
     log.addHandler(handler)
@@ -897,7 +898,7 @@ def main():  # TODO (GS): main should start the application.
 
 
 if __name__ == '__main__':
-    self_test()
+    # self_test()
     # test()
-    # main()
+    main()
     # TODO (GS): sys.exit(0) from module level.t

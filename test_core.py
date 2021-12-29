@@ -6,87 +6,110 @@
 import random
 import unittest
 
-from core import _Template  # ABC.
-
-from test_assets import create_random_template
-
-
-# Setup elements for testing.
-
-class_names = [cls.__name__ for cls in _Template.__subclasses__()]
-# Generate list of template subclasses.
-#   Example:
-#       class_names = ['Surgery', 'ComprehensiveExam', 'etc']
-
-subclass_obj = _Template.__subclasses__()
-# Generate list of template subclass objects.
-#   Example:
-#       subclass_obj = [<class 'core.LimitedExam'>, <class 'core.Surgery'>, <class 'core.HygieneExam'>, etc.]
-
-
-subclasses = dict(zip(class_names, subclass_obj))
-# Generate dictionary of template class names as keys and objects as values.
-#   Example:
-#       self.subclasses = {
-#           'LimitedExam': <class 'core.LimitedExam'>,
-#           'Surgery': <class 'core.Surgery'>,
-#           'HygieneExam': <class 'core.HygieneExam'>,
-#           'PeriodicExam': <class 'core.PeriodicExam'>,
-#           'ComprehensiveExam': <class 'core.ComprehensiveExam'>
-#       }
-
-
-# Randomly choose instance attributes to instantiate.
-
-choice = random.choice(class_names)  # Choose class type.
-
-template = create_random_template(type_=choice)
-# Dictionary of randomly chosen attributes for chosen class type.
-#   Example:
-#       template = {
-#           '_type': 'Surgery,
-#           'id': 0123456789,
-#           'note': 'This is a note.'
-#       }
-
-test_class = subclasses[choice]  # Identify child class object.
-instance = test_class(template)  # Instantiate instance.
-
-instance_dict = instance.to_dict()  # to_dict() used on object used to make sure it is instantiated correctly.
-#   Example:
-#       instance_dict = {
-#           '_type': 'Surgery,
-#           'id': 0123456789,
-#           'note': 'This is a note.'
-#       }
+from core import _Template, CoreError
+from notekeeper import NoteKeeper
 
 
 class TestCore(unittest.TestCase):
     """Perform unittest of core.py."""
 
+    @classmethod
+    def setUpClass(cls):
+        pass
+
+    @classmethod
+    def tearDownClass(cls):
+        pass
+
+    def setUp(self):
+        self.app = NoteKeeper(test_=True)
+        self.cls_names = [k for k in self.app.note_classes.keys()]  # Generate list of note class names.
+
+    def tearDown(self):
+        pass
+
     def test_child_classes(self):
         """Test instantiation of _Template child classes."""
 
-        self.assertIsInstance(instance, test_class)
+        for cls, notes in self.app.templates.items():
+            for note in notes:
+                self.assertIsInstance(note, self.app.get_class(note))
 
-    def test_ABC(self):
-        """Test instantiation of _Template (ABC)."""
+    def test_parent_class(self):
+        """Test instantiation of _Template class."""
 
-        self.assertIsInstance(instance, _Template)
+        for cls, notes in self.app.templates.items():
+            for note in notes:
+                self.assertIsInstance(note, _Template)
 
     def test__repr__(self):
         """Test _Template __repr__."""
 
-        msg = f"{instance_dict['_type']}, id: {instance_dict['id']}"
-        self.assertEqual(instance.__repr__(), msg)
+        cls = random.choice(self.cls_names)
+        note = random.choice(self.app.templates[cls])
+        template = note.to_dict()
+
+        msg = f"{template['_type']}, id: {template['id']}"
+        self.assertEqual(note.__repr__(), msg)
 
     def test__str__(self):
         """Test _Template __str__."""
 
-        msg = f"Type: {instance_dict['_type']}\nID: {instance_dict['id']}\n\n{instance_dict['note']}"
-        self.assertEqual(instance.__str__(), msg)
+        cls = random.choice(self.cls_names)
+        note = random.choice(self.app.templates[cls])
+        template = note.to_dict()
+
+        msg = f"Type: {template['_type']}\nID: {template['id']}\n\n{template['note']}"
+        self.assertEqual(note.__str__(), msg)
 
     def test_to_dict(self):
         """Test _Template to_dict."""
 
-        self.assertEqual(template, instance.to_dict())
+        cls = random.choice(self.cls_names)
+        note = random.choice(self.app.templates[cls])
+        template = {'_type': cls, 'id': note.id, 'note': note.note}
+
+        self.assertDictEqual(note.to_dict(), template)
+
+    def test__eq__(self):  # TODO (GS): Develop test.
+        """Test _Template __eq__."""
+
+        cls = random.choice(self.cls_names)
+        note = random.choice(self.app.templates[cls])
+
+        # Confirm note is the same object as note.
+        self.assertIs(note, note)
+
+        # Confirm equality using object as argument.
+        self.assertTrue(note.__eq__(note))
+        # Confirm equality using dictionary as argument.
+        self.assertTrue(note.__eq__(note.to_dict()))
+
+        # Select new class, making sure it is not the same as cls.
+        classes_ = [k for k in self.app.templates.keys() if k != cls]
+        different_cls = random.choice(classes_)
+
+        # Select another note.
+        note_2 = random.choice(self.app.templates[different_cls])
+
+        # Confirm inequality using object as argument.
+        self.assertFalse(note.__eq__(note_2))
+        # Confirm inequality using dictionary as argument.
+        self.assertFalse(note.__eq__(note_2.to_dict()))
+
+        # Test CoreError.
+
+        # Bad argument.
+        arg = 'asdf'
+        with self.assertRaises(CoreError):
+            note.__eq__(arg)
+
+        # Dictionary without id.
+        note_2 = note_2.to_dict()
+        note_2.pop('id')
+        with self.assertRaises(CoreError):
+            note.__eq__(note_2)
+
+
+if __name__ == '__main__':
+    unittest.main()
