@@ -54,8 +54,8 @@ def create_mock_templates(classes, num=DEFAULT_MOCK_TEMPLATE_DIGIT_NUM):
     all_cls_represented = False
     cls_to_represent = 0
 
+    # Loop creates a mock note for each _Template class, then creates mock notes with randomized classes.
     for n in range(num):
-
         if all_cls_represented is True:
             type_ = random.choice(classes)
         # If num >= the number of available note classes make sure each class is represented with a template.
