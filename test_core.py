@@ -11,7 +11,7 @@ from notekeeper import NoteKeeper
 
 
 class TestCore(unittest.TestCase):
-    """Perform unittest of core.py."""
+    """Perform unittest on core.py."""
 
     @classmethod
     def setUpClass(cls):
@@ -71,7 +71,7 @@ class TestCore(unittest.TestCase):
 
         self.assertDictEqual(note.to_dict(), template)
 
-    def test__eq__(self):  # TODO (GS): Develop test.
+    def test__eq__(self):
         """Test _Template __eq__."""
 
         cls = random.choice(self.cls_names)

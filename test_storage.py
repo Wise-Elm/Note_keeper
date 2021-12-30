@@ -12,7 +12,7 @@ import yaml
 
 from core import ID_DIGIT_LENGTH
 from storage import Repo, StorageError
-from test_assets import DEFAULT_MOCK_TEMPLATE_NUM
+from test_assets import DEFAULT_MOCK_TEMPLATE_DIGIT_NUM
 
 
 DEFAULT_STORAGE_TEST_FILENAME = 'test_storage.yaml'
@@ -41,7 +41,7 @@ class TestStorage(unittest.TestCase):
     def test_load_test(self):
         """Test Repo.load_test().
 
-        Tests that the correct number of objects are loaded into the correct locations."""
+        Confirm the correct number of objects are loaded into the correct locations."""
 
         self.repo.ids = []
         self.repo.templates = self.repo.classes  # Reformat repo.templates to state before input data.
@@ -51,7 +51,7 @@ class TestStorage(unittest.TestCase):
 
         self.repo.load_test()
 
-        self.assertEqual(len(self.repo.ids), DEFAULT_MOCK_TEMPLATE_NUM)  # Confirm proper number of ids are stored.
+        self.assertEqual(len(self.repo.ids), DEFAULT_MOCK_TEMPLATE_DIGIT_NUM)  # Confirm proper number of ids are stored.
         for cls, notes in self.repo.templates.items():
             for note in notes:
                 # Confirm that each note has been instantiated correctly.
@@ -145,10 +145,10 @@ class TestStorage(unittest.TestCase):
                 self.repo._add_id(id_too_short)
 
         for id_ in ids:
-            id_not_numeric = str(id_)
+            id_not_integer = str(id_)
             with self.assertRaises(StorageError):
                 # Confirm exception is raised when attempting to add an id that is not type int.
-                self.repo._add_id(id_not_numeric)
+                self.repo._add_id(id_not_integer)
 
         new_id = self.repo.generate_id()  # Generate a new legal id.
         self.repo._add_id(new_id)  # Add new id.
@@ -167,9 +167,6 @@ class TestStorage(unittest.TestCase):
         self.repo.ids = []  # Return to preloaded state.
         self.repo.templates = self.repo.classes  # Return to preloaded state.
         self.repo.load()
-
-        x = self.repo.templates
-        y = templates
 
         self.assertDictEqual(self.repo.templates, templates)
         self.assertEqual(self.repo.ids, ids)

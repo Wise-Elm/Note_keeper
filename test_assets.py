@@ -3,8 +3,8 @@
 
 """This module is used to provide testing assets for test_application.py, test_storage.py, & test_core.py.
 
-The functions in this module provide functionality for creating randomized note templates for testing. The most
-commonly used function will be create_random_template(), which uses all of the other function, but the other functions
+The functions in this module provide functionality for creating mock note templates for testing. The most
+commonly used function will be create_mock_template(), which uses the other function, but the other functions
 can be used to construct specific parts of note templates."""
 
 import random
@@ -13,7 +13,9 @@ import unittest
 
 from core import ID_DIGIT_LENGTH
 
-DEFAULT_MOCK_TEMPLATE_NUM = 10
+DEFAULT_MOCK_TEMPLATE_DIGIT_NUM = 10
+DEFAULT_MOCK_NOTE_MIN_LENGTH = 500
+DEFAULT_MOCK_NOTE_MAX_LENGTH = 3000
 
 IDS = []  # Keep list of used ids to make sure create_random_id() generates unique ids.
 
@@ -22,7 +24,7 @@ class TestingError(RuntimeError):
     """Base class for exceptions arising from this module."""
 
 
-def create_mock_templates(classes, num=DEFAULT_MOCK_TEMPLATE_NUM):
+def create_mock_templates(classes, num=DEFAULT_MOCK_TEMPLATE_DIGIT_NUM):
     """Creates note templates fill with randomized attributes.
 
     Intended to be used for unittest. Will create templates using each class in argument classes in order until each
@@ -79,38 +81,40 @@ def create_mock_id(id_len=ID_DIGIT_LENGTH):
     """Generate a randomized template id number.
 
     Args:
-        id_len (int, OPTIONAL):
+        id_len (int, OPTIONAL): Defaults to ID_DIGIT_LENGTH. Number of digits for return id_.
 
     Returns:
         id_ (int): Id number. Length of id number. Defaults to ID_DIGIT_LENGTH.
     """
 
-    unique = False
-    len_ = False
-    while not unique or not len_:
+    is_unique = False
+    is_proper_len = False
+    while not is_unique or not is_proper_len:
         id_ = randint(int('1' + ('0' * (id_len - 1))), int('9' * id_len))
         #   Example if ID_DIGIT_LEN == 3:
         #       id_ = int between 100 & 999.
 
         if len(str(id_)) == id_len:  # Check length.
-            len_ = True
+            is_proper_len = True
 
         if id_ not in IDS:
-            unique = True
+            is_unique = True
 
-        if len_ is False or unique is False:  # Reset unique and len_ variables when checks are not passed.
-            id_, unique = False, False
+        # Reset is_unique and is_proper_len variables when checks are not passed.
+        if is_proper_len is False or is_unique is False:
+            id_, is_unique = False, False
 
     IDS.append(id_)  # Add id_ to list of used ids.
     return id_
 
 
-def create_mock_note(min_len=500, max_len=3000):
+def create_mock_note(min_len=DEFAULT_MOCK_NOTE_MIN_LENGTH, max_len=DEFAULT_MOCK_NOTE_MAX_LENGTH):
     """Generate a note filled with random alphabetical characters and spaces.
 
     Args:
-        min_len (int, OPTIONAL): First parameter. Minimum character length for note. Default to 500 characters.
-        max_len (int, OPTIONAL): Second parameter. Maximum character length for note. Default to 3000 characters.
+        min_len (int, OPTIONAL): First parameter. Defaults to DEFAULT_MOCK_NOTE_MIN_LENGTH. Minimum character length for
+             note.
+        max_len (int, OPTIONAL): Second parameter. DEFAULT_MOCK_NOTE_MAX_LENGTH. Maximum character length for note.
 
     Returns:
         note (str): String of random alphabetical and space characters of length between min_len and max_len.

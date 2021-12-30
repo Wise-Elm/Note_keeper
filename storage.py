@@ -3,7 +3,6 @@
 
 """This module saves and loads data for application.py.
 
-# TODO (GS): Generate ids using uuid.uuid4.
 """
 
 import copy
@@ -297,7 +296,7 @@ class Repo:
         with open(file_path, 'w') as yaml_outfile:
             yaml.dump(records, yaml_outfile)
 
-    def delete_note(self, id_):  # TODO (GS): be aware that old numbers should be tracked.
+    def delete_note(self, id_):  # TODO (GS): Should old numbers should be tracked.
         """Delete note.
 
         Args:

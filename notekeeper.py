@@ -25,7 +25,7 @@ from storage import Repo, storage_self_test, StorageError
 
 DEFAULT_LOG_FILENAME = 'note_keeper_log.log'
 DEFAULT_LOG_LEVEL = logging.DEBUG
-# TODO (GS): Should have parameter such as auto load = False.
+
 # Configure logging.
 log = logging.getLogger()
 log.addHandler(logging.NullHandler())
@@ -38,16 +38,30 @@ class NoteKeeperApplicationError(RuntimeError):
 class NoteKeeper:
     """Handle interaction between program modules."""
 
-    def __init__(self, test_=False):
+    def __init__(self, test_=False, load=True):
+        """Initializing NoteKeeper.
+
+        Args:
+            test_ (Bool, OPTIONAL): First parameter. Default is False. False signifies the application is not running
+                a test, and thus should load the regular program data. True has application load mock data to perform
+                unittest.
+            load (Bool, OPTIONAL): Second parameter. Defaults to True. True signifies the application should load stored
+                data. No data is loaded when load=False.
+
+        Returns:
+            None
+        """
 
         log.debug('Starting Note Keeper...')
 
         self.repo = Repo()
 
-        if test_ is True:
-            self.repo.load_test()  # Load mock data for testing.
-        else:
-            self.repo.load()  # Load patient notes.
+        # Test argument load.
+        if load is True:
+            if test_ is True:
+                self.repo.load_test()  # Load mock data for testing.
+            else:
+                self.repo.load()  # Load patient notes.
 
         self.templates = self.repo.templates  # Dictionary: Keys=template class names, Values=[note templates].
         #   Example:
@@ -98,7 +112,7 @@ class NoteKeeper:
 
         Args:
             new_template (dict, OPTIONAL): First parameter. Dictionary representation of a note. The id key/value is
-            optional.
+                optional.
                 Example:
                     new_template = {
                         '_type': 'Surgery,
@@ -875,9 +889,8 @@ def self_test():
 def test():
     """For development level module testing."""
 
-    app = NoteKeeper()
-    x = app.create_note(blank=True)
-    print(x)
+    app = NoteKeeper(load=False)
+    print(app.templates)
 
 
 def main():
@@ -895,6 +908,8 @@ def main():
     run_application(args)  # Returns instance of application.
 
     log.debug('main.')
+
+    sys.exit(0)
 
 
 if __name__ == '__main__':
