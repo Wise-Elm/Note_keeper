@@ -3,9 +3,16 @@
 
 """This module is used to provide testing assets for test_application.py, test_storage.py, & test_core.py.
 
-The functions in this module provide functionality for creating mock note templates for testing. The most
-commonly used function will be create_mock_template(), which uses the other function, but the other functions
-can be used to construct specific parts of note templates."""
+Description:
+    The functions in this module provide functionality for creating mock note templates for testing. The most
+    commonly used function will be create_mock_template(), which uses the other function, but the other functions
+    can be used to construct specific parts of note templates.
+
+Attributes:
+    DEFAULT_MOCK_TEMPLATE_DIGIT_NUM (int): Default number of mock templates to produce.
+    DEFAULT_MOCK_NOTE_MIN_LENGTH (int): Default max digit length when generating mock notes.
+    DEFAULT_MOCK_NOTE_MAX_LENGTH (int): Default min digit length when generating mock notes.
+"""
 
 import random
 from random import randint

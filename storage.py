@@ -3,6 +3,15 @@
 
 """This module saves and loads data for application.py.
 
+Attributes:
+    DEFAULT_RECORDS_FILENAME (str): Default path for storing and retrieving data.
+    DEFAULT_STORAGE_LOG_FILENAME (str): Default file path for logging when this module is called directly.
+    STORAGE_LOG_LEVEL (:obj: 'int'): Integer represents a value which assigns a log level from logging.
+
+TODO:
+    Possible revamp of ids using uuid.uuid4 to generate ids as strings.
+    Possibly change ID_DIGIT_LENGTH to a range, and produce number between a min and max.
+    Develop way to track deleted ids.
 """
 
 import copy
@@ -20,7 +29,7 @@ from test_assets import create_mock_templates
 
 
 DEFAULT_RECORDS_FILENAME = 'records.yaml'
-DEFAULT_STORAGE_LOG_FILENAME = 'storage.log'  # Used when __name__ == '__main__'
+DEFAULT_STORAGE_LOG_FILENAME = 'storage.log'
 STORAGE_LOG_LEVEL = logging.DEBUG
 
 
@@ -296,7 +305,7 @@ class Repo:
         with open(file_path, 'w') as yaml_outfile:
             yaml.dump(records, yaml_outfile)
 
-    def delete_note(self, id_):  # TODO (GS): Should old numbers should be tracked.
+    def delete_note(self, id_):
         """Delete note.
 
         Args:
@@ -445,11 +454,6 @@ class Repo:
 
         Returns:
             id_ (int): A unique id number of the proper length (ID_DIGIT_LENGTH).
-
-            # TODO (GS): Should ids be strings?
-            # TODO (GS): Should ids be generated using uuid.uuid4?
-            # Todo (GS): Possibly change ID_DIGIT_LENGTH to a range, ex: ID_RANGE = (x, y)
-            # TODO (GS): If range is implemented just use randint(min, max)
         """
 
         log.debug('Generating new id number...')
@@ -510,7 +514,7 @@ def test():
 if __name__ == '__main__':
 
     # Configure Rotating Log. Only runs when module is called directly.
-    handler = handlers.RotatingFileHandler(filename=DEFAULT_STORAGE_LOG_FILENAME, maxBytes=50)
+    handler = handlers.RotatingFileHandler(filename=DEFAULT_STORAGE_LOG_FILENAME, maxBytes=100**3, backupCount=1)
     formatter = logging.Formatter(f'[%(asctime)s] - {RUNTIME_ID} - %(levelname)s - [%(name)s:%(lineno)s] - %(message)s')
     handler.setFormatter(formatter)
     log.addHandler(handler)

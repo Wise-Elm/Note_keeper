@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""This module performs a unittest on core.py"""
+"""This module performs a unittest on core.py."""
 
 import random
 import unittest

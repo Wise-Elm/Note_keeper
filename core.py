@@ -1,7 +1,14 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""This module provides object classes for application.py."""
+"""This module provides object classes for application.py.
+
+Attributes:
+    RUNTIME_ID (:obj: 'UUID'): Designates an id for each runtime. Uses uuid4.
+    ID_DIGIT_LENGTH (int): Designates length of note ids. Used over multiple modules when creating ids.
+    DEFAULT_CORE_LOG_FILENAME (str): Default file path for logging when this module is called directly.
+    CORE_LOG_LEVEL (:obj: 'int'): Integer represents a value which assigns a log level from logging.
+"""
 
 import copy
 import logging
@@ -29,6 +36,7 @@ class _Template:
         self.id = template['id']  # type(int). Unique identification number.
         self.note = template['note']  # type(str). Exam note.
         """Initialize class.
+        
             Args:
                 template (dict): Note template.
                     Example:
@@ -193,7 +201,7 @@ def test():
 if __name__ == '__main__':
 
     # Configure Rotating Log. Only runs when module is called directly.
-    handler = handlers.RotatingFileHandler(filename=DEFAULT_CORE_LOG_FILENAME, maxBytes=50)
+    handler = handlers.RotatingFileHandler(filename=DEFAULT_CORE_LOG_FILENAME, maxBytes=100**3, backupCount=1)
     formatter = logging.Formatter(f'[%(asctime)s] - {RUNTIME_ID} - %(levelname)s - [%(name)s:%(lineno)s] - %(message)s')
     handler.setFormatter(formatter)
     log.addHandler(handler)

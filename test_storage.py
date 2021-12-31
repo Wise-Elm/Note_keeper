@@ -1,7 +1,11 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""This module performs a unittest on storage.py"""
+"""This module performs a unittest on storage.py
+
+Attributes:
+    DEFAULT_STORAGE_TEST_FILENAME (str):  Default path for storing and retrieving test data.
+"""
 
 import copy
 import os
@@ -51,7 +55,8 @@ class TestStorage(unittest.TestCase):
 
         self.repo.load_test()
 
-        self.assertEqual(len(self.repo.ids), DEFAULT_MOCK_TEMPLATE_DIGIT_NUM)  # Confirm proper number of ids are stored.
+        # Confirm proper number of ids are stored.
+        self.assertEqual(len(self.repo.ids), DEFAULT_MOCK_TEMPLATE_DIGIT_NUM)
         for cls, notes in self.repo.templates.items():
             for note in notes:
                 # Confirm that each note has been instantiated correctly.

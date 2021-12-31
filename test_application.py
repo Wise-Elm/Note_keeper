@@ -8,7 +8,6 @@ import unittest
 
 from core import _Template, ID_DIGIT_LENGTH
 from notekeeper import NoteKeeper
-
 from test_assets import create_mock_templates
 
 

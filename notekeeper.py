@@ -5,11 +5,17 @@ __version__ = '0.1.0'
 
 """Note organization application.
 
--This program is currently in production, and is primarily derived for the purpose of learning Python.-
+Context:
+    This program is currently in production, and is primarily derived for the purpose of learning Python.
+    
+Description:
+    This application is designed to aid in writing medical notes by allowing the user to construct, save, display, 
+    delete, and edit note templates. Note templates are intended to provide the basic structure of a patient note so 
+    that the practitioner can save time by filling the details rather than constructing a completely new note.
 
-This application is designed to aid in writing medical notes by allowing the user to construct, save, display, delete, 
-and edit note templates. Note templates are intended to provide the basic structure of a patient note so that the 
-practitioner can save time by filling the details rather than constructing a completely new note.
+Attributes:
+    DEFAULT_LOG_FILENAME (str): Default file path for application wide logging.
+    DEFAULT_LOG_LEVEL (:obj: 'int'): Integer represents a value which assigns a log level from logging.
 """
 
 
@@ -91,14 +97,15 @@ class NoteKeeper:
         # Keys = inputs, Values = functions.
         self.options = {
             'add': self._get_add,
-            'date': self._get_date,
+            'date': self.get_date,
             'delete': self._get_delete,
             'display': self._get_display,
             'display type': self._get_display_type,
             'edit': self._get_edit,
             'menu': self._get_menu,
             'save': self._get_save,
-            'quit': self._get_quit
+            'quit': self._get_quit,
+            'workday': self.is_workday
         }
 
         log.debug('Note Keeper has started.')
@@ -129,7 +136,7 @@ class NoteKeeper:
                       note.id = randomly generated integer that complies with id requirements.
                       note.note = '' (empty string)
 
-        Returns:  # TODO (GS): Change all Returns to Return?
+        Returns:
             note (_Template): New note.
         """
 
@@ -224,21 +231,35 @@ class NoteKeeper:
 
         return note
 
-    def get_notes_of_type(self, type_):
+    def get_notes_of_type(self, type_, str_=False):
         """Return all notes of type in argument.
 
         Args:
-            type_ (str): Type.
+            type_ (str): First parameter. Note Type.
+            str_ (Bool): Second parameter. When True return is a string containing all notes of type in a nicely
+                readable format.
 
         Returns:
-            notes (lst): All notes of argument type.
+            text (str): When str is True. String containing all notes of type in a nicely readable format.
+            notes (lst): When str is False. All notes of argument type.
         """
 
         notes = self.repo.get_notes_of_type(type_)
 
+        # When True present notes in pretty format.
+        if str_ is True:
+            text = ''
+            num = 0
+            notes = [note.__str__() for note in notes]
+            for note in notes:
+                num += 1
+                pretty = f'\n\nNumber: {num}\n' + note + '\n'
+                text += pretty
+            return text
+
         return notes
 
-    def delete_note(self, id_):  # TODO (GS): Develop way to track deleted ids.
+    def delete_note(self, id_):
         """Delete note.
 
         Uses Repo.delete_note() to remove note from program.
@@ -385,7 +406,7 @@ class NoteKeeper:
         log.debug(f'User selection: {user_input}.')
 
         if user_input.lower() in self.options:  # Check if user input is legal.
-            result = self.options[user_input]()
+            result = self.options[user_input.lower()]()
             if result is False:  # Quit main_event_loop and end program.
                 return False
             else:
@@ -423,7 +444,7 @@ class NoteKeeper:
             return
 
     @staticmethod
-    def _get_date(as_str=False):
+    def get_date(as_str=False):
         """Display current date.
 
         Args:
@@ -444,20 +465,35 @@ class NoteKeeper:
             print(f"Today's date: {result}")
 
     @staticmethod
-    def _is_workday(day):
-        """Determines if day is a regular workday: Monday-Friday.
+    def is_workday(date_=None):
+        """Determines if a date is a regular workday: Monday-Friday.
 
         Args:
-            day (datetime obj): datetime object representing a date.
+            date_ (str, OPTIONAL): String representation of a date using the format yyyy-mm-dd. Defaults to prompting
+                user for date.
 
         Returns:
             (Bool): True if workday (Monday-Friday), False otherwise (Saturday or Sunday).
         """
 
-        # Within the datetime module days to the week are represented by the integers 0-6, with Monday being 0.
-        if day.weekday() < 5:
-            return False
-        return True
+        if date_ is None:
+            date_ = input('Enter a date (yyyy-mm-dd): ')
+            y, m, d = date_.split('-')
+
+        else:
+            y, m, d = date_.split('-')
+
+        try:
+            # Within the datetime module days to the week are represented by the integers 0-6, with Monday being 0.
+            if date(int(y), int(m), int(d)).weekday() < 5:
+                print(f'{date_} is a regular workday.')
+                return
+            else:
+                print(f'{date_} is not a regular workday.')
+
+        except ValueError as ve:
+            print(ve)
+            return
 
     def _get_delete(self):
         """Delete note.
@@ -705,6 +741,7 @@ class NoteKeeper:
         menu = f"Optional inputs:\n" \
                f"{' ' * menu_indent}add{' ' * (menu_space - len('add'))} Add a new note template.\n" \
                f"{' ' * menu_indent}date{' ' * (menu_space - len('date'))} Display today's date\n" \
+               f"{' ' * menu_indent}workday{' ' * (menu_space - len('workday'))} Signify if date is a workday.\n" \
                f"{' ' * menu_indent}delete{' ' * (menu_space - len('delete'))} Delete a note template.\n" \
                f"{' ' * menu_indent}display{' ' * (menu_space - len('display'))} Display note template.\n" \
                f"{' ' * menu_indent}display type{' ' * (menu_space - len('display type'))} Display all note " \
@@ -745,13 +782,23 @@ def parse_args(argv=sys.argv):
         default=False
     )
 
-    # Run Application.today_date().
+    # Run Application._get_date().
     parser.add_argument(
         '-d',
         '--date',
         help="Return today's date and exit.",
         action='store_true',
         default=False
+    )
+
+    # Run Application.is_workday().
+    parser.add_argument(
+        '-wd',
+        '--workday',
+        help="Signify if input date is a workday. Entry should be in format: yyyy-mm-dd.",
+        nargs=1,
+        default=False,
+        metavar='Date'
     )
 
     # Concatenate notes of argument type using Application.get_note().
@@ -834,10 +881,6 @@ def run_application(args):
         core_self_test()  # Test core.py
         return
 
-    elif args.date:
-        print(date.today())
-        return
-
     app = NoteKeeper()  # Begin application instance.
     log.debug('NoteKeeper instantiated.')
 
@@ -846,8 +889,16 @@ def run_application(args):
         print(f'Note: {note}, has been created.')
         return
 
+    elif args.date:
+        print(app.get_date())
+        return
+
+    elif args.workday:
+        print(app.is_workday(args.workday[0]))
+        return
+
     elif args.all:
-        print(app.get_notes_of_type(args.all[0]))
+        print(app.get_notes_of_type(args.all[0], str_=True))
         return
 
     elif args.display:
@@ -889,14 +940,13 @@ def self_test():
 def test():
     """For development level module testing."""
 
-    app = NoteKeeper(load=False)
-    print(app.templates)
+    print(type(logging.DEBUG))
 
 
 def main():
 
     # Configure Rotating Log.
-    handler = handlers.RotatingFileHandler(filename=DEFAULT_LOG_FILENAME, maxBytes=50)
+    handler = handlers.RotatingFileHandler(filename=DEFAULT_LOG_FILENAME, maxBytes=100**3, backupCount=1)
     formatter = logging.Formatter(f'[%(asctime)s] - {RUNTIME_ID} - %(levelname)s - [%(name)s:%(lineno)s] - %(message)s')
     handler.setFormatter(formatter)
     log.addHandler(handler)
@@ -916,4 +966,3 @@ if __name__ == '__main__':
     # self_test()
     # test()
     main()
-    # TODO (GS): sys.exit(0) from module level.t
