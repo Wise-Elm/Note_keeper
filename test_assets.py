@@ -12,6 +12,10 @@ Attributes:
     DEFAULT_MOCK_TEMPLATE_DIGIT_NUM (int): Default number of mock templates to produce.
     DEFAULT_MOCK_NOTE_MIN_LENGTH (int): Default max digit length when generating mock notes.
     DEFAULT_MOCK_NOTE_MAX_LENGTH (int): Default min digit length when generating mock notes.
+
+TODO (GS): Update create_mock_note() characters to pull string characters from string.ascii_lowercase and
+TODO (GS): string.whitespace.
+
 """
 
 import random
