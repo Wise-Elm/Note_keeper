@@ -18,7 +18,6 @@ from core import ID_DIGIT_LENGTH
 from storage import Repo, StorageError
 from test_assets import DEFAULT_MOCK_TEMPLATE_DIGIT_NUM
 
-
 DEFAULT_STORAGE_TEST_FILENAME = "test_storage.yaml"
 
 

@@ -22,11 +22,8 @@ from random import randint
 
 import yaml
 
-from core import _Template
-from core import ID_DIGIT_LENGTH
-from core import RUNTIME_ID
+from core import ID_DIGIT_LENGTH, RUNTIME_ID, _Template
 from test_assets import create_mock_templates
-
 
 DEFAULT_RECORDS_FILENAME = "records.yaml"
 DEFAULT_STORAGE_LOG_FILENAME = "storage.log"

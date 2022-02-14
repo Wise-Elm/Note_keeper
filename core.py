@@ -12,8 +12,8 @@ Attributes:
 
 import copy
 import logging
-from logging import handlers
 import uuid
+from logging import handlers
 
 RUNTIME_ID = uuid.uuid4()  # Set unique id for each runtime.
 ID_DIGIT_LENGTH = 10

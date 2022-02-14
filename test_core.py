@@ -6,7 +6,7 @@
 import random
 import unittest
 
-from core import _Template, CoreError
+from core import CoreError, _Template
 from notekeeper import NoteKeeper
 
 

@@ -15,8 +15,8 @@ Attributes:
 """
 
 import random
-from random import randint
 import unittest
+from random import randint
 
 from core import ID_DIGIT_LENGTH
 

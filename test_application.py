@@ -6,7 +6,7 @@
 import random
 import unittest
 
-from core import _Template, ID_DIGIT_LENGTH
+from core import ID_DIGIT_LENGTH, _Template
 from notekeeper import NoteKeeper
 from test_assets import create_mock_templates
 

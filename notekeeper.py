@@ -20,14 +20,13 @@ Attributes:
 
 
 import argparse
-from datetime import date
 import logging
-from logging import handlers
 import sys
+from datetime import date
+from logging import handlers
 
-from core import CoreError, core_self_test, RUNTIME_ID, _Template
-from storage import Repo, storage_self_test, StorageError
-
+from core import RUNTIME_ID, CoreError, _Template, core_self_test
+from storage import Repo, StorageError, storage_self_test
 
 DEFAULT_LOG_FILENAME = "note_keeper_log.log"
 DEFAULT_LOG_LEVEL = logging.DEBUG
