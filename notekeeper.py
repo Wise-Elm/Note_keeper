@@ -7,10 +7,10 @@ __version__ = "0.1.0"
 
 Context:
     This program is currently in production, and is primarily derived for the purpose of learning Python.
-    
+
 Description:
-    This application is designed to aid in writing medical notes by allowing the user to construct, save, display, 
-    delete, and edit note templates. Note templates are intended to provide the basic structure of a patient note so 
+    This application is designed to aid in writing medical notes by allowing the user to construct, save, display,
+    delete, and edit note templates. Note templates are intended to provide the basic structure of a patient note so
     that the practitioner can save time by filling the details rather than constructing a completely new note.
 
 Attributes:
@@ -467,7 +467,7 @@ class NoteKeeper:
 
         result = date.today()
         if result is None:
-            msg = f"An error occurred while retrieving the date."
+            msg = "An error occurred while retrieving the date."
             raise NoteKeeperApplicationError(msg)
         elif as_str is True:
             return result
@@ -722,9 +722,9 @@ class NoteKeeper:
 
         welcome = (
             f"Welcome to:\n"
-            f"{' ' * graphic_indent}         __  _____  __{' ' * graphic_space}      __   __   __   __   __   \n"
-            f"{' ' * graphic_indent} /\  /  /  \   |   |__{' ' * graphic_space}|_/  |__  |__  |_/  |__  |__|  \n"
-            f"{' ' * graphic_indent}/  \/   \__/   |   |__{' ' * graphic_space}| \  |__  |__  |    |__  |  \  \n\n"
+            f"{' ' * graphic_indent}         __  _____  __{' ' * graphic_space}      __   __   __   __   __   \n"  # noqa: E501,W605
+            f"{' ' * graphic_indent} /\  /  /  \   |   |__{' ' * graphic_space}|_/  |__  |__  |_/  |__  |__|  \n"  # noqa: E501,W605
+            f"{' ' * graphic_indent}/  \/   \__/   |   |__{' ' * graphic_space}| \  |__  |__  |    |__  |  \  \n\n"  # noqa: E501,W605
             "Application is being run in persistent mode. Enter 'menu' for a list of options, or 'quit' to exit."
         )
 

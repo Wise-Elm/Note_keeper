@@ -36,7 +36,7 @@ class _Template:
         self.id = template["id"]  # type(int). Unique identification number.
         self.note = template["note"]  # type(str). Exam note.
         """Initialize class.
-        
+
             Args:
                 template (dict): Note template.
                     Example:
@@ -44,7 +44,7 @@ class _Template:
                             'id': 0123456789,
                             'note': 'This is an example'
                         }
-                
+
             Returns:
                 None
         """
