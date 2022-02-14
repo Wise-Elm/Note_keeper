@@ -54,7 +54,7 @@ def create_mock_templates(classes, num=DEFAULT_MOCK_TEMPLATE_DIGIT_NUM):
     """
 
     if num < 1:
-        msg = f'Argument num: {num}, must be greater than 0.'
+        msg = f"Argument num: {num}, must be greater than 0."
         raise TestingError(msg)
 
     notes = []
@@ -74,9 +74,9 @@ def create_mock_templates(classes, num=DEFAULT_MOCK_TEMPLATE_DIGIT_NUM):
             cls_to_represent += 1
 
         randomized_note = {
-            '_type': type_,
-            'id': create_mock_id(),
-            'note': create_mock_note()
+            "_type": type_,
+            "id": create_mock_id(),
+            "note": create_mock_note(),
         }
 
         notes.append(randomized_note)
@@ -97,7 +97,7 @@ def create_mock_id(id_len=ID_DIGIT_LENGTH):
     is_unique = False
     is_proper_len = False
     while not is_unique or not is_proper_len:
-        id_ = randint(int('1' + ('0' * (id_len - 1))), int('9' * id_len))
+        id_ = randint(int("1" + ("0" * (id_len - 1))), int("9" * id_len))
         #   Example if ID_DIGIT_LEN == 3:
         #       id_ = int between 100 & 999.
 
@@ -115,7 +115,9 @@ def create_mock_id(id_len=ID_DIGIT_LENGTH):
     return id_
 
 
-def create_mock_note(min_len=DEFAULT_MOCK_NOTE_MIN_LENGTH, max_len=DEFAULT_MOCK_NOTE_MAX_LENGTH):
+def create_mock_note(
+    min_len=DEFAULT_MOCK_NOTE_MIN_LENGTH, max_len=DEFAULT_MOCK_NOTE_MAX_LENGTH
+):
     """Generate a note filled with random alphabetical characters and spaces.
 
     Args:
@@ -127,8 +129,8 @@ def create_mock_note(min_len=DEFAULT_MOCK_NOTE_MIN_LENGTH, max_len=DEFAULT_MOCK_
         note (str): String of random alphabetical and space characters of length between min_len and max_len.
     """
 
-    characters = '  abcdefghijklmnopqrstuvwxyz'
-    note = ''
+    characters = "  abcdefghijklmnopqrstuvwxyz"
+    note = ""
     for i in range(min_len, max_len):
         letter = random.choice(characters)
         note += letter
@@ -136,5 +138,5 @@ def create_mock_note(min_len=DEFAULT_MOCK_NOTE_MIN_LENGTH, max_len=DEFAULT_MOCK_
     return note
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

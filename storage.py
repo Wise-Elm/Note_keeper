@@ -28,8 +28,8 @@ from core import RUNTIME_ID
 from test_assets import create_mock_templates
 
 
-DEFAULT_RECORDS_FILENAME = 'records.yaml'
-DEFAULT_STORAGE_LOG_FILENAME = 'storage.log'
+DEFAULT_RECORDS_FILENAME = "records.yaml"
+DEFAULT_STORAGE_LOG_FILENAME = "storage.log"
 STORAGE_LOG_LEVEL = logging.DEBUG
 
 
@@ -47,13 +47,17 @@ class Repo:
 
     def __init__(self):
 
-        log.debug('Initializing...')
+        log.debug("Initializing...")
 
-        self.subclass_names = [cls.__name__ for cls in _Template.__subclasses__()]  # List of template class names.
+        self.subclass_names = [
+            cls.__name__ for cls in _Template.__subclasses__()
+        ]  # List of template class names.
         #   Example:
         #       self.subclass_names = ['Surgery', 'ComprehensiveExam', 'etc']
 
-        self.classes = {_class: [] for _class in self.subclass_names}  # Keys = Template class, values = [empty].
+        self.classes = {
+            _class: [] for _class in self.subclass_names
+        }  # Keys = Template class, values = [empty].
         #   Construct dictionary format for use with self.templates.
         #   Example:
         #       self.classes = {
@@ -64,7 +68,9 @@ class Repo:
         #           'ComprehensiveExam': []
         #       }
 
-        self.templates = copy.deepcopy(self.classes)  # Dictionary: keys=template class names, values=[note templates].
+        self.templates = copy.deepcopy(
+            self.classes
+        )  # Dictionary: keys=template class names, values=[note templates].
         #   Values will be populated with loaded data.
         #   Example:
         #       self.templates = {
@@ -94,7 +100,7 @@ class Repo:
         self.ids = []  # List storing template id's for each note template.
         """Initialize class."""
 
-        log.debug('Initializing complete.')
+        log.debug("Initializing complete.")
 
     def load_test(self):
         """Loads creates test data and loads into program.
@@ -108,17 +114,17 @@ class Repo:
             None
         """
 
-        log.debug('Generating test data...')
+        log.debug("Generating test data...")
 
         # Get list[Dict], where each dictionary is a representation of a note containing test data.
         notes = create_mock_templates(self.subclass_names)
 
-        log.debug('Generation of test data complete.')
-        log.debug('Instantiating test data...')
+        log.debug("Generation of test data complete.")
+        log.debug("Instantiating test data...")
 
         self._load_obj(notes)
 
-        log.debug('Instantiation of test data complete.')
+        log.debug("Instantiation of test data complete.")
 
     def load(self, file_path=DEFAULT_RECORDS_FILENAME):
         """Load note templates from data file.
@@ -130,12 +136,14 @@ class Repo:
             None
         """
 
-        log.debug('Loading...')
+        log.debug("Loading...")
 
-        templates = self._get_from_yaml(file_path)  # List of dictionaries representing each template.
+        templates = self._get_from_yaml(
+            file_path
+        )  # List of dictionaries representing each template.
         self._load_obj(templates)
 
-        log.debug('Loading complete.')
+        log.debug("Loading complete.")
 
     def _get_from_yaml(self, file_path):
         """Retrieve data from yaml file.
@@ -152,18 +160,18 @@ class Repo:
                     ]
         """
 
-        log.debug(f'Retrieving data from {file_path}...')
+        log.debug(f"Retrieving data from {file_path}...")
 
         # Check if .yaml data file exists. Create file if False.
         file_exists = exists(file_path)  # Bool
         if not file_exists:
-            new_file = open(file_path, 'w')
+            new_file = open(file_path, "w")
             new_file.close()
 
-        with open(file_path, 'r') as infile:
+        with open(file_path, "r") as infile:
             records = yaml.full_load(infile) or []
 
-        log.debug(f'Retrieving data from {file_path} complete.')
+        log.debug(f"Retrieving data from {file_path} complete.")
 
         return records
 
@@ -184,12 +192,12 @@ class Repo:
             None
         """
 
-        log.debug('Instantiating template objects...')
+        log.debug("Instantiating template objects...")
 
         for template in templates:
             self._instantiate_templates(template)
 
-        log.debug('Instantiating template objects complete.')
+        log.debug("Instantiating template objects complete.")
 
     def _instantiate_templates(self, template):
         """Instantiate a note template object and append it to self.templates.
@@ -203,15 +211,17 @@ class Repo:
             note (Obj): Object representing a note template.
         """
 
-        class_ = self.note_classes[template['_type']]  # Identify class object.
+        class_ = self.note_classes[template["_type"]]  # Identify class object.
         note = class_(template)  # Instantiate class object.
 
-        self._add_id(template['id'])  # Add id to used id list (self.id_).
+        self._add_id(template["id"])  # Add id to used id list (self.id_).
 
         try:  # Add add object to self.note_templates.
-            self.templates[template['_type']].append(note)
-        except StorageError('Unable to instantiate template object for {}'.format(template['id'])) as se:
-            log.warning(f'{se}')
+            self.templates[template["_type"]].append(note)
+        except StorageError(
+            "Unable to instantiate template object for {}".format(template["id"])
+        ) as se:
+            log.warning(f"{se}")
 
         return note
 
@@ -229,19 +239,19 @@ class Repo:
 
         # Check length.
         if len(str(id_)) != ID_DIGIT_LENGTH:
-            msg = f'Error for ID #: {id_}. Must be {ID_DIGIT_LENGTH}.'
+            msg = f"Error for ID #: {id_}. Must be {ID_DIGIT_LENGTH}."
             log.warning(msg)
             raise StorageError(msg)
 
         # Check if already used.
         elif id_ in self.ids:
-            msg = f'Error for ID #: {id_}. ID already in use for another note template.'
+            msg = f"Error for ID #: {id_}. ID already in use for another note template."
             log.warning(msg)
             raise StorageError(msg)
 
         # Check if id is an integer.
         elif type(id_) is not int:
-            msg = f'Error for ID #: {id_}. ID must be an integer.'
+            msg = f"Error for ID #: {id_}. ID must be an integer."
             log.warning(msg)
             raise StorageError(msg)
 
@@ -262,7 +272,7 @@ class Repo:
             True (Bool): True when successful.
         """
 
-        log.debug(f'Saving data to {file_path}...')
+        log.debug(f"Saving data to {file_path}...")
 
         templates = self.templates
         records = []
@@ -274,7 +284,7 @@ class Repo:
 
         self._save_to_yaml(records, file_path)
 
-        log.debug(f'Saving data to {file_path} complete.')
+        log.debug(f"Saving data to {file_path} complete.")
 
         return True
 
@@ -296,13 +306,15 @@ class Repo:
         """
 
         # Check legality of file type.
-        if file_path.split('.')[1] != 'yaml' and file_path.split('.')[1] != 'yml':
-            msg = f'An error occurred while attempting to save to .yaml file. File path: {file_path} must end in ' \
-                  f'.yaml, or .yml to be a legal yaml file.'
+        if file_path.split(".")[1] != "yaml" and file_path.split(".")[1] != "yml":
+            msg = (
+                f"An error occurred while attempting to save to .yaml file. File path: {file_path} must end in "
+                f".yaml, or .yml to be a legal yaml file."
+            )
             log.warning(msg)
             raise StorageError(msg)
 
-        with open(file_path, 'w') as yaml_outfile:
+        with open(file_path, "w") as yaml_outfile:
             yaml.dump(records, yaml_outfile)
 
     def delete_note(self, id_):
@@ -315,18 +327,18 @@ class Repo:
             (Bool): True if successful.
         """
 
-        log.debug('Deleting note...')
+        log.debug("Deleting note...")
 
         if type(id_) is str:  # Check legality of id_.
             if not id_.isnumeric():
-                msg = f'Entered id: ({id_}), is not valid. Must only contain numbers.'
+                msg = f"Entered id: ({id_}), is not valid. Must only contain numbers."
                 log.warning(msg)
                 raise StorageError(msg)
             else:
                 id_ = int(id_)
 
         if not type(id_) is int:  # Check legality of id_ argument.
-            msg = 'Entered id is not valid. Must be numeric.'
+            msg = "Entered id is not valid. Must be numeric."
             log.warning(msg)
             raise StorageError(msg)
 
@@ -336,11 +348,11 @@ class Repo:
                     index = self.templates[name].index(note)
                     self.templates[name].pop(index)
                     self.ids.remove(id_)
-                    msg = f'Template Type: {name}, id: {id_}, has been deleted.'
+                    msg = f"Template Type: {name}, id: {id_}, has been deleted."
                     log.debug(msg)
                     return True
 
-        msg = f'Template id: {id_}, cannot be found and has NOT been deleted.'
+        msg = f"Template id: {id_}, cannot be found and has NOT been deleted."
         log.debug(msg)
         raise StorageError(msg)
 
@@ -356,11 +368,11 @@ class Repo:
             note (_Template): Returns the note with a id that matches argument.
         """
 
-        log.debug('Finding note...')
+        log.debug("Finding note...")
 
         if type(id_) is str:  # Check legality of id_ argument.
             if not id_.isnumeric():
-                msg = 'Entered id is not valid. Must be all numbers.'
+                msg = "Entered id is not valid. Must be all numbers."
                 log.warning(msg)
                 raise StorageError(msg)
             else:
@@ -369,11 +381,11 @@ class Repo:
         for name, notes in self.templates.items():
             for note in notes:
                 if note.id == id_:
-                    msg = 'Note found.'
+                    msg = "Note found."
                     log.debug(msg)
                     return note
 
-        msg = f'Note with id: {id_}, cannot be found.'
+        msg = f"Note with id: {id_}, cannot be found."
         log.debug(msg)
         raise StorageError(msg)
 
@@ -387,15 +399,15 @@ class Repo:
             notes (lst): All notes of argument type.
         """
 
-        log.debug(f'Retrieving all notes of type: {type_}.')
+        log.debug(f"Retrieving all notes of type: {type_}.")
 
         if type_ not in self.templates.keys():
-            msg = f'Could not find type: {type_} in stored notes.'
+            msg = f"Could not find type: {type_} in stored notes."
             log.warning(msg)
             raise StorageError(msg)
         else:
             notes = [note for note in self.templates[type_]]
-            log.debug(f'All notes of type: {type_} retrieved.')
+            log.debug(f"All notes of type: {type_} retrieved.")
             return notes
 
     def edit_type(self, note, desired_type):
@@ -411,24 +423,24 @@ class Repo:
             edited (_Template): Note with class determined from new_type argument.
         """
 
-        log.debug('Editing note type...')
+        log.debug("Editing note type...")
 
         # Check legality of desired_type.
         if desired_type not in [cls for cls in self.note_classes.values()]:
-            msg = f'Desired type: {desired_type.__class__.__name__}, is not an available type.'
+            msg = f"Desired type: {desired_type.__class__.__name__}, is not an available type."
             log.warning(msg)
             raise StorageError(msg)
 
         # Check legality of note.
         if not isinstance(note, _Template):
-            msg = f'Note to edit: {note}, is not a legal object.'
+            msg = f"Note to edit: {note}, is not a legal object."
             log.warning(msg)
             raise StorageError(msg)
 
         note_attrs = copy.deepcopy(note.to_dict())  # Note is dict.
 
         # Remove note original object.
-        self.delete_note(note_attrs['id'])
+        self.delete_note(note_attrs["id"])
 
         # Identify string name for desired_type.
         new_type = None
@@ -437,12 +449,12 @@ class Repo:
                 new_type = k
                 break
 
-        note_attrs['_type'] = new_type
+        note_attrs["_type"] = new_type
 
         # Add edited note.
         note = self._instantiate_templates(note_attrs)  # Note is obj.
 
-        log.debug('Editing of note type is complete.')
+        log.debug("Editing of note type is complete.")
 
         return note
 
@@ -456,12 +468,14 @@ class Repo:
             id_ (int): A unique id number of the proper length (ID_DIGIT_LENGTH).
         """
 
-        log.debug('Generating new id number...')
+        log.debug("Generating new id number...")
 
         is_unique = False
         is_long_enough = False
         while not is_unique or not is_long_enough:
-            id_ = randint(int('1' + ('0' * (ID_DIGIT_LENGTH - 1))), int('9' * ID_DIGIT_LENGTH))
+            id_ = randint(
+                int("1" + ("0" * (ID_DIGIT_LENGTH - 1))), int("9" * ID_DIGIT_LENGTH)
+            )
             #   Example if ID_DIGIT_LEN == 3:
             #       id_ = int between 100 & 999.
 
@@ -474,7 +488,7 @@ class Repo:
             if id_ is False or is_unique is False:
                 id_, is_unique = False, False
 
-        log.debug('New id number generated.')
+        log.debug("New id number generated.")
 
         return id_
 
@@ -511,11 +525,15 @@ def test():
     pass
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
 
     # Configure Rotating Log. Only runs when module is called directly.
-    handler = handlers.RotatingFileHandler(filename=DEFAULT_STORAGE_LOG_FILENAME, maxBytes=100**3, backupCount=1)
-    formatter = logging.Formatter(f'[%(asctime)s] - {RUNTIME_ID} - %(levelname)s - [%(name)s:%(lineno)s] - %(message)s')
+    handler = handlers.RotatingFileHandler(
+        filename=DEFAULT_STORAGE_LOG_FILENAME, maxBytes=100**3, backupCount=1
+    )
+    formatter = logging.Formatter(
+        f"[%(asctime)s] - {RUNTIME_ID} - %(levelname)s - [%(name)s:%(lineno)s] - %(message)s"
+    )
     handler.setFormatter(formatter)
     log.addHandler(handler)
     log.setLevel(STORAGE_LOG_LEVEL)

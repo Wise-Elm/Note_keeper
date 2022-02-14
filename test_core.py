@@ -23,7 +23,9 @@ class TestCore(unittest.TestCase):
 
     def setUp(self):
         self.app = NoteKeeper(test_=True)
-        self.cls_names = [k for k in self.app.note_classes.keys()]  # Generate list of note class names.
+        self.cls_names = [
+            k for k in self.app.note_classes.keys()
+        ]  # Generate list of note class names.
 
     def tearDown(self):
         pass
@@ -67,7 +69,7 @@ class TestCore(unittest.TestCase):
 
         cls = random.choice(self.cls_names)
         note = random.choice(self.app.templates[cls])
-        template = {'_type': cls, 'id': note.id, 'note': note.note}
+        template = {"_type": cls, "id": note.id, "note": note.note}
 
         self.assertDictEqual(note.to_dict(), template)
 
@@ -100,16 +102,16 @@ class TestCore(unittest.TestCase):
         # Test CoreError.
 
         # Bad argument.
-        arg = 'asdf'
+        arg = "asdf"
         with self.assertRaises(CoreError):
             note.__eq__(arg)
 
         # Dictionary without id.
         note_2 = note_2.to_dict()
-        note_2.pop('id')
+        note_2.pop("id")
         with self.assertRaises(CoreError):
             note.__eq__(note_2)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

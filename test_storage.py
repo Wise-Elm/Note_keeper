@@ -19,7 +19,7 @@ from storage import Repo, StorageError
 from test_assets import DEFAULT_MOCK_TEMPLATE_DIGIT_NUM
 
 
-DEFAULT_STORAGE_TEST_FILENAME = 'test_storage.yaml'
+DEFAULT_STORAGE_TEST_FILENAME = "test_storage.yaml"
 
 
 class TestStorage(unittest.TestCase):
@@ -48,10 +48,14 @@ class TestStorage(unittest.TestCase):
         Confirm the correct number of objects are loaded into the correct locations."""
 
         self.repo.ids = []
-        self.repo.templates = self.repo.classes  # Reformat repo.templates to state before input data.
+        self.repo.templates = (
+            self.repo.classes
+        )  # Reformat repo.templates to state before input data.
 
         self.assertEqual(len(self.repo.ids), 0)  # Confirm repo.ids is empty.
-        self.assertDictEqual(self.repo.templates, self.repo.classes)  # Confirm that repo.templates in original state.
+        self.assertDictEqual(
+            self.repo.templates, self.repo.classes
+        )  # Confirm that repo.templates in original state.
 
         self.repo.load_test()
 
@@ -79,7 +83,7 @@ class TestStorage(unittest.TestCase):
         self.assertDictEqual(self.repo.templates, templates)
 
         # Load test data.
-        with open(DEFAULT_STORAGE_TEST_FILENAME, 'r') as infile:
+        with open(DEFAULT_STORAGE_TEST_FILENAME, "r") as infile:
             records = yaml.full_load(infile) or []
 
         for cls, notes in self.repo.templates.items():
@@ -98,7 +102,7 @@ class TestStorage(unittest.TestCase):
         self.repo.templates = self.repo.classes  # Return to preloaded state.
 
         # Load test data.
-        with open(DEFAULT_STORAGE_TEST_FILENAME, 'r') as infile:
+        with open(DEFAULT_STORAGE_TEST_FILENAME, "r") as infile:
             records = yaml.full_load(infile) or []
 
         self.repo._load_obj(records)
@@ -116,16 +120,18 @@ class TestStorage(unittest.TestCase):
         self.repo.templates = self.repo.classes  # Return to preloaded state.
 
         # Load test data.
-        with open(DEFAULT_STORAGE_TEST_FILENAME, 'r') as infile:
+        with open(DEFAULT_STORAGE_TEST_FILENAME, "r") as infile:
             records = yaml.full_load(infile) or []
 
         self.repo._instantiate_templates(records[0])
 
         # Confirm loaded data is the same as existing data.
         self.assertIn(self.repo.ids[0], ids)
-        new_template = self.repo.templates[records[0]['_type']][0]  # Isolate record for testing.
-        self.assertIn(new_template, templates[records[0]['_type']])
-        self.assertIsInstance(new_template, self.repo.note_classes[records[0]['_type']])
+        new_template = self.repo.templates[records[0]["_type"]][
+            0
+        ]  # Isolate record for testing.
+        self.assertIn(new_template, templates[records[0]["_type"]])
+        self.assertIsInstance(new_template, self.repo.note_classes[records[0]["_type"]])
 
     def test_add_id(self):
         """Test Repo._add_id()."""
@@ -138,7 +144,7 @@ class TestStorage(unittest.TestCase):
                 self.repo._add_id(id_)
 
         for id_ in ids:
-            id_too_long = int(str(id_) + '0')
+            id_too_long = int(str(id_) + "0")
             with self.assertRaises(StorageError):
                 # Confirm exception is raised when attempting to add an id that has too many digits.
                 self.repo._add_id(id_too_long)
@@ -157,7 +163,9 @@ class TestStorage(unittest.TestCase):
 
         new_id = self.repo.generate_id()  # Generate a new legal id.
         self.repo._add_id(new_id)  # Add new id.
-        self.assertIn(new_id, self.repo.ids)  # Confirm new id has been added to Repo.ids.
+        self.assertIn(
+            new_id, self.repo.ids
+        )  # Confirm new id has been added to Repo.ids.
 
     def test_save(self):
         """Test Repo.save().
@@ -188,13 +196,13 @@ class TestStorage(unittest.TestCase):
 
         # Test StorageError when trying to pass a non-yaml file type.
         with self.assertRaises(StorageError):
-            self.repo._save_to_yaml(records, file_path='test_storage.txt')
+            self.repo._save_to_yaml(records, file_path="test_storage.txt")
 
         # Save data to yaml.
         self.repo._save_to_yaml(records, DEFAULT_STORAGE_TEST_FILENAME)
 
         # Retrieve data from yaml.
-        with open(DEFAULT_STORAGE_TEST_FILENAME, 'r') as infile:
+        with open(DEFAULT_STORAGE_TEST_FILENAME, "r") as infile:
             new_records = yaml.full_load(infile) or []
 
         # Confirm data has not changed.
@@ -234,7 +242,7 @@ class TestStorage(unittest.TestCase):
         with self.assertRaises(StorageError):
             self.repo.get_note(new_id_1)
 
-        new_id_2 = str(note.id) + 'a'  # Generate id that is not numeric.
+        new_id_2 = str(note.id) + "a"  # Generate id that is not numeric.
         with self.assertRaises(StorageError):
             self.repo.get_note(new_id_2)
 
@@ -247,7 +255,7 @@ class TestStorage(unittest.TestCase):
 
         self.assertEqual(self.repo.get_notes_of_type(cls), notes)
 
-        junk_cls = 'asdf'
+        junk_cls = "asdf"
         with self.assertRaises(StorageError):
             self.repo.get_notes_of_type(junk_cls)
 
@@ -262,7 +270,7 @@ class TestStorage(unittest.TestCase):
         self.assertIsInstance(note, self.repo.note_classes[cls])
 
         # Select new class, making sure it is not the same as cls.
-        new_cls = ''
+        new_cls = ""
         same_cls = True
         while same_cls is True:
             new_cls = random.choice(self.repo.subclass_names)
@@ -302,5 +310,5 @@ class TestStorage(unittest.TestCase):
         self.assertNotIn(id_, self.repo.ids)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

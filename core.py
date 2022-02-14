@@ -17,7 +17,7 @@ import uuid
 
 RUNTIME_ID = uuid.uuid4()  # Set unique id for each runtime.
 ID_DIGIT_LENGTH = 10
-DEFAULT_CORE_LOG_FILENAME = 'core.log'  # Used when __name__ == '__main__'
+DEFAULT_CORE_LOG_FILENAME = "core.log"  # Used when __name__ == '__main__'
 CORE_LOG_LEVEL = logging.DEBUG
 
 # Configure logging.
@@ -33,8 +33,8 @@ class _Template:
     """ABC. Objects of this type represent a periodontal appointment note template."""
 
     def __init__(self, template):
-        self.id = template['id']  # type(int). Unique identification number.
-        self.note = template['note']  # type(str). Exam note.
+        self.id = template["id"]  # type(int). Unique identification number.
+        self.note = template["note"]  # type(str). Exam note.
         """Initialize class.
         
             Args:
@@ -52,14 +52,14 @@ class _Template:
     def __repr__(self):
         """String representation of _Template containing technical information.
 
-            Args:
-                None
+        Args:
+            None
 
-            Returns:
-                result (str): String representation of self containing subclass name and id.
+        Returns:
+            result (str): String representation of self containing subclass name and id.
         """
 
-        result = f'{self.__class__.__name__}, id: {self.id}'
+        result = f"{self.__class__.__name__}, id: {self.id}"
 
         return result
 
@@ -75,35 +75,35 @@ class _Template:
             is_equivalent (bool): True if equal, False otherwise.
         """
 
-        log.debug('__eq__...')
+        log.debug("__eq__...")
 
         # Handle dictionary as argument.
         if type(other) is dict:
-            if 'id' in other:
-                if self.id == other['id']:
-                    log.debug('__eq__ = True.')
+            if "id" in other:
+                if self.id == other["id"]:
+                    log.debug("__eq__ = True.")
                     return True
                 else:
-                    log.debug('__eq__ = False.')
+                    log.debug("__eq__ = False.")
                     return False
             else:
-                msg = 'Invalid id. Dictionary must contain an id as a key.'
-                log.debug('__eq__ ' + msg)
+                msg = "Invalid id. Dictionary must contain an id as a key."
+                log.debug("__eq__ " + msg)
                 raise CoreError(msg)
 
         # Handle _NoteTemplate as argument.
         elif isinstance(other, _Template):
             if self.id == other.id:
-                log.debug('__eq__ = True.')
+                log.debug("__eq__ = True.")
                 return True
             else:
-                log.debug('__eq__ = False.')
+                log.debug("__eq__ = False.")
                 return False
 
         # Handle illegal argument.
         else:
-            msg = 'Invalid ID. Comparison could not be made.'
-            log.debug('__eq__ ' + msg)
+            msg = "Invalid ID. Comparison could not be made."
+            log.debug("__eq__ " + msg)
             raise CoreError(msg)
 
     def __str__(self):
@@ -124,7 +124,7 @@ class _Template:
         """
 
         _type = self.__class__.__name__  # Child class name as string.
-        display_text = 'Type: {}\nID: {}\n\n{}'.format(_type, self.id, self.note)
+        display_text = "Type: {}\nID: {}\n\n{}".format(_type, self.id, self.note)
         return display_text
 
     def to_dict(self):
@@ -143,13 +143,13 @@ class _Template:
                     }
         """
 
-        log.debug(f'{self.__repr__()} to_dict...')
+        log.debug(f"{self.__repr__()} to_dict...")
 
         note = self.__dict__
         note = copy.deepcopy(note)  # Keep integrity of __dict__.
-        note['_type'] = self.__class__.__name__
+        note["_type"] = self.__class__.__name__
 
-        log.debug(f'{self.__repr__()} to_dict.')
+        log.debug(f"{self.__repr__()} to_dict.")
         return note
 
 
@@ -198,11 +198,15 @@ def test():
     pass
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
 
     # Configure Rotating Log. Only runs when module is called directly.
-    handler = handlers.RotatingFileHandler(filename=DEFAULT_CORE_LOG_FILENAME, maxBytes=100**3, backupCount=1)
-    formatter = logging.Formatter(f'[%(asctime)s] - {RUNTIME_ID} - %(levelname)s - [%(name)s:%(lineno)s] - %(message)s')
+    handler = handlers.RotatingFileHandler(
+        filename=DEFAULT_CORE_LOG_FILENAME, maxBytes=100**3, backupCount=1
+    )
+    formatter = logging.Formatter(
+        f"[%(asctime)s] - {RUNTIME_ID} - %(levelname)s - [%(name)s:%(lineno)s] - %(message)s"
+    )
     handler.setFormatter(formatter)
     log.addHandler(handler)
     log.setLevel(CORE_LOG_LEVEL)
