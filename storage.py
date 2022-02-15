@@ -158,10 +158,13 @@ class Repo:
         data_file = Path(file_path)
         data_file.touch(exist_ok=True)
 
+        records = []
         with data_file.open(mode="r") as infile:
-            records = yaml.full_load(infile) or []
-
-        log.debug(f"Retrieving data from {file_path} complete.")
+            try:
+                records = yaml.full_load(infile)
+                log.debug(f"Retrieving data from {file_path} complete.")
+            except yaml.parser.ParserError as e:
+                log.exception(f"{file_path} is not valid yaml, continuing with empty list")
 
         return records
 
