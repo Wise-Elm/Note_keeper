@@ -42,32 +42,44 @@ class StorageError(RuntimeError):
 class Repo:
     """Load and save program data."""
 
-    def __init__(self):
+    # List of template class names.
+    #   Example:
+    #       self.subclass_names = ['Surgery', 'ComprehensiveExam', 'etc']
+    subclass_names = [cls.__name__ for cls in _Template.__subclasses__()]
 
+    # Keys = Template class, values = [empty].
+    #   Construct dictionary format for use with self.templates.
+    #   Example:
+    #       self.classes = {
+    #           'LimitedExam': [],
+    #           'Surgery': [],
+    #           'HygieneExam': [],
+    #           'PeriodicExam': [],
+    #           'ComprehensiveExam': []
+    #       }
+    classes = {_class: [] for _class in subclass_names}
+
+    #   Gather _Template child class objects and insert them into a list.
+    #   Example:
+    #       subclass_obj = [<class 'core.LimitedExam'>, <class 'core.Surgery'>, <class 'core.HygieneExam'>, etc.]
+    subclass_obj = _Template.__subclasses__()
+
+    #   Dictionary of template class names as keys and corresponding objects as values.
+    #   Example:
+    #       self.note_classes = {
+    #           'LimitedExam': <class 'core.LimitedExam'>,
+    #           'Surgery': <class 'core.Surgery'>,
+    #           'HygieneExam': <class 'core.HygieneExam'>,
+    #           'PeriodicExam': <class 'core.PeriodicExam'>,
+    #           'ComprehensiveExam': <class 'core.ComprehensiveExam'>
+    #       }
+    note_classes = dict(zip(subclass_names, subclass_obj))
+
+    def __init__(self):
+        """Initialize class."""
         log.debug("Initializing...")
 
-        self.subclass_names = [
-            cls.__name__ for cls in _Template.__subclasses__()
-        ]  # List of template class names.
-        #   Example:
-        #       self.subclass_names = ['Surgery', 'ComprehensiveExam', 'etc']
-
-        self.classes = {
-            _class: [] for _class in self.subclass_names
-        }  # Keys = Template class, values = [empty].
-        #   Construct dictionary format for use with self.templates.
-        #   Example:
-        #       self.classes = {
-        #           'LimitedExam': [],
-        #           'Surgery': [],
-        #           'HygieneExam': [],
-        #           'PeriodicExam': [],
-        #           'ComprehensiveExam': []
-        #       }
-
-        self.templates = copy.deepcopy(
-            self.classes
-        )  # Dictionary: keys=template class names, values=[note templates].
+        # Dictionary: keys=template class names, values=[note templates].
         #   Values will be populated with loaded data.
         #   Example:
         #       self.templates = {
@@ -77,25 +89,10 @@ class Repo:
         #           'PeriodicExam': [PeriodicExam objects],
         #           'ComprehensiveExam': [ComprehensiveExam objects]
         #       }
+        self.templates = copy.deepcopy(self.classes)
 
-        subclass_obj = _Template.__subclasses__()
-        #   Gather _Template child class objects and insert them into a list.
-        #   Example:
-        #       subclass_obj = [<class 'core.LimitedExam'>, <class 'core.Surgery'>, <class 'core.HygieneExam'>, etc.]
-
-        self.note_classes = dict(zip(self.subclass_names, subclass_obj))
-        #   Dictionary of template class names as keys and corresponding objects as values.
-        #   Example:
-        #       self.note_classes = {
-        #           'LimitedExam': <class 'core.LimitedExam'>,
-        #           'Surgery': <class 'core.Surgery'>,
-        #           'HygieneExam': <class 'core.HygieneExam'>,
-        #           'PeriodicExam': <class 'core.PeriodicExam'>,
-        #           'ComprehensiveExam': <class 'core.ComprehensiveExam'>
-        #       }
-
-        self.ids = []  # List storing template id's for each note template.
-        """Initialize class."""
+        # List storing template id's for each note template.
+        self.ids = []
 
         log.debug("Initializing complete.")
 
