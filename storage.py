@@ -45,7 +45,7 @@ class Repo:
     # List of template class names.
     #   Example:
     #       self.subclass_names = ['Surgery', 'ComprehensiveExam', 'etc']
-    subclass_names = [cls.__name__ for cls in _Template.__subclasses__()]
+    subclass_names: list = [cls.__name__ for cls in _Template.__subclasses__()]
 
     # Keys = Template class, values = [empty].
     #   Construct dictionary format for use with self.templates.
@@ -57,12 +57,12 @@ class Repo:
     #           'PeriodicExam': [],
     #           'ComprehensiveExam': []
     #       }
-    classes = {_class: [] for _class in subclass_names}
+    classes: dict = {_class: [] for _class in subclass_names}
 
     #   Gather _Template child class objects and insert them into a list.
     #   Example:
     #       subclass_obj = [<class 'core.LimitedExam'>, <class 'core.Surgery'>, <class 'core.HygieneExam'>, etc.]
-    subclass_obj = _Template.__subclasses__()
+    subclass_obj: list = _Template.__subclasses__()
 
     #   Dictionary of template class names as keys and corresponding objects as values.
     #   Example:
@@ -73,7 +73,7 @@ class Repo:
     #           'PeriodicExam': <class 'core.PeriodicExam'>,
     #           'ComprehensiveExam': <class 'core.ComprehensiveExam'>
     #       }
-    note_classes = dict(zip(subclass_names, subclass_obj))
+    note_classes: dict = dict(zip(subclass_names, subclass_obj))
 
     def __init__(self):
         """Initialize class."""
@@ -138,7 +138,7 @@ class Repo:
         log.debug("Loading complete.")
 
     @staticmethod
-    def _get_from_yaml(file_path):
+    def _get_from_yaml(file_path: str) -> list:
         """Retrieve data from yaml file.
 
         Args:
@@ -169,7 +169,7 @@ class Repo:
 
         return records
 
-    def _load_obj(self, templates):
+    def _load_obj(self, templates: list) -> None:
         """Iterates through loaded data and feeds another method which instantiates template objects.
 
         Passes loaded data to self._instantiate_template() for object instantiation.
@@ -193,7 +193,7 @@ class Repo:
 
         log.debug("Instantiating template objects complete.")
 
-    def _instantiate_templates(self, template):
+    def _instantiate_templates(self, template: dict) -> _Template:
         """Instantiate a note template object and append it to self.templates.
 
         Args:
@@ -221,7 +221,7 @@ class Repo:
 
         return note
 
-    def _add_id(self, id_):
+    def _add_id(self, id_: int) -> None:
         """Add template id to repo._id if unique.
 
         Check legality of argument, then add to self.id_ if legal.
