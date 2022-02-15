@@ -137,7 +137,8 @@ class Repo:
 
         log.debug("Loading complete.")
 
-    def _get_from_yaml(self, file_path):
+    @staticmethod
+    def _get_from_yaml(file_path):
         """Retrieve data from yaml file.
 
         Args:
