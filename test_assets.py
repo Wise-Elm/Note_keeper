@@ -115,9 +115,7 @@ def create_mock_id(id_len=ID_DIGIT_LENGTH):
     return id_
 
 
-def create_mock_note(
-    min_len=DEFAULT_MOCK_NOTE_MIN_LENGTH, max_len=DEFAULT_MOCK_NOTE_MAX_LENGTH
-):
+def create_mock_note(min_len=DEFAULT_MOCK_NOTE_MIN_LENGTH, max_len=DEFAULT_MOCK_NOTE_MAX_LENGTH):
     """Generate a note filled with random alphabetical characters and spaces.
 
     Args:

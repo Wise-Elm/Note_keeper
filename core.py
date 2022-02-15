@@ -201,12 +201,8 @@ def test():
 if __name__ == "__main__":
 
     # Configure Rotating Log. Only runs when module is called directly.
-    handler = handlers.RotatingFileHandler(
-        filename=DEFAULT_CORE_LOG_FILENAME, maxBytes=100**3, backupCount=1
-    )
-    formatter = logging.Formatter(
-        f"[%(asctime)s] - {RUNTIME_ID} - %(levelname)s - [%(name)s:%(lineno)s] - %(message)s"
-    )
+    handler = handlers.RotatingFileHandler(filename=DEFAULT_CORE_LOG_FILENAME, maxBytes=100**3, backupCount=1)
+    formatter = logging.Formatter(f"[%(asctime)s] - {RUNTIME_ID} - %(levelname)s - [%(name)s:%(lineno)s] - %(message)s")
     handler.setFormatter(formatter)
     log.addHandler(handler)
     log.setLevel(CORE_LOG_LEVEL)

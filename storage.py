@@ -132,9 +132,7 @@ class Repo:
 
         log.debug("Loading...")
 
-        templates = self._get_from_yaml(
-            file_path
-        )  # List of dictionaries representing each template.
+        templates = self._get_from_yaml(file_path)  # List of dictionaries representing each template.
         self._load_obj(templates)
 
         log.debug("Loading complete.")
@@ -212,9 +210,7 @@ class Repo:
 
         try:  # Add add object to self.note_templates.
             self.templates[template["_type"]].append(note)
-        except StorageError(
-            "Unable to instantiate template object for {}".format(template["id"])
-        ) as se:
+        except StorageError("Unable to instantiate template object for {}".format(template["id"])) as se:
             log.warning(f"{se}")
 
         return note
@@ -467,9 +463,7 @@ class Repo:
         is_unique = False
         is_long_enough = False
         while not is_unique or not is_long_enough:
-            id_ = randint(
-                int("1" + ("0" * (ID_DIGIT_LENGTH - 1))), int("9" * ID_DIGIT_LENGTH)
-            )
+            id_ = randint(int("1" + ("0" * (ID_DIGIT_LENGTH - 1))), int("9" * ID_DIGIT_LENGTH))
             #   Example if ID_DIGIT_LEN == 3:
             #       id_ = int between 100 & 999.
 
@@ -522,12 +516,8 @@ def test():
 if __name__ == "__main__":
 
     # Configure Rotating Log. Only runs when module is called directly.
-    handler = handlers.RotatingFileHandler(
-        filename=DEFAULT_STORAGE_LOG_FILENAME, maxBytes=100**3, backupCount=1
-    )
-    formatter = logging.Formatter(
-        f"[%(asctime)s] - {RUNTIME_ID} - %(levelname)s - [%(name)s:%(lineno)s] - %(message)s"
-    )
+    handler = handlers.RotatingFileHandler(filename=DEFAULT_STORAGE_LOG_FILENAME, maxBytes=100**3, backupCount=1)
+    formatter = logging.Formatter(f"[%(asctime)s] - {RUNTIME_ID} - %(levelname)s - [%(name)s:%(lineno)s] - %(message)s")
     handler.setFormatter(formatter)
     log.addHandler(handler)
     log.setLevel(STORAGE_LOG_LEVEL)

@@ -68,9 +68,7 @@ class NoteKeeper:
             else:
                 self.repo.load()  # Load patient notes.
 
-        self.templates = (
-            self.repo.templates
-        )  # Dictionary: Keys=template class names, Values=[note templates].
+        self.templates = self.repo.templates  # Dictionary: Keys=template class names, Values=[note templates].
         #   Example:
         #       self.templates = {
         #           'LimitedExam': [LimitedExam objects],
@@ -82,9 +80,7 @@ class NoteKeeper:
 
         self.ids = self.repo.ids  # List storing template id's for each note template.
 
-        self.note_classes = (
-            self.repo.note_classes
-        )  # Dict: keys = class names, values = class objects.
+        self.note_classes = self.repo.note_classes  # Dict: keys = class names, values = class objects.
         #   Example:
         #       self.note_classes = {
         #           'LimitedExam': <class 'core.LimitedExam'>,
@@ -94,9 +90,7 @@ class NoteKeeper:
         #           'ComprehensiveExam': <class 'core.ComprehensiveExam'>
         #       }
 
-        self.welcome_message = self._get_welcome(
-            return_str=True
-        )  # Welcome message to display on program startup.
+        self.welcome_message = self._get_welcome(return_str=True)  # Welcome message to display on program startup.
 
         # Map of program methods that are intended for use during main_event_loop().
         # Keys = inputs, Values = functions.
@@ -147,9 +141,7 @@ class NoteKeeper:
 
         log.debug("Creating new note...")
 
-        if (
-            blank is True
-        ):  # User wants a note without a designated subclass of _Template, and a randomly generated id.
+        if blank is True:  # User wants a note without a designated subclass of _Template, and a randomly generated id.
             note_template = {"id": self.generate_id(), "note": ""}
 
             note = _Template(note_template)
@@ -158,13 +150,9 @@ class NoteKeeper:
 
         else:  # User wants a note with a designated subclass of _Template.
             # Check if new_template can be associated with a valid class.
-            cls_names = [
-                k for k in self.note_classes.keys()
-            ]  # Generate list of note class names.
+            cls_names = [k for k in self.note_classes.keys()]  # Generate list of note class names.
             if new_template["_type"] not in cls_names:
-                msg = "Note Template type: {}, not allowed.".format(
-                    new_template["_type"]
-                )
+                msg = "Note Template type: {}, not allowed.".format(new_template["_type"])
                 log.warning(msg)
                 raise NoteKeeperApplicationError(msg)
 
@@ -174,9 +162,7 @@ class NoteKeeper:
 
             note_template = {"id": id_, "note": new_template["note"]}
 
-            cls = self.note_classes[
-                new_template["_type"]
-            ]  # Select appropriate object class for new note.
+            cls = self.note_classes[new_template["_type"]]  # Select appropriate object class for new note.
             note = cls(note_template)  # Instantiate note object.
 
             # Add new object to appropriate dictionary value in self.templates.
@@ -318,18 +304,14 @@ class NoteKeeper:
         original = self.repo.get_note(edited_template["id"])  # Find note to edit.
 
         # Check type.
-        if (
-            edited_template["_type"] == original.to_dict()["_type"]
-        ):  # If note type is not going to change.
+        if edited_template["_type"] == original.to_dict()["_type"]:  # If note type is not going to change.
             original.note = edited_template["note"]
             new = original
         else:
             # Change note type.
             new = self.repo.edit_type(
                 self.repo.get_note(edited_template["id"]),  # Note on which to change.
-                self.note_classes[
-                    edited_template["_type"]
-                ],  # Desired _Template subclass.
+                self.note_classes[edited_template["_type"]],  # Desired _Template subclass.
             )
             new.note = edited_template["note"]
 
@@ -435,9 +417,7 @@ class NoteKeeper:
             None
         """
 
-        print(
-            f"Available types: {[k for k in self.note_classes.keys()]}."
-        )  # Generate list of note class names.
+        print(f"Available types: {[k for k in self.note_classes.keys()]}.")  # Generate list of note class names.
         type_ = input("Enter note type: ")
         note = input("Enter note: ")
         try:
@@ -565,9 +545,7 @@ class NoteKeeper:
             None
         """
 
-        print(
-            f"Available types: {[k for k in self.note_classes.keys()]}."
-        )  # Generate list of note class names.
+        print(f"Available types: {[k for k in self.note_classes.keys()]}.")  # Generate list of note class names.
         print("Entry is case sensitive.")
         type_ = input("Enter template type: ")
         try:
@@ -968,12 +946,8 @@ def test():
 def main():
 
     # Configure Rotating Log.
-    handler = handlers.RotatingFileHandler(
-        filename=DEFAULT_LOG_FILENAME, maxBytes=100**3, backupCount=1
-    )
-    formatter = logging.Formatter(
-        f"[%(asctime)s] - {RUNTIME_ID} - %(levelname)s - [%(name)s:%(lineno)s] - %(message)s"
-    )
+    handler = handlers.RotatingFileHandler(filename=DEFAULT_LOG_FILENAME, maxBytes=100**3, backupCount=1)
+    formatter = logging.Formatter(f"[%(asctime)s] - {RUNTIME_ID} - %(levelname)s - [%(name)s:%(lineno)s] - %(message)s")
     handler.setFormatter(formatter)
     log.addHandler(handler)
     log.setLevel(DEFAULT_LOG_LEVEL)

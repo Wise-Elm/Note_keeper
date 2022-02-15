@@ -47,14 +47,10 @@ class TestStorage(unittest.TestCase):
         Confirm the correct number of objects are loaded into the correct locations."""
 
         self.repo.ids = []
-        self.repo.templates = (
-            self.repo.classes
-        )  # Reformat repo.templates to state before input data.
+        self.repo.templates = self.repo.classes  # Reformat repo.templates to state before input data.
 
         self.assertEqual(len(self.repo.ids), 0)  # Confirm repo.ids is empty.
-        self.assertDictEqual(
-            self.repo.templates, self.repo.classes
-        )  # Confirm that repo.templates in original state.
+        self.assertDictEqual(self.repo.templates, self.repo.classes)  # Confirm that repo.templates in original state.
 
         self.repo.load_test()
 
@@ -126,9 +122,7 @@ class TestStorage(unittest.TestCase):
 
         # Confirm loaded data is the same as existing data.
         self.assertIn(self.repo.ids[0], ids)
-        new_template = self.repo.templates[records[0]["_type"]][
-            0
-        ]  # Isolate record for testing.
+        new_template = self.repo.templates[records[0]["_type"]][0]  # Isolate record for testing.
         self.assertIn(new_template, templates[records[0]["_type"]])
         self.assertIsInstance(new_template, self.repo.note_classes[records[0]["_type"]])
 
@@ -162,9 +156,7 @@ class TestStorage(unittest.TestCase):
 
         new_id = self.repo.generate_id()  # Generate a new legal id.
         self.repo._add_id(new_id)  # Add new id.
-        self.assertIn(
-            new_id, self.repo.ids
-        )  # Confirm new id has been added to Repo.ids.
+        self.assertIn(new_id, self.repo.ids)  # Confirm new id has been added to Repo.ids.
 
     def test_save(self):
         """Test Repo.save().

@@ -24,9 +24,7 @@ class TestApplication(unittest.TestCase):
 
     def setUp(self):
         self.app = NoteKeeper(test_=True)
-        self.cls_names = [
-            k for k in self.app.note_classes.keys()
-        ]  # Generate list of note class names.
+        self.cls_names = [k for k in self.app.note_classes.keys()]  # Generate list of note class names.
 
     def tearDown(self):
         pass
@@ -59,9 +57,7 @@ class TestApplication(unittest.TestCase):
 
         template = create_mock_templates(classes=self.cls_names, num=1)[0]
         len_before = len(self.app.templates[template["_type"]])
-        note = self.app.create_from_attributes(
-            type_=template["_type"], notes=template["note"]
-        )
+        note = self.app.create_from_attributes(type_=template["_type"], notes=template["note"])
         len_after = len(self.app.templates[template["_type"]])
 
         self.assertEqual(len_before + 1, len_after)
