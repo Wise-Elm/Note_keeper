@@ -211,8 +211,12 @@ class Repo:
 
         try:  # Add add object to self.note_templates.
             self.templates[template["_type"]].append(note)
-        except StorageError("Unable to instantiate template object for {}".format(template["id"])) as se:
-            log.warning(f"{se}")
+        # catch the likely errors and reraise
+        except (KeyError, ValueError) as se:
+            raise StorageError(f"Unable to instantiate templates for {template['id']}") from se
+        # catch anything else and raise separately
+        except BaseException as be:
+            raise StorageError(f"Unexpected error instantiating templates for {template['id']}") from be
 
         return note
 
