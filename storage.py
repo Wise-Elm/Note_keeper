@@ -17,7 +17,7 @@ TODO:
 import copy
 import logging
 from logging import handlers
-from os.path import exists
+from pathlib import Path
 from random import randint
 
 import yaml
@@ -155,12 +155,10 @@ class Repo:
         log.debug(f"Retrieving data from {file_path}...")
 
         # Check if .yaml data file exists. Create file if False.
-        file_exists = exists(file_path)  # Bool
-        if not file_exists:
-            new_file = open(file_path, "w")
-            new_file.close()
+        data_file = Path(file_path)
+        data_file.touch(exist_ok=True)
 
-        with open(file_path, "r") as infile:
+        with data_file.open(mode="r") as infile:
             records = yaml.full_load(infile) or []
 
         log.debug(f"Retrieving data from {file_path} complete.")
