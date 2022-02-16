@@ -6,7 +6,7 @@
 import random
 import unittest
 
-from core import _Template, ID_DIGIT_LENGTH
+from core import ID_DIGIT_LENGTH, _Template
 from notekeeper import NoteKeeper
 from test_assets import create_mock_templates
 
@@ -38,13 +38,13 @@ class TestApplication(unittest.TestCase):
         """
 
         template = create_mock_templates(classes=self.cls_names, num=1)[0]
-        len_before = len(self.app.templates[template['_type']])
+        len_before = len(self.app.templates[template["_type"]])
         note = self.app.create_note(template)
-        len_after = len(self.app.templates[template['_type']])
+        len_after = len(self.app.templates[template["_type"]])
 
         self.assertEqual(len_before + 1, len_after)
-        self.assertIn(note, self.app.templates[template['_type']])
-        self.assertIsInstance(note, self.app.note_classes[template['_type']])
+        self.assertIn(note, self.app.templates[template["_type"]])
+        self.assertIsInstance(note, self.app.note_classes[template["_type"]])
         self.assertIsInstance(note, _Template)
 
     def test_create_from_attributes(self):
@@ -56,13 +56,13 @@ class TestApplication(unittest.TestCase):
         """
 
         template = create_mock_templates(classes=self.cls_names, num=1)[0]
-        len_before = len(self.app.templates[template['_type']])
-        note = self.app.create_from_attributes(type_=template['_type'], notes=template['note'])
-        len_after = len(self.app.templates[template['_type']])
+        len_before = len(self.app.templates[template["_type"]])
+        note = self.app.create_from_attributes(type_=template["_type"], notes=template["note"])
+        len_after = len(self.app.templates[template["_type"]])
 
         self.assertEqual(len_before + 1, len_after)
-        self.assertIn(note, self.app.templates[template['_type']])
-        self.assertIsInstance(note, self.app.note_classes[template['_type']])
+        self.assertIn(note, self.app.templates[template["_type"]])
+        self.assertIsInstance(note, self.app.note_classes[template["_type"]])
         self.assertIsInstance(note, _Template)
 
     def test_generate_id(self):
@@ -126,11 +126,11 @@ class TestApplication(unittest.TestCase):
         note = random.choice(self.app.templates[cls])
 
         new = create_mock_templates(self.cls_names, 1)[0]
-        new['id'] = note.id
+        new["id"] = note.id
         note = self.app.edit_note(new)
 
         self.assertDictEqual(new, note.to_dict())
-        self.assertIn(note, self.app.templates[new['_type']])
+        self.assertIn(note, self.app.templates[new["_type"]])
 
     def test_get_class(self):
         """Test Application.get_class().
@@ -145,5 +145,5 @@ class TestApplication(unittest.TestCase):
         self.assertIsInstance(note, test)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

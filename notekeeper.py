@@ -1,16 +1,16 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-__version__ = '0.1.0'
+__version__ = "0.1.0"
 
 """Note organization application.
 
 Context:
     This program is currently in production, and is primarily derived for the purpose of learning Python.
-    
+
 Description:
-    This application is designed to aid in writing medical notes by allowing the user to construct, save, display, 
-    delete, and edit note templates. Note templates are intended to provide the basic structure of a patient note so 
+    This application is designed to aid in writing medical notes by allowing the user to construct, save, display,
+    delete, and edit note templates. Note templates are intended to provide the basic structure of a patient note so
     that the practitioner can save time by filling the details rather than constructing a completely new note.
 
 Attributes:
@@ -20,16 +20,15 @@ Attributes:
 
 
 import argparse
-from datetime import date
 import logging
-from logging import handlers
 import sys
+from datetime import date
+from logging import handlers
 
-from core import CoreError, core_self_test, RUNTIME_ID, _Template
-from storage import Repo, storage_self_test, StorageError
+from core import RUNTIME_ID, CoreError, _Template, core_self_test
+from storage import Repo, StorageError, storage_self_test
 
-
-DEFAULT_LOG_FILENAME = 'note_keeper_log.log'
+DEFAULT_LOG_FILENAME = "note_keeper_log.log"
 DEFAULT_LOG_LEVEL = logging.DEBUG
 
 # Configure logging.
@@ -58,7 +57,7 @@ class NoteKeeper:
             None
         """
 
-        log.debug('Starting Note Keeper...')
+        log.debug("Starting Note Keeper...")
 
         self.repo = Repo()
 
@@ -96,19 +95,19 @@ class NoteKeeper:
         # Map of program methods that are intended for use during main_event_loop().
         # Keys = inputs, Values = functions.
         self.options = {
-            'add': self._get_add,
-            'date': self.get_date,
-            'delete': self._get_delete,
-            'display': self._get_display,
-            'display type': self._get_display_type,
-            'edit': self._get_edit,
-            'menu': self._get_menu,
-            'save': self._get_save,
-            'quit': self._get_quit,
-            'workday': self.is_workday
+            "add": self._get_add,
+            "date": self.get_date,
+            "delete": self._get_delete,
+            "display": self._get_display,
+            "display type": self._get_display_type,
+            "edit": self._get_edit,
+            "menu": self._get_menu,
+            "save": self._get_save,
+            "quit": self._get_quit,
+            "workday": self.is_workday,
         }
 
-        log.debug('Note Keeper has started.')
+        log.debug("Note Keeper has started.")
 
     def create_note(self, new_template=None, id_=None, blank=False):
         """Create new note.
@@ -140,13 +139,10 @@ class NoteKeeper:
             note (_Template): New note.
         """
 
-        log.debug('Creating new note...')
+        log.debug("Creating new note...")
 
         if blank is True:  # User wants a note without a designated subclass of _Template, and a randomly generated id.
-            note_template = {
-                'id': self.generate_id(),
-                'note': ''
-            }
+            note_template = {"id": self.generate_id(), "note": ""}
 
             note = _Template(note_template)
 
@@ -155,8 +151,8 @@ class NoteKeeper:
         else:  # User wants a note with a designated subclass of _Template.
             # Check if new_template can be associated with a valid class.
             cls_names = [k for k in self.note_classes.keys()]  # Generate list of note class names.
-            if new_template['_type'] not in cls_names:
-                msg = 'Note Template type: {}, not allowed.'.format(new_template['_type'])
+            if new_template["_type"] not in cls_names:
+                msg = "Note Template type: {}, not allowed.".format(new_template["_type"])
                 log.warning(msg)
                 raise NoteKeeperApplicationError(msg)
 
@@ -164,18 +160,15 @@ class NoteKeeper:
             if id_ is None:
                 id_ = self.generate_id()
 
-            note_template = {
-                'id': id_,
-                'note': new_template['note']
-            }
+            note_template = {"id": id_, "note": new_template["note"]}
 
-            cls = self.note_classes[new_template['_type']]  # Select appropriate object class for new note.
+            cls = self.note_classes[new_template["_type"]]  # Select appropriate object class for new note.
             note = cls(note_template)  # Instantiate note object.
 
             # Add new object to appropriate dictionary value in self.templates.
             self.templates[cls.__name__].append(note)
 
-            log.debug('New note created and added.')
+            log.debug("New note created and added.")
 
             return note
 
@@ -194,10 +187,7 @@ class NoteKeeper:
             note
         """
 
-        template = {
-            '_type': type_,
-            'note': notes
-        }
+        template = {"_type": type_, "note": notes}
 
         note = self.create_note(new_template=template, id_=id_)
 
@@ -248,12 +238,12 @@ class NoteKeeper:
 
         # When True present notes in pretty format.
         if str_ is True:
-            text = ''
+            text = ""
             num = 0
             notes = [note.__str__() for note in notes]
             for note in notes:
                 num += 1
-                pretty = f'\n\nNumber: {num}\n' + note + '\n'
+                pretty = f"\n\nNumber: {num}\n" + note + "\n"
                 text += pretty
             return text
 
@@ -286,46 +276,46 @@ class NoteKeeper:
             result (_NoteTemplate[obj]): Template object.
         """
 
-        log.debug('Editing note template...')
+        log.debug("Editing note template...")
 
-        if type(edited_template['id']) is str:  # Check legality of id key.
-            if not edited_template['id'].isnumeric():
+        if type(edited_template["id"]) is str:  # Check legality of id key.
+            if not edited_template["id"].isnumeric():
                 msg = f"Entered id: {edited_template['id']}, is not valid. Must be all numbers."
                 log.warning(msg)
                 raise NoteKeeperApplicationError(msg)
             else:
-                edited_template['id'] = int(edited_template['id'])
+                edited_template["id"] = int(edited_template["id"])
 
-        if not type(edited_template['id']) is int:  # Check legality of id key.
-            msg = 'Entered id is not valid. Must be all numbers.'
+        if not type(edited_template["id"]) is int:  # Check legality of id key.
+            msg = "Entered id is not valid. Must be all numbers."
             log.warning(msg)
             raise NoteKeeperApplicationError(msg)
 
-        if edited_template['_type'] not in self.templates:  # Check legality of _type.
+        if edited_template["_type"] not in self.templates:  # Check legality of _type.
             msg = f"Entered type: {edited_template['_type']}, is not valid."
             log.warning(msg)
             raise NoteKeeperApplicationError(msg)
 
-        if not type(edited_template['_type']) is str:  # Check legality of _type.
+        if not type(edited_template["_type"]) is str:  # Check legality of _type.
             msg = f"Entered type: {edited_template['_type']}, is not valid."
             log.warning(msg)
             raise NoteKeeperApplicationError(msg)
 
-        original = self.repo.get_note(edited_template['id'])  # Find note to edit.
+        original = self.repo.get_note(edited_template["id"])  # Find note to edit.
 
         # Check type.
-        if edited_template['_type'] == original.to_dict()['_type']:  # If note type is not going to change.
-            original.note = edited_template['note']
+        if edited_template["_type"] == original.to_dict()["_type"]:  # If note type is not going to change.
+            original.note = edited_template["note"]
             new = original
         else:
             # Change note type.
             new = self.repo.edit_type(
-                self.repo.get_note(edited_template['id']),  # Note on which to change.
-                self.note_classes[edited_template['_type']]  # Desired _Template subclass.
-                )
-            new.note = edited_template['note']
+                self.repo.get_note(edited_template["id"]),  # Note on which to change.
+                self.note_classes[edited_template["_type"]],  # Desired _Template subclass.
+            )
+            new.note = edited_template["note"]
 
-        msg = 'Note has been edited.'
+        msg = "Note has been edited."
         log.debug(msg)
 
         return new  # Return resultant note.
@@ -340,11 +330,11 @@ class NoteKeeper:
             None
         """
 
-        log.debug('Saving...')
+        log.debug("Saving...")
 
         result = self.repo.save()
 
-        log.debug('Saving complete.')
+        log.debug("Saving complete.")
 
         return result
 
@@ -359,7 +349,7 @@ class NoteKeeper:
         """
 
         template = note.to_dict()
-        cls = self.note_classes[template['_type']]
+        cls = self.note_classes[template["_type"]]
 
         return cls
 
@@ -377,7 +367,7 @@ class NoteKeeper:
 
         print(self.welcome_message)  # Print welcome message to screen.
 
-        log.debug('Entering Main Event Loop...')
+        log.debug("Entering Main Event Loop...")
 
         run = True
         while run is True:
@@ -385,7 +375,7 @@ class NoteKeeper:
             if result is False:
                 run = False
 
-        log.debug('Main Event Loop has ended.')
+        log.debug("Main Event Loop has ended.")
 
         return
 
@@ -399,11 +389,11 @@ class NoteKeeper:
             (False OR None): Returns to _main_event_loop(), False to end program, OR None to continue loop.
         """
 
-        log.debug('Prompting user.')
+        log.debug("Prompting user.")
 
-        user_input = input('\nEnter your selection: ')
+        user_input = input("\nEnter your selection: ")
 
-        log.debug(f'User selection: {user_input}.')
+        log.debug(f"User selection: {user_input}.")
 
         if user_input.lower() in self.options:  # Check if user input is legal.
             result = self.options[user_input.lower()]()
@@ -427,13 +417,13 @@ class NoteKeeper:
             None
         """
 
-        print(f'Available types: {[k for k in self.note_classes.keys()]}.')  # Generate list of note class names.
-        type_ = input('Enter note type: ')
-        note = input('Enter note: ')
+        print(f"Available types: {[k for k in self.note_classes.keys()]}.")  # Generate list of note class names.
+        type_ = input("Enter note type: ")
+        note = input("Enter note: ")
         try:
-            result = self.create_note({'_type': type_, 'note': note})
-            print(f'New note template:\n\n{result}\n')
-            print('Note template has been added.')
+            result = self.create_note({"_type": type_, "note": note})
+            print(f"New note template:\n\n{result}\n")
+            print("Note template has been added.")
         except CoreError as ce:
             print(ce)
         except NoteKeeperApplicationError as ae:
@@ -457,7 +447,7 @@ class NoteKeeper:
 
         result = date.today()
         if result is None:
-            msg = f'An error occurred while retrieving the date.'
+            msg = "An error occurred while retrieving the date."
             raise NoteKeeperApplicationError(msg)
         elif as_str is True:
             return result
@@ -477,19 +467,19 @@ class NoteKeeper:
         """
 
         if date_ is None:
-            date_ = input('Enter a date (yyyy-mm-dd): ')
-            y, m, d = date_.split('-')
+            date_ = input("Enter a date (yyyy-mm-dd): ")
+            y, m, d = date_.split("-")
 
         else:
-            y, m, d = date_.split('-')
+            y, m, d = date_.split("-")
 
         try:
             # Within the datetime module days to the week are represented by the integers 0-6, with Monday being 0.
             if date(int(y), int(m), int(d)).weekday() < 5:
-                print(f'{date_} is a regular workday.')
+                print(f"{date_} is a regular workday.")
                 return
             else:
-                print(f'{date_} is not a regular workday.')
+                print(f"{date_} is not a regular workday.")
 
         except ValueError as ve:
             print(ve)
@@ -507,7 +497,7 @@ class NoteKeeper:
             None
         """
 
-        id_ = input('Id of note to delete: ')
+        id_ = input("Id of note to delete: ")
         try:
             print(self.delete_note(id_))
         except CoreError as ce:
@@ -531,7 +521,7 @@ class NoteKeeper:
             None
         """
 
-        id_ = input('Enter template id: ')
+        id_ = input("Enter template id: ")
         try:
             print(self.get_note(id_).__str__())
         except CoreError as ce:
@@ -555,19 +545,19 @@ class NoteKeeper:
             None
         """
 
-        print(f'Available types: {[k for k in self.note_classes.keys()]}.')  # Generate list of note class names.
-        print('Entry is case sensitive.')
-        type_ = input('Enter template type: ')
+        print(f"Available types: {[k for k in self.note_classes.keys()]}.")  # Generate list of note class names.
+        print("Entry is case sensitive.")
+        type_ = input("Enter template type: ")
         try:
-            text = ''
+            text = ""
             num = 0
             for note in self.templates[type_]:
                 num += 1
-                out_str = f'\n\nNumber: {num}\n' + note.__str__() + '\n'
+                out_str = f"\n\nNumber: {num}\n" + note.__str__() + "\n"
                 text += out_str
 
             if len(text) == 0:
-                text = f'No notes found for type: {type_}'
+                text = f"No notes found for type: {type_}"
 
             print(text)
 
@@ -594,14 +584,14 @@ class NoteKeeper:
 
         # Determine id of note to edit.
         try:
-            id_ = int(input('Enter id of note to edit: '))
+            id_ = int(input("Enter id of note to edit: "))
         except ValueError:
-            print('Input id must be an integer.')
+            print("Input id must be an integer.")
             return
 
         # Display note when found.
         try:
-            print('\n' + self.get_note(id_).__str__() + '\n')
+            print("\n" + self.get_note(id_).__str__() + "\n")
         except CoreError as ce:
             print(ce)
             return
@@ -613,10 +603,10 @@ class NoteKeeper:
             return
 
         # Prompt user for new attributes.
-        print('You are allowed to edit the type and note content.')
-        type_ = input('Enter type for note: ')
-        note = input('Enter new note content. Pressing Enter will input the note: \n')
-        argument = {'_type': type_, 'id': id_, 'note': note}
+        print("You are allowed to edit the type and note content.")
+        type_ = input("Enter type for note: ")
+        note = input("Enter new note content. Pressing Enter will input the note: \n")
+        argument = {"_type": type_, "id": id_, "note": note}
 
         # Change attributes of associated note.
         try:
@@ -644,7 +634,7 @@ class NoteKeeper:
 
         try:
             self.save()
-            print('Data saved.')
+            print("Data saved.")
         except CoreError as ce:
             print(ce)
         except NoteKeeperApplicationError as ae:
@@ -667,16 +657,16 @@ class NoteKeeper:
             None
         """
 
-        option = input('Would you like to save y/n?: ')
-        if option.lower() == 'y':
+        option = input("Would you like to save y/n?: ")
+        if option.lower() == "y":
             self.save()
-            print('Program Saved.')
+            print("Program Saved.")
             return False  # Quit main_event_loop and end program.
-        elif option.lower() != 'n':
-            print('Invalid selection.')
+        elif option.lower() != "n":
+            print("Invalid selection.")
             return
         else:
-            print('Program not saved.')
+            print("Program not saved.")
             return False  # Quit main_event_loop and end program.
 
     def _get_invalid(self):
@@ -689,7 +679,7 @@ class NoteKeeper:
             None
         """
 
-        print('Invalid input.')
+        print("Invalid input.")
         return
 
     def _get_welcome(self, return_str=False):
@@ -702,24 +692,26 @@ class NoteKeeper:
             welcome (str): Returns welcome when return_str is True.
         """
 
-        log.debug('Getting welcome...')
+        log.debug("Getting welcome...")
 
         # Welcome graphic formatting.
         graphic_space = 9
         graphic_indent = 8
 
-        welcome = f"Welcome to:\n" \
-            f"{' ' * graphic_indent}         __  _____  __{' ' * graphic_space}      __   __   __   __   __   \n" \
-            f"{' ' * graphic_indent} /\  /  /  \   |   |__{' ' * graphic_space}|_/  |__  |__  |_/  |__  |__|  \n" \
-            f"{' ' * graphic_indent}/  \/   \__/   |   |__{' ' * graphic_space}| \  |__  |__  |    |__  |  \  \n\n" \
+        welcome = (
+            f"Welcome to:\n"
+            f"{' ' * graphic_indent}         __  _____  __{' ' * graphic_space}      __   __   __   __   __   \n"  # noqa: E501,W605
+            f"{' ' * graphic_indent} /\  /  /  \   |   |__{' ' * graphic_space}|_/  |__  |__  |_/  |__  |__|  \n"  # noqa: E501,W605
+            f"{' ' * graphic_indent}/  \/   \__/   |   |__{' ' * graphic_space}| \  |__  |__  |    |__  |  \  \n\n"  # noqa: E501,W605
             "Application is being run in persistent mode. Enter 'menu' for a list of options, or 'quit' to exit."
+        )
 
         if return_str is True:
-            log.debug('Returning welcome as string.')
+            log.debug("Returning welcome as string.")
             return welcome
 
         else:
-            log.debug('Printing welcome to screen.')
+            log.debug("Printing welcome to screen.")
             print(welcome)
 
     def _get_menu(self, return_str=False):
@@ -732,131 +724,133 @@ class NoteKeeper:
             menu (str): Returns menu when return_str is True.
         """
 
-        log.debug('Getting menu...')
+        log.debug("Getting menu...")
 
         # Menu display formatting.
         menu_space = 20
         menu_indent = 4
 
-        menu = f"Optional inputs:\n" \
-               f"{' ' * menu_indent}add{' ' * (menu_space - len('add'))} Add a new note template.\n" \
-               f"{' ' * menu_indent}date{' ' * (menu_space - len('date'))} Display today's date\n" \
-               f"{' ' * menu_indent}workday{' ' * (menu_space - len('workday'))} Signify if date is a workday.\n" \
-               f"{' ' * menu_indent}delete{' ' * (menu_space - len('delete'))} Delete a note template.\n" \
-               f"{' ' * menu_indent}display{' ' * (menu_space - len('display'))} Display note template.\n" \
-               f"{' ' * menu_indent}display type{' ' * (menu_space - len('display type'))} Display all note " \
-               f"templates of a type.\n" \
-               f"{' ' * menu_indent}edit{' ' * (menu_space - len('edit'))} Edit a note template.\n" \
-               f"{' ' * menu_indent}save{' ' * (menu_space - len('save'))} Option to save changes.\n" \
-               f"{' ' * menu_indent}quit{' ' * (menu_space - len('quit'))} Quit Program."
+        menu = (
+            f"Optional inputs:\n"
+            f"{' ' * menu_indent}add{' ' * (menu_space - len('add'))} Add a new note template.\n"
+            f"{' ' * menu_indent}date{' ' * (menu_space - len('date'))} Display today's date\n"
+            f"{' ' * menu_indent}workday{' ' * (menu_space - len('workday'))} Signify if date is a workday.\n"
+            f"{' ' * menu_indent}delete{' ' * (menu_space - len('delete'))} Delete a note template.\n"
+            f"{' ' * menu_indent}display{' ' * (menu_space - len('display'))} Display note template.\n"
+            f"{' ' * menu_indent}display type{' ' * (menu_space - len('display type'))} Display all note "
+            f"templates of a type.\n"
+            f"{' ' * menu_indent}edit{' ' * (menu_space - len('edit'))} Edit a note template.\n"
+            f"{' ' * menu_indent}save{' ' * (menu_space - len('save'))} Option to save changes.\n"
+            f"{' ' * menu_indent}quit{' ' * (menu_space - len('quit'))} Quit Program."
+        )
 
         if return_str is True:
-            log.debug('Returning menu as string.')
+            log.debug("Returning menu as string.")
             return menu
 
         else:
-            log.debug('Printing menu to screen.')
+            log.debug("Printing menu to screen.")
             print(menu)
 
 
 def parse_args(argv=sys.argv):
     """Setup shell environment to run program."""
 
-    log.debug('parse_args...')
+    log.debug("parse_args...")
 
     # Program description.
     parser = argparse.ArgumentParser(
-        description='Welcome to Note Keeper. This application is designed to aid in writing medical notes by allowing '
-                    'the user to construct, save, display, delete, and edit note templates. Note templates are '
-                    'intended to provide the basic structure of a patient note so that the practitioner can save time '
-                    'by filling the details rather than constructing a completely new note.',
-        epilog='When no arguments are present application will run from shell in persistent mode.'
+        description="Welcome to Note Keeper. This application is designed to aid in writing medical notes by allowing "
+        "the user to construct, save, display, delete, and edit note templates. Note templates are "
+        "intended to provide the basic structure of a patient note so that the practitioner can save time "
+        "by filling the details rather than constructing a completely new note.",
+        epilog="When no arguments are present application will run from shell in persistent mode.",
     )
 
     # Run Application.self_test().
     parser.add_argument(
-        '-t',
-        '--test',
-        help='Run testing on application to confirm program is running correctly and exit. OK = Pass.',
-        action='store_true',
-        default=False
+        "-t",
+        "--test",
+        help="Run testing on application to confirm program is running correctly and exit. OK = Pass.",
+        action="store_true",
+        default=False,
     )
 
     # Run Application._get_date().
     parser.add_argument(
-        '-d',
-        '--date',
+        "-d",
+        "--date",
         help="Return today's date and exit.",
-        action='store_true',
-        default=False
+        action="store_true",
+        default=False,
     )
 
     # Run Application.is_workday().
     parser.add_argument(
-        '-wd',
-        '--workday',
+        "-wd",
+        "--workday",
         help="Signify if input date is a workday. Entry should be in format: yyyy-mm-dd.",
         nargs=1,
         default=False,
-        metavar='Date'
+        metavar="Date",
     )
 
     # Concatenate notes of argument type using Application.get_note().
     parser.add_argument(
-        '-a',
-        '--all',
-        help='Display all notes of a type. Available note types: PeriodicExam, HygieneExam, Surgery, '
-             'ComprehensiveExam, LimitedExam.',
+        "-a",
+        "--all",
+        help="Display all notes of a type. Available note types: PeriodicExam, HygieneExam, Surgery, "
+        "ComprehensiveExam, LimitedExam.",
         nargs=1,
         default=False,
-        metavar='Type'
+        metavar="Type",
     )
 
     # Run Application.add_template().
     parser.add_argument(
-        '-x',
-        '--add',
-        help='Add a new note template. Note must be surrounded by quotation marks.',
+        "-x",
+        "--add",
+        help="Add a new note template. Note must be surrounded by quotation marks.",
         nargs=2,
         default=False,
-        metavar=('Type', 'Note')
+        metavar=("Type", "Note"),
     )
 
     # Run Application.display_template().
     parser.add_argument(
-        '-w',
-        '--display',
-        help='Display a specific note template.',
+        "-w",
+        "--display",
+        help="Display a specific note template.",
         nargs=1,
         default=False,
-        metavar='ID'
+        metavar="ID",
     )
 
     # Run Application.delete_note().
     parser.add_argument(
-        '-l',
-        '--delete',
-        help='Delete a note template.',
+        "-l",
+        "--delete",
+        help="Delete a note template.",
         nargs=1,
         default=False,
-        metavar='ID'
+        metavar="ID",
     )
 
     # Run Application.edit_template().
     parser.add_argument(
-        '-e',
-        '--edit',
+        "-e",
+        "--edit",
         help="Edit a note template. Args=(id, type, 'note'). Id is immutable and must exist. Type and note will"
-             " change to input. Note must be surrounded by quotation marks.",
+        " change to input. Note must be surrounded by quotation marks.",
         nargs=3,
         default=False,
-        metavar=('ID', 'Type', 'Note')
+        metavar=("ID", "Type", "Note"),
     )
 
     args = parser.parse_args()  # Collect arguments.
 
-    log.debug(f'args: {args}')
-    log.debug('parse_args complete.')
+    log.debug(f"args: {args}")
+    log.debug("parse_args complete.")
 
     return args
 
@@ -871,10 +865,10 @@ def run_application(args):
         None
     """
 
-    log.debug('Checking for arguments from shell...')
+    log.debug("Checking for arguments from shell...")
 
     if args.test:
-        log.debug('Begin unittests on notekeeper.py, storage.py, and core.py...')
+        log.debug("Begin unittests on notekeeper.py, storage.py, and core.py...")
 
         self_test()  # Test application.py
         storage_self_test()  # Test storage.py
@@ -882,11 +876,11 @@ def run_application(args):
         return
 
     app = NoteKeeper()  # Begin application instance.
-    log.debug('NoteKeeper instantiated.')
+    log.debug("NoteKeeper instantiated.")
 
     if args.add:
         note = app.create_from_attributes(type_=args.add[0], notes=args.add[1])
-        print(f'Note: {note}, has been created.')
+        print(f"Note: {note}, has been created.")
         return
 
     elif args.date:
@@ -910,7 +904,13 @@ def run_application(args):
         return
 
     elif args.edit:
-        app.edit_note(edited_template={'id': args.edit[0], 'type_': args.edit[1], 'note': args.edit[2]})
+        app.edit_note(
+            edited_template={
+                "id": args.edit[0],
+                "type_": args.edit[1],
+                "note": args.edit[2],
+            }
+        )
         return
 
     else:
@@ -947,22 +947,22 @@ def main():
 
     # Configure Rotating Log.
     handler = handlers.RotatingFileHandler(filename=DEFAULT_LOG_FILENAME, maxBytes=100**3, backupCount=1)
-    formatter = logging.Formatter(f'[%(asctime)s] - {RUNTIME_ID} - %(levelname)s - [%(name)s:%(lineno)s] - %(message)s')
+    formatter = logging.Formatter(f"[%(asctime)s] - {RUNTIME_ID} - %(levelname)s - [%(name)s:%(lineno)s] - %(message)s")
     handler.setFormatter(formatter)
     log.addHandler(handler)
     log.setLevel(DEFAULT_LOG_LEVEL)
 
-    log.debug('main...')
+    log.debug("main...")
 
     args = parse_args()
     run_application(args)  # Returns instance of application.
 
-    log.debug('main.')
+    log.debug("main.")
 
     sys.exit(0)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     # self_test()
     # test()
     main()
