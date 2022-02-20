@@ -12,15 +12,12 @@ Attributes:
     DEFAULT_MOCK_TEMPLATE_DIGIT_NUM (int): Default number of mock templates to produce.
     DEFAULT_MOCK_NOTE_MIN_LENGTH (int): Default max digit length when generating mock notes.
     DEFAULT_MOCK_NOTE_MAX_LENGTH (int): Default min digit length when generating mock notes.
-
-TODO (GS): Update create_mock_note() characters to pull string characters from string.ascii_lowercase and
-TODO (GS): string.whitespace.
-
 """
 
 import random
-from random import randint
 import unittest
+from random import randint
+from string import ascii_lowercase
 
 from core import ID_DIGIT_LENGTH
 
@@ -131,7 +128,7 @@ def create_mock_note(min_len=DEFAULT_MOCK_NOTE_MIN_LENGTH, max_len=DEFAULT_MOCK_
         note (str): String of random alphabetical and space characters of length between min_len and max_len.
     """
 
-    characters = '  abcdefghijklmnopqrstuvwxyz'
+    characters = ascii_lowercase + (' ' * 3)
     note = ''
     for i in range(min_len, max_len):
         letter = random.choice(characters)
