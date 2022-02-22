@@ -8,7 +8,7 @@ __version__ = '0.1.0'
 Context:
     This program is currently in production, and is primarily derived for the purpose of
      learning Python.
-    
+
 Description:
     This application is designed to aid in writing medical notes by allowing the user 
     to construct, save, display, delete, and edit note templates. Note templates are 
@@ -19,7 +19,7 @@ Attributes:
     DEFAULT_LOG_FILENAME (str): Default file path for application wide logging.
     DEFAULT_LOG_LEVEL (:obj: 'int'): Integer represents a value which assigns a log 
         level from logging.
-        
+
 Composition Attributes:
     Line length = 88 Characters
 """
