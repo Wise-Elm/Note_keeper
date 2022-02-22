@@ -22,9 +22,7 @@ from random import randint
 
 import yaml
 
-from core import _Template
-from core import ID_DIGIT_LENGTH
-from core import RUNTIME_ID
+from core import ID_DIGIT_LENGTH, RUNTIME_ID, _Template
 from test_assets import create_mock_templates
 
 
@@ -49,11 +47,13 @@ class Repo:
 
         log.debug('Initializing...')
 
-        self.subclass_names = [cls.__name__ for cls in _Template.__subclasses__()]  # List of template class names.
+        # List of template class names.
+        self.subclass_names = [cls.__name__ for cls in _Template.__subclasses__()]
         #   Example:
         #       self.subclass_names = ['Surgery', 'ComprehensiveExam', 'etc']
 
-        self.classes = {_class: [] for _class in self.subclass_names}  # Keys = Template class, values = [empty].
+        # Keys = Template class, values = [empty].
+        self.classes = {_class: [] for _class in self.subclass_names}
         #   Construct dictionary format for use with self.templates.
         #   Example:
         #       self.classes = {
@@ -64,7 +64,8 @@ class Repo:
         #           'ComprehensiveExam': []
         #       }
 
-        self.templates = copy.deepcopy(self.classes)  # Dictionary: keys=template class names, values=[note templates].
+        # Dictionary: keys=template class names, values=[note templates].
+        self.templates = copy.deepcopy(self.classes)
         #   Values will be populated with loaded data.
         #   Example:
         #       self.templates = {
@@ -78,10 +79,16 @@ class Repo:
         subclass_obj = _Template.__subclasses__()
         #   Gather _Template child class objects and insert them into a list.
         #   Example:
-        #       subclass_obj = [<class 'core.LimitedExam'>, <class 'core.Surgery'>, <class 'core.HygieneExam'>, etc.]
+        #       subclass_obj = [
+        #       <class 'core.LimitedExam'>,
+        #       <class 'core.Surgery'>,
+        #       <class 'core.HygieneExam'>,
+        #       etc.
+        #       ]
 
         self.note_classes = dict(zip(self.subclass_names, subclass_obj))
-        #   Dictionary of template class names as keys and corresponding objects as values.
+        #   Dictionary of template class names as keys and corresponding objects as
+        #   values.
         #   Example:
         #       self.note_classes = {
         #           'LimitedExam': <class 'core.LimitedExam'>,
@@ -110,7 +117,8 @@ class Repo:
 
         log.debug('Generating test data...')
 
-        # Get list[Dict], where each dictionary is a representation of a note containing test data.
+        # Get list[Dict], where each dictionary is a representation of a note
+        # containing test data.
         notes = create_mock_templates(self.subclass_names)
 
         log.debug('Generation of test data complete.')
@@ -124,7 +132,8 @@ class Repo:
         """Load note templates from data file.
 
         Args:
-            file_path (str): File path with which to load program data. Must be .yaml file.
+            file_path (str): File path with which to load program data. Must be .yaml
+                file.
 
         Returns:
             None
@@ -132,7 +141,8 @@ class Repo:
 
         log.debug('Loading...')
 
-        templates = self._get_from_yaml(file_path)  # List of dictionaries representing each template.
+        # List of dictionaries representing each template.
+        templates = self._get_from_yaml(file_path)
         self._load_obj(templates)
 
         log.debug('Loading complete.')
@@ -141,14 +151,24 @@ class Repo:
         """Retrieve data from yaml file.
 
         Args:
-            file_path (str): Filepath for yaml file. New file will be constructed if it does not already exist.
+            file_path (str): Filepath for yaml file. New file will be constructed if it
+                does not already exist.
 
         Returns:
-            records (lst [dict]): List of dictionaries containing note template attributes.
+            records (lst [dict]): List of dictionaries containing note template
+                attributes.
                 Example:
                     records = [
-                        {'_type': 'LimitedExam', 'id': 0123456789, 'note': 'This is a note.'},
-                        {'_type': 'Surgery', 'id': 1234567890, 'note': 'This is another note.'},
+                        {
+                        '_type': 'LimitedExam',
+                        'id': 0123456789,
+                        'note': 'This is a note.'
+                        },
+                        {
+                        '_type': 'Surgery',
+                        'id': 1234567890, 'note':
+                        'This is another note.'
+                        }
                     ]
         """
 
@@ -168,16 +188,27 @@ class Repo:
         return records
 
     def _load_obj(self, templates):
-        """Iterates through loaded data and feeds another method which instantiates template objects.
+        """Iterates through loaded data and feeds another method which instantiates
+        template objects.
 
         Passes loaded data to self._instantiate_template() for object instantiation.
 
         Args:
-            templates (lst [dict]): List of each note template represented as a dictionary.
+            templates (lst [dict]): List of each note template represented as a
+                dictionary.
                 Example:
                         templates = [
-                            {'_type': 'Surgery', 'id': 0123456789, 'note': 'This is a note.'},
-                            {'_type': 'Hygiene', 'id': 1234567890, 'note': 'This is another note.'}
+                            {
+                            '_type': 'Surgery',
+                            'id': 0123456789,
+                            'note': 'This is a note.'
+                            },
+                            {
+                            '_type': 'Hygiene',
+                            'id': 1234567890,
+                            'note':
+                            'This is another note.'
+                            }
                         ]
 
         Returns:
@@ -197,7 +228,8 @@ class Repo:
         Args:
             template (dict): Dictionary representing a note template.
                 Example:
-                    template = {'_type': 'Surgery', 'id': 0123456789, 'note': 'This is a note.'}
+                    template = {'_type': 'Surgery', 'id': 0123456789,
+                    'note': 'This is a note.'}
 
         Returns:
             note (Obj): Object representing a note template.
@@ -208,10 +240,18 @@ class Repo:
 
         self._add_id(template['id'])  # Add id to used id list (self.id_).
 
-        try:  # Add add object to self.note_templates.
+        try:  # Add an object to self.note_templates.
             self.templates[template['_type']].append(note)
-        except StorageError('Unable to instantiate template object for {}'.format(template['id'])) as se:
-            log.warning(f'{se}')
+
+        except (KeyError, ValueError, StorageError) as se:
+            msg = f"Unable to instantiate template object for {template['id']}"
+            log.warning(f'{msg}')
+            raise StorageError(msg) from se
+
+        except BaseException as be:
+            msg = f"Unexpected error instantiating templates for {template['id']}"
+            log.warning(f'{msg}')
+            raise StorageError(msg) from be
 
         return note
 
@@ -255,8 +295,8 @@ class Repo:
         Convert note objects to dictionary representations and store data.
 
         Args:
-            file_path (str, OPTIONAL): File path within which to save data. Must be .yaml. If none given a default file
-            path will be used.
+            file_path (str, OPTIONAL): File path within which to save data. Must be
+                .yaml. If none given a default file path will be used.
 
         Returns:
             True (Bool): True when successful.
@@ -282,14 +322,24 @@ class Repo:
         """Save data to .yaml file.
 
         Args:
-            records (lst [dict]): First parameter. List of dictionaries representing note templates.
+            records (lst [dict]): First parameter. List of dictionaries representing
+                note templates.
                 Example:
                     records = [
-                        {'_type': 'Surgery', 'id': 0123456789, 'note': 'This is a note.'},
-                        {'_type': 'Hygiene', 'id': 1234567890, 'note': 'This is another note.'}
+                        {
+                        '_type': 'Surgery',
+                        'id': 0123456789, 'note':
+                        'This is a note.'
+                        },
+                        {
+                        '_type': 'Hygiene',
+                        'id': 1234567890,
+                        'note': 'This is another note.'
+                        }
                     ]
 
-            file_path (str): Second parameter. File path within which to save data. Must be a yaml file.
+            file_path (str): Second parameter. File path within which to save data.
+                Must be a yaml file.
 
         Returns:
             None
@@ -297,10 +347,12 @@ class Repo:
 
         # Check legality of file type.
         if file_path.split('.')[1] != 'yaml' and file_path.split('.')[1] != 'yml':
-            msg = f'An error occurred while attempting to save to .yaml file. File path: {file_path} must end in ' \
-                  f'.yaml, or .yml to be a legal yaml file.'
-            log.warning(msg)
-            raise StorageError(msg)
+            msg = (
+                f'An error occurred while attempting to save to .yaml file. File path: '
+                f'{file_path} must end in .yaml, or .yml to be a legal yaml file.'
+            )
+            log.warning(msg[0])
+            raise StorageError(msg[0])
 
         with open(file_path, 'w') as yaml_outfile:
             yaml.dump(records, yaml_outfile)
@@ -405,7 +457,8 @@ class Repo:
 
         Args:
             note (_Template): First argument. Note on which to change type.
-            desired_type (_Template): Second argument. _Template subclass in which to change the first argument.
+            desired_type (_Template): Second argument. _Template subclass in which to
+                change the first argument.
 
         Returns:
             edited (_Template): Note with class determined from new_type argument.
@@ -415,9 +468,12 @@ class Repo:
 
         # Check legality of desired_type.
         if desired_type not in [cls for cls in self.note_classes.values()]:
-            msg = f'Desired type: {desired_type.__class__.__name__}, is not an available type.'
-            log.warning(msg)
-            raise StorageError(msg)
+            msg = (
+                f'Desired type: {desired_type.__class__.__name__}, is not an available '
+                f'type.'
+            )
+            log.warning(msg[0])
+            raise StorageError(msg[0])
 
         # Check legality of note.
         if not isinstance(note, _Template):
@@ -461,9 +517,11 @@ class Repo:
         is_unique = False
         is_long_enough = False
         while not is_unique or not is_long_enough:
-            id_ = randint(int('1' + ('0' * (ID_DIGIT_LENGTH - 1))), int('9' * ID_DIGIT_LENGTH))
-            #   Example if ID_DIGIT_LEN == 3:
-            #       id_ = int between 100 & 999.
+            id_ = randint(
+                int('1' + ('0' * (ID_DIGIT_LENGTH - 1))), int('9' * ID_DIGIT_LENGTH)
+            )
+            #  Example if ID_DIGIT_LEN == 3:
+            #    id_ = int between 100 & 999.
 
             if len(str(id_)) == ID_DIGIT_LENGTH:
                 is_long_enough = True
@@ -499,7 +557,8 @@ def storage_self_test():
 
 
 def test():
-    """Used to perform detailed module testing during development. Not for production use.
+    """Used to perform detailed module testing during development. Not for production
+    use.
 
     Args:
         None
@@ -514,11 +573,17 @@ def test():
 if __name__ == '__main__':
 
     # Configure Rotating Log. Only runs when module is called directly.
-    handler = handlers.RotatingFileHandler(filename=DEFAULT_STORAGE_LOG_FILENAME, maxBytes=100**3, backupCount=1)
-    formatter = logging.Formatter(f'[%(asctime)s] - {RUNTIME_ID} - %(levelname)s - [%(name)s:%(lineno)s] - %(message)s')
+    handler = handlers.RotatingFileHandler(
+        filename=DEFAULT_STORAGE_LOG_FILENAME,
+        maxBytes=100**3,
+        backupCount=1
+    )
+    formatter = logging.Formatter(
+        f'[%(asctime)s] - {RUNTIME_ID} - %(levelname)s - [%(name)s:%(lineno)s] - '
+        f'%(message)s'
+    )
     handler.setFormatter(formatter)
     log.addHandler(handler)
     log.setLevel(STORAGE_LOG_LEVEL)
 
     storage_self_test()
-    # test()

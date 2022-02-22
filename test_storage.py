@@ -4,7 +4,8 @@
 """This module performs a unittest on storage.py
 
 Attributes:
-    DEFAULT_STORAGE_TEST_FILENAME (str):  Default path for storing and retrieving test data.
+    DEFAULT_STORAGE_TEST_FILENAME (str):  Default path for storing and retrieving test
+        data.
 """
 
 import copy
@@ -45,13 +46,16 @@ class TestStorage(unittest.TestCase):
     def test_load_test(self):
         """Test Repo.load_test().
 
-        Confirm the correct number of objects are loaded into the correct locations."""
+        Confirm the correct number of objects are loaded into the correct locations.
+        """
 
         self.repo.ids = []
-        self.repo.templates = self.repo.classes  # Reformat repo.templates to state before input data.
+        # Reformat repo.templates to state before input data.
+        self.repo.templates = self.repo.classes
 
         self.assertEqual(len(self.repo.ids), 0)  # Confirm repo.ids is empty.
-        self.assertDictEqual(self.repo.templates, self.repo.classes)  # Confirm that repo.templates in original state.
+        # Confirm that repo.templates in original state.
+        self.assertDictEqual(self.repo.templates, self.repo.classes)
 
         self.repo.load_test()
 
@@ -65,8 +69,9 @@ class TestStorage(unittest.TestCase):
     def test_load(self):
         """Test Repo.load().
 
-        Confirm that data is loaded properly by comparing successive reloads and checking loaded data against orininal
-        data."""
+        Confirm that data is loaded properly by comparing successive reloads and
+        checking loaded data against original data.
+        """
 
         ids = copy.deepcopy(self.repo.ids)
         self.repo.ids = []  # Return to preloaded state.
@@ -123,7 +128,8 @@ class TestStorage(unittest.TestCase):
 
         # Confirm loaded data is the same as existing data.
         self.assertIn(self.repo.ids[0], ids)
-        new_template = self.repo.templates[records[0]['_type']][0]  # Isolate record for testing.
+        # Isolate record for testing.
+        new_template = self.repo.templates[records[0]['_type']][0]
         self.assertIn(new_template, templates[records[0]['_type']])
         self.assertIsInstance(new_template, self.repo.note_classes[records[0]['_type']])
 
@@ -140,24 +146,28 @@ class TestStorage(unittest.TestCase):
         for id_ in ids:
             id_too_long = int(str(id_) + '0')
             with self.assertRaises(StorageError):
-                # Confirm exception is raised when attempting to add an id that has too many digits.
+                # Confirm exception is raised when attempting to add an id that has too
+                # many digits.
                 self.repo._add_id(id_too_long)
 
         for id_ in ids:
             id_too_short = int(str(id_)[:-1])
             with self.assertRaises(StorageError):
-                # Confirm exception is raised when attempting to add an id that has too many digits.
+                # Confirm exception is raised when attempting to add an id that has too
+                # many digits.
                 self.repo._add_id(id_too_short)
 
         for id_ in ids:
             id_not_integer = str(id_)
             with self.assertRaises(StorageError):
-                # Confirm exception is raised when attempting to add an id that is not type int.
+                # Confirm exception is raised when attempting to add an id that is not
+                # type int.
                 self.repo._add_id(id_not_integer)
 
         new_id = self.repo.generate_id()  # Generate a new legal id.
         self.repo._add_id(new_id)  # Add new id.
-        self.assertIn(new_id, self.repo.ids)  # Confirm new id has been added to Repo.ids.
+        # Confirm new id has been added to Repo.ids.
+        self.assertIn(new_id, self.repo.ids)
 
     def test_save(self):
         """Test Repo.save().
@@ -289,8 +299,9 @@ class TestStorage(unittest.TestCase):
     def test_generate_id(self):
         """Test Repo.generate_id().
 
-        A shortcoming of this test is that it cannot test for uniqueness of generated ids because of the large amount
-        of ids that would need to be generated."""
+        A shortcoming of this test is that it cannot test for uniqueness of generated
+        ids because of the large amount of ids that would need to be generated.
+        """
 
         id_ = self.repo.generate_id()
 

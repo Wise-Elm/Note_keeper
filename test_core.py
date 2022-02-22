@@ -6,7 +6,7 @@
 import random
 import unittest
 
-from core import _Template, CoreError
+from core import CoreError, _Template
 from notekeeper import NoteKeeper
 
 
@@ -23,7 +23,8 @@ class TestCore(unittest.TestCase):
 
     def setUp(self):
         self.app = NoteKeeper(test_=True)
-        self.cls_names = [k for k in self.app.note_classes.keys()]  # Generate list of note class names.
+        # Generate list of note class names.
+        self.cls_names = [k for k in self.app.note_classes.keys()]
 
     def tearDown(self):
         pass

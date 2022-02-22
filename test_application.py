@@ -6,7 +6,7 @@
 import random
 import unittest
 
-from core import _Template, ID_DIGIT_LENGTH
+from core import ID_DIGIT_LENGTH, _Template
 from notekeeper import NoteKeeper
 from test_assets import create_mock_templates
 
@@ -24,7 +24,8 @@ class TestApplication(unittest.TestCase):
 
     def setUp(self):
         self.app = NoteKeeper(test_=True)
-        self.cls_names = [k for k in self.app.note_classes.keys()]  # Generate list of note class names.
+        # Generate list of note class names.
+        self.cls_names = [k for k in self.app.note_classes.keys()]
 
     def tearDown(self):
         pass
@@ -32,9 +33,10 @@ class TestApplication(unittest.TestCase):
     def test_create_note(self):
         """Test Application.create_note().
 
-        Asserts that the template object is added correctly be checking the length of the template object list for the
-        corresponding template type before and after it is added, and asserts that the template is instantiated into the
-        correct object parent and child classes.
+        Asserts that the template object is added correctly be checking the length of
+        the template object list for the corresponding template type before and after
+        it is added, and asserts that the template is instantiated into the correct
+        object parent and child classes.
         """
 
         template = create_mock_templates(classes=self.cls_names, num=1)[0]
@@ -50,14 +52,16 @@ class TestApplication(unittest.TestCase):
     def test_create_from_attributes(self):
         """Test Application.create_from_attributes().
 
-        Asserts that the template object is added correctly be checking the length of the template object list for the
-        corresponding template type before and after it is added, and asserts that the template is instantiated into the
-        correct object parent and child classes.
+        Asserts that the template object is added correctly be checking the length of
+        the template object list for the corresponding template type before and after
+        it is added, and asserts that the template is instantiated into the correct
+        object parent and child classes.
         """
 
         template = create_mock_templates(classes=self.cls_names, num=1)[0]
         len_before = len(self.app.templates[template['_type']])
-        note = self.app.create_from_attributes(type_=template['_type'], notes=template['note'])
+        note = self.app.create_from_attributes(type_=template['_type'],
+                                               notes=template['note'])
         len_after = len(self.app.templates[template['_type']])
 
         self.assertEqual(len_before + 1, len_after)
@@ -77,8 +81,9 @@ class TestApplication(unittest.TestCase):
     def test_delete_note(self):
         """Test Application.delete_note().
 
-        Picks a random note template from instance, asserts the existence of template, deletes template, and asserts the
-        non existence to template. After testing, adds template object back into instance.
+        Picks a random note template from instance, asserts the existence of template,
+        deletes template, and asserts the non-existence to template. After testing,
+        adds template object back into instance.
         """
 
         cls = random.choice(self.cls_names)
@@ -119,7 +124,8 @@ class TestApplication(unittest.TestCase):
     def test_edit_note(self):
         """Test Application.edit_note().
 
-        Tests that objects are edited properly by editing a template and confirming the proper changes are made.
+        Tests that objects are edited properly by editing a template and confirming the
+        proper changes are made.
         """
 
         cls = random.choice(self.cls_names)

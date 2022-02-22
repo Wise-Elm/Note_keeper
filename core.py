@@ -5,15 +5,18 @@
 
 Attributes:
     RUNTIME_ID (:obj: 'UUID'): Designates an id for each runtime. Uses uuid4.
-    ID_DIGIT_LENGTH (int): Designates length of note ids. Used over multiple modules when creating ids.
-    DEFAULT_CORE_LOG_FILENAME (str): Default file path for logging when this module is called directly.
-    CORE_LOG_LEVEL (:obj: 'int'): Integer represents a value which assigns a log level from logging.
+    ID_DIGIT_LENGTH (int): Designates length of note ids. Used over multiple modules
+        when creating ids.
+    DEFAULT_CORE_LOG_FILENAME (str): Default file path for logging when this module is
+        called directly.
+    CORE_LOG_LEVEL (:obj: 'int'): Integer represents a value which assigns a log level
+        from logging.
 """
 
 import copy
 import logging
-from logging import handlers
 import uuid
+from logging import handlers
 
 RUNTIME_ID = uuid.uuid4()  # Set unique id for each runtime.
 ID_DIGIT_LENGTH = 10
@@ -36,27 +39,27 @@ class _Template:
         self.id = template['id']  # type(int). Unique identification number.
         self.note = template['note']  # type(str). Exam note.
         """Initialize class.
-        
-            Args:
-                template (dict): Note template.
-                    Example:
-                        template = {
-                            'id': 0123456789,
-                            'note': 'This is an example'
-                        }
-                
-            Returns:
-                None
+
+        Args:
+            template (dict): Note template.
+                Example:
+                    template = {
+                        'id': 0123456789,
+                        'note': 'This is an example'
+                    }
+
+        Returns:
+            None
         """
 
     def __repr__(self):
         """String representation of _Template containing technical information.
 
-            Args:
-                None
+        Args:
+            None
 
-            Returns:
-                result (str): String representation of self containing subclass name and id.
+        Returns:
+            result (str): String representation of self containing subclass name and id.
         """
 
         result = f'{self.__class__.__name__}, id: {self.id}'
@@ -69,7 +72,8 @@ class _Template:
         Compares argument exam id with self.
 
         Args:
-            other (dict OR Obj): Dictionary representation of a note template OR a _NoteTemplate obj.
+            other (dict OR Obj): Dictionary representation of a note template OR a
+                _NoteTemplate obj.
 
         Returns:
             is_equivalent (bool): True if equal, False otherwise.
@@ -154,23 +158,33 @@ class _Template:
 
 
 class LimitedExam(_Template):
-    """Child class of _Template. Objects of this type represent a limited note template."""
+    """Child class of _Template. Objects of this type represent a limited note
+    template.
+    """
 
 
 class Surgery(_Template):
-    """Child class of _Template. Objects of this type represent a surgery note template."""
+    """Child class of _Template. Objects of this type represent a surgery note
+    template.
+    """
 
 
 class HygieneExam(_Template):
-    """Child class of _Template. Objects of this type represent a hygiene note template."""
+    """Child class of _Template. Objects of this type represent a hygiene note
+    template.
+    """
 
 
 class PeriodicExam(_Template):
-    """Child class of _Template. Objects of this type represent a periodic note template."""
+    """Child class of _Template. Objects of this type represent a periodic note
+    template.
+    """
 
 
 class ComprehensiveExam(_Template):
-    """Child class of _Template. Objects of this type represent a comprehensive note template."""
+    """Child class of _Template. Objects of this type represent a comprehensive note
+    template.
+    """
 
 
 def core_self_test():
@@ -201,11 +215,17 @@ def test():
 if __name__ == '__main__':
 
     # Configure Rotating Log. Only runs when module is called directly.
-    handler = handlers.RotatingFileHandler(filename=DEFAULT_CORE_LOG_FILENAME, maxBytes=100**3, backupCount=1)
-    formatter = logging.Formatter(f'[%(asctime)s] - {RUNTIME_ID} - %(levelname)s - [%(name)s:%(lineno)s] - %(message)s')
+    handler = handlers.RotatingFileHandler(
+        filename=DEFAULT_CORE_LOG_FILENAME,
+        maxBytes=100**3,
+        backupCount=1
+    )
+    formatter = logging.Formatter(
+        f'[%(asctime)s] - {RUNTIME_ID} - %(levelname)s - [%(name)s:%(lineno)s] - '
+        f'%(message)s'
+    )
     handler.setFormatter(formatter)
     log.addHandler(handler)
     log.setLevel(CORE_LOG_LEVEL)
 
     core_self_test()
-    # test()

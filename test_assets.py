@@ -1,17 +1,21 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""This module is used to provide testing assets for test_application.py, test_storage.py, & test_core.py.
+"""This module is used to provide testing assets for test_application.py,
+test_storage.py, & test_core.py.
 
 Description:
-    The functions in this module provide functionality for creating mock note templates for testing. The most
-    commonly used function will be create_mock_template(), which uses the other function, but the other functions
-    can be used to construct specific parts of note templates.
+    The functions in this module provide functionality for creating mock note templates
+    for testing. The most commonly used function will be create_mock_template(), which
+    uses the other function, but the other functions can be used to construct specific
+    parts of note templates.
 
 Attributes:
     DEFAULT_MOCK_TEMPLATE_DIGIT_NUM (int): Default number of mock templates to produce.
-    DEFAULT_MOCK_NOTE_MIN_LENGTH (int): Default max digit length when generating mock notes.
-    DEFAULT_MOCK_NOTE_MAX_LENGTH (int): Default min digit length when generating mock notes.
+    DEFAULT_MOCK_NOTE_MIN_LENGTH (int): Default max digit length when generating mock
+        notes.
+    DEFAULT_MOCK_NOTE_MAX_LENGTH (int): Default min digit length when generating mock
+        notes.
 """
 
 import random
@@ -35,17 +39,20 @@ class TestingError(RuntimeError):
 def create_mock_templates(classes, num=DEFAULT_MOCK_TEMPLATE_DIGIT_NUM):
     """Creates note templates fill with randomized attributes.
 
-    Intended to be used for unittest. Will create templates using each class in argument classes in order until each
-    class has been used. Once each class type in classes has been used for a template, random template classes from
-    classes will be used. This is intended for the purposes of creating at least one template for each available class.
+    Intended to be used for unittest. Will create templates using each class in
+    argument classes in order until each class has been used. Once each class type in
+    classes has been used for a template, random template classes from classes will be
+    used. This is intended for the purposes of creating at least one template for each
+    available class.
 
     Args:
         classes (lst): First Parameter. Classes for which a note can me instantiated.
-        num (int, OPTIONAL): Second Parameter. Number of templates to generate. Must be greater than 0. Defaults to
-            DEFAULT_MOCK_TEMPLATE_NUM.
+        num (int, OPTIONAL): Second Parameter. Number of templates to generate. Must be
+            greater than 0. Defaults to DEFAULT_MOCK_TEMPLATE_NUM.
 
     Returns:
-        notes (lst[dict]): Each dictionary contains a template of attributes intended to represent a note.
+        notes (lst[dict]): Each dictionary contains a template of attributes intended
+            to represent a note.
             Example:
                 dict = {
                     '_type': 'SomeClass',
@@ -62,11 +69,13 @@ def create_mock_templates(classes, num=DEFAULT_MOCK_TEMPLATE_DIGIT_NUM):
     all_cls_represented = False
     cls_to_represent = 0
 
-    # Loop creates a mock note for each _Template class, then creates mock notes with randomized classes.
+    # Loop creates a mock note for each _Template class, then creates mock notes with
+    # randomized classes.
     for n in range(num):
         if all_cls_represented is True:
             type_ = random.choice(classes)
-        # If num >= the number of available note classes make sure each class is represented with a template.
+        # If num >= the number of available note classes make sure each class is
+        # represented with a template.
         elif cls_to_represent >= len(classes):
             all_cls_represented = True
             type_ = random.choice(classes)
@@ -89,7 +98,8 @@ def create_mock_id(id_len=ID_DIGIT_LENGTH):
     """Generate a randomized template id number.
 
     Args:
-        id_len (int, OPTIONAL): Defaults to ID_DIGIT_LENGTH. Number of digits for return id_.
+        id_len (int, OPTIONAL): Defaults to ID_DIGIT_LENGTH. Number of digits for
+            return id_.
 
     Returns:
         id_ (int): Id number. Length of id number. Defaults to ID_DIGIT_LENGTH.
@@ -116,16 +126,21 @@ def create_mock_id(id_len=ID_DIGIT_LENGTH):
     return id_
 
 
-def create_mock_note(min_len=DEFAULT_MOCK_NOTE_MIN_LENGTH, max_len=DEFAULT_MOCK_NOTE_MAX_LENGTH):
+def create_mock_note(
+        min_len=DEFAULT_MOCK_NOTE_MIN_LENGTH,
+        max_len=DEFAULT_MOCK_NOTE_MAX_LENGTH
+):
     """Generate a note filled with random alphabetical characters and spaces.
 
     Args:
-        min_len (int, OPTIONAL): First parameter. Defaults to DEFAULT_MOCK_NOTE_MIN_LENGTH. Minimum character length for
-             note.
-        max_len (int, OPTIONAL): Second parameter. DEFAULT_MOCK_NOTE_MAX_LENGTH. Maximum character length for note.
+        min_len (int, OPTIONAL): First parameter. Defaults to
+            DEFAULT_MOCK_NOTE_MIN_LENGTH. Minimum character length for note.
+        max_len (int, OPTIONAL): Second parameter. DEFAULT_MOCK_NOTE_MAX_LENGTH.
+            Maximum character length for note.
 
     Returns:
-        note (str): String of random alphabetical and space characters of length between min_len and max_len.
+        note (str): String of random alphabetical and space characters of length
+            between min_len and max_len.
     """
 
     characters = ascii_lowercase + (' ' * 3)
